@@ -15,6 +15,7 @@ import {Model} from 'objection';
 // Middleware
 import {LoggerMiddleware} from './middlewares/logger.middleware';
 import ctxdump from './middlewares/ctxdump.middleware';
+import {SetVersionHeader} from './middlewares/headers.middleware';
 
 // Utils
 import {CONFIG, validateConfig} from './utils/config.util';
@@ -26,7 +27,7 @@ export function startServer() {
   app.name = 'CommunityService';
   const PORT = CONFIG.app.port;
 
-  // Initialize knex.
+  // Initialize knex
   const knex = Knex(CONFIG.postgres);
   // Bind all Models to a knex instance. If you only have one database in
   // your server this is all you have to do. For multi database systems, see
@@ -35,6 +36,7 @@ export function startServer() {
 
   app.use(responseTime()); // This middleware should be placed as the very first to ensure that responsetime is correctly calculated
   app.use(LoggerMiddleware);
+  app.use(SetVersionHeader);
 
   // Use CORS
   const corsOptions = {
@@ -59,6 +61,6 @@ export function startServer() {
   });
 
   app.listen(PORT, () => {
-    log.debug(`Server is up and running on port ${PORT}!`, {sessionLifetime: CONFIG.session.life_time});
+    log.debug(`Server is up and running on port ${PORT}!`);
   });
 }

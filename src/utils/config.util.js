@@ -49,10 +49,10 @@ export function validateConfig(config = CONFIG, k = '') {
     }
     else {
       if (config[key] === undefined) { // eslint-disable-line no-undefined
-        throw Error(`${k}${key} was not specified in config. See https://github.com/DBCDK/communityservice#environment-variabler for a list of environment variables and take a look at https://github.com/DBCDK/communityservice/blob/master/src/utils/config.util.js to see how they're mapped`); // eslint-disable-line max-len
+        throw Error(`${k}${key} was not specified in config. See https://github.com/DBCDK/communityservice#environment-variables for a list of environment variables and take a look at https://github.com/DBCDK/communityservice/blob/master/src/utils/config.util.js to see how they're mapped`); // eslint-disable-line max-len
       }
       if (typeof config[key] === 'number' && Number.isNaN(config[key])) {
-        throw Error(`${k}${key}: expected NaN to be a number. See https://github.com/DBCDK/communityservice#environment-variabler for a list of environment variables and take a look at https://github.com/DBCDK/communityservice/blob/master/src/utils/config.util.js to see how they're mapped`); // eslint-disable-line max-len
+        throw Error(`${k}${key}: expected NaN to be a number. See https://github.com/DBCDK/communityservice#environment-variables for a list of environment variables and take a look at https://github.com/DBCDK/communityservice/blob/master/src/utils/config.util.js to see how they're mapped`); // eslint-disable-line max-len
       }
     }
   }
