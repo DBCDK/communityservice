@@ -35,7 +35,6 @@ export function startServer() {
 
   app.use(responseTime()); // This middleware should be placed as the very first to ensure that responsetime is correctly calculated
   app.use(LoggerMiddleware);
-  app.use(SetVersionHeader);
 
   // Use CORS
   const corsOptions = {
