@@ -8,7 +8,7 @@ import Router from 'koa-router'; // @see https://github.com/alexmingoia/koa-rout
 const router = new Router();
 
 router.get('/', (ctx, next) => {
-  ctx.body = 'Frontpage';
+  ctx.body = 'CommunityService';
   next();
 });
 
