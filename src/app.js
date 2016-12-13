@@ -52,7 +52,7 @@ export function startServer() {
 
   app.use(router);
 
-  if (CONFIG.app.env !== 'production') {
+  if (CONFIG.app.env !== 'production' && CONFIG.app.env !== 'test') {
     app.use(ctxdump);
   }
 
