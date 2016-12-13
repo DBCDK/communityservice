@@ -8,7 +8,7 @@
 The mighy community service
 
 ##Releases
-Releases are found at GitHub [/releases](https://github.com/DBCDK/hejmdal/releases). Each containing a link to the changelog for the given release. A consolidated changelog for all releases is found at [CHANGELOG.md](https://github.com/DBCDK/hejmdal/blob/master/CHANGELOG.md) in the project root.  
+Releases are found at GitHub [/releases](https://github.com/DBCDK/communityservice/releases). Each containing a link to the changelog for the given release. A consolidated changelog for all releases is found at [CHANGELOG.md](https://github.com/DBCDK/communityservice/blob/master/CHANGELOG.md) in the project root.  
 The changelog is made with [github_changelog_generator](https://github.com/skywinder/Github-Changelog-Generator) and can be created with the command `github_changelog_generator -u DBCDK -p communityservice --exclude-tags-regex "(jenkins-|\d\.\d\d{1,})"` -- you may need a valid github token to run the command.
 
 ##Start
@@ -52,13 +52,13 @@ Minimum connections in pool
 Database host
 
 - `CS_DB_NAME` : `postgres.connection.database`  
-Name of hejmdals database
+Name of the CommunityService database
 
 - `CS_DB_USER` : `postgres.connection.user`    
 Database user
 
 - `CS_DB_USER_PASSWORD` : `postgres.connection.password`  
-hejmdal database password
+CommunityService database password
 
 - `LOG_LEVEL` : `log.level`  
 Specifies the log level used by the application. Defaults to `INFO`
