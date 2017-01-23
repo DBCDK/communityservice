@@ -2,7 +2,7 @@
 
 *Community Service* provides a small, well-defined set of building blocks that make it easy to build online communities.
 
-The service provides a minimalistic API that makes it easy and intuitive for software developers to create communities like [Biblo](https://biblo.dk/), where users can present, review and discuss topics of their choice relating to external media.
+The service provides a minimalistic API that makes it easy and intuitive for software developers to create communities like(https://biblo.dk/), where users can present, review and discuss topics of their choice relating to external media.
 
 The building blocks are comprised of a REST API that makes it possible for community developers to create, control or link entities like user profiles, groups, posts, ratings, followers, etc., and to retrieve data from the entities again to form Views that can be presented back to the users.
 
