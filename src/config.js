@@ -29,9 +29,6 @@ function Defaults() {
   let dbUserPassword = process.env.DB_USER_PASSWORD;
   let dbPoolMin = process.env.DB_CONNECTIONS_POOL_MIN;
   let dbPoolMax = process.env.DB_CONNECTIONS_POOL_MAX;
-  if (environment === 'development') {
-    port = 3001;
-  }
   return {
     environment,
     hostname: hostname(),
