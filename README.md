@@ -15,10 +15,19 @@ Releases are found at GitHub [/releases](https://github.com/DBCDK/communityservi
 
 ## Deployment
 
+To start the server in development mode:
+
+    $ cd src
+    $ . /nvm.sh
+    $ nvm install
+    $ npm install
+    $ npm run serve
+
 To start the server in staging/production mode:
 
     $ cd src
-    $ ./nvm.sh
+    $ nvm install
+    $ npm install --production
     $ npm run serve
 
 Administrative endpoints:

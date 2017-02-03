@@ -1,5 +1,5 @@
 #!/bin/bash -e
 
-#echo "--> Installing node 6.x"
-#curl -sL https://deb.nodesource.com/setup_6.x | bash -
-#apt-get install -y nodejs
+echo "--> Installing node 6.x"
+curl -sL https://deb.nodesource.com/setup_6.x | bash -
+apt-get install -y nodejs
