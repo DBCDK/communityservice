@@ -1,20 +1,17 @@
 language: node_js
+node_js:
+  - "6"
 sudo: false
 dist: trusty
 cache:
-  bundler: true
   directories:
   - node_modules
 branches:
   only:
   - master
+before_install: cd src
 env:
-- TEST_SUITE=lint
-- TEST_SUITE=test
-- TEST_SUITE=test:integration
-script: npm run $TEST_SUITE
-notifications:
-  slack:
-    secure: vWSKARgEuGgenW0GD15HZPTvf92EJZucDrvqwJymlvyEC2y75SsnmqZP1m+gcvr9XYwB9CACIQUHSbLoOedcndhc9Ke1Eo4BaIIkOA7dfQKtIjAXhk3LStg0hz5XRkcSF50rKcvnp4LoRmnf57DMT/hb8EuUlza/uTRPEtA/l9q7+DxIz0mJzu8dXqguYO3uy95yNIJehEq7FilhRm1MN/cMaxL8gDDAnqddlUPxeNoqyeHLCJIs6HKXVgcD1KUWaUYHcF6sZiVHg56X9ESKEW9z0kp+FPMZGB6G47rHBi0wLXOWOlSdk4fKhay5qo7Rh3Gh5CIXKn4Jvw8LiAAsyg7iOyL7/o7HzhQg3BrBfavh7TVt56GHNtLFCpeUPuZdcJ9OyY07EU1NE41c9OK248aQJSLZkCmvgcWC1jMY9ZawqvOMYgpmvzQG6Hditdh5fx/NwjJy0My6qPHwbSGp648/mBm74NtVC7kFRmEGfANNv8UHBVElw88Fh2Fa1SPBmJIV3peyk2cp4f912Zy8l9k0uXoxSO+y64bx+dzArsgs3fMPrIQ4e0toL/v7+886JndSuH35NSigHjwUxRjYQHR1NGFNgqQAu7vyXDwko/ZIHrMm8TV5K1bBc0tHgQCk6cABrpdOGS8mCSG22wF4HS0dHSHSPgZX08jUyhL8/cg=
-addons:
-  sauce_connect: true
+- NODE_ENV=development
+script: npm test
+after_script:
+- npm run coverage && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage

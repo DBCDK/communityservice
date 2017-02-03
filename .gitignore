@@ -1,40 +1,6 @@
-
-# ==========
-# IDE #
-# ==========
-.idea/
-
-# ==========
-# NODE/NPM #
-# ==========
-node_modules/
-npm-debug.log
-yarn.lock
-
-# ==========
-# REPORTS #
-# ==========
-reports
-report.xml
-static/*.css
-
-# ==========
-# ENV #
-# ==========
-*.env
-
-# ==========
-# SELENIUM #
-# ==========
-errorShots
-selenium/*.png
-
-# ==========
-# ESLINT #
-# ==========
-.eslintcache
-
-# ==========
-# STATICS #
-# ==========
-static/css
+.vagrant/
+src/coverage/
+src/node_modules/
+src/npm-debug.log
+src/server/config.js
+src/env.env

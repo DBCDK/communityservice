@@ -1,0 +1,12 @@
+{
+  "packageJsonLocation": "src/package.json",
+  "ignore": [
+    "**/node_modules/**"
+  ],
+  "test": [
+    "**/test_*.js"
+  ],
+  "critics": {
+    "lint": {"engine": "eslint"}
+  }
+}

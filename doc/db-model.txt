@@ -1,0 +1,51 @@
+Service
+-------
+id: INTEGER
+name: TINYTEXT
+createdTime: TIMESTAMP
+modifiedTime: TIMESTAMP
+deletedTime: TIMESTAMP
+attributes: JSONB
+
+
+Profile
+-------
+id: INTEGER
+name: TINYTEXT
+serviceId: INTEGER
+createdTime: TIMESTAMP
+modifiedTime: TIMESTAMP
+deletedTime: TIMESTAMP
+attributes: JSONB
+
+
+Entity
+------
+id: INTEGER
+title: TINYTEXT
+contents: MEDIUMTEXT
+serviceId: INTEGER
+profileId: INTEGER
+parentId: INTEGER
+type: TINYTEXT
+createdTime: TIMESTAMP
+modifiedTime: TIMESTAMP
+startTime: TIMESTAMP
+endTime: TIMESTAMP
+deletedTime: TIMESTAMP
+attributes: JSONB
+
+
+Action
+------
+id: INTEGER
+serviceId: INTEGER
+profileId: INTEGER
+entityId: INTEGER
+type: TINYTEXT
+createdTime: TIMESTAMP
+modifiedTime: TIMESTAMP
+startTime: TIMESTAMP
+endTime: TIMESTAMP
+deletedTime: TIMESTAMP
+attributes: JSONB

@@ -1,0 +1,8 @@
+#!/bin/bash -e
+
+echo "--> Changing bash prompt"
+cat /provision/bashrc-prompt >> ~/.bashrc
+
+echo "--> Setting up machine for development"
+cd /vagrant
+./setup-dev-env.sh
