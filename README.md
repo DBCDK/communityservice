@@ -18,6 +18,7 @@ Releases are found at GitHub [/releases](https://github.com/DBCDK/communityservi
 To start the server in staging/production mode:
 
     $ cd src
+    $ ./nvm.sh
     $ npm run serve
 
 Administrative endpoints:

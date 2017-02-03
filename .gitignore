@@ -1,6 +1,9 @@
+.cache/
 .vagrant/
+src/alias/
 src/coverage/
+src/env.env
 src/node_modules/
 src/npm-debug.log
 src/server/config.js
-src/env.env
+src/versions/
