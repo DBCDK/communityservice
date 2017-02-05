@@ -1,25 +1,33 @@
 'use strict';
 
-const config = require('server/config').db;
-
 module.exports = {
   development: {
-    client: 'postgresql',
-    connection: {
-      host: config.host,
-      database: config.name,
-      user: config.user,
-      password: config.password
-    },
-    pool: {
-      min: config.minPool,
-      max: config.maxPool
-    },
+    client: 'pg',
+    connection: 'postgres://localhost/elvis',
     migrations: {
-      tableName: 'knex_migrations'
+      directory: 'migrations'
     },
     seeds: {
-      directory: './seeds'
+      directory: 'seeds'
+    }
+  },
+  product: {
+    client: 'pg',
+    connection: {
+      host: process.env.DB_HOST || '127.0.0.1',
+      database: process.env.DB_NAME,
+      user: process.env.DB_USER,
+      password: process.env.DB_USER_PASSWORD
+    },
+    pool: {
+      min: process.env.DB_CONNECTIONS_POOL_MIN || 2,
+      max: process.env.DB_CONNECTIONS_POOL_MAX || 10
+    },
+    migrations: {
+      directory: 'migrations'
+    },
+    seeds: {
+      directory: 'seeds'
     }
   }
 };

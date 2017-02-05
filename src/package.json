@@ -8,6 +8,7 @@
   "devDependencies": {
     "bithound": "^1.7.0",
     "chai": "^3.5.0",
+    "chai-http": "^3.0.0",
     "coveralls": "^2.11.15",
     "eslint": "^3.14.1",
     "istanbul": "^0.4.5",
@@ -31,7 +32,7 @@
   "scripts": {
     "postinstall": "./setup-node-env.sh",
     "lint": "eslint *.js server/**/*.js lib/**/*.js",
-    "unittest": "mocha server/**/*_test.js lib/**/*_test.js",
+    "unittest": ". ./env.env && mocha server/**/*_test.js lib/**/*_test.js",
     "coverage": "istanbul cover _mocha -- server/**/*_test.js lib/**/*_test.js",
     "test": "npm run lint && npm run unittest",
     "serve": "nodemon --exec node app.js",

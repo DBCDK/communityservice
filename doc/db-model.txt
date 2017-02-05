@@ -2,9 +2,9 @@ Service
 -------
 id: INTEGER
 name: TINYTEXT
-createdTime: TIMESTAMP
-modifiedTime: TIMESTAMP
-deletedTime: TIMESTAMP
+created_at: TIMESTAMP
+updated_at: TIMESTAMP
+deleted_at: TIMESTAMP
 attributes: JSONB
 
 
@@ -13,9 +13,9 @@ Profile
 id: INTEGER
 name: TINYTEXT
 serviceId: INTEGER
-createdTime: TIMESTAMP
-modifiedTime: TIMESTAMP
-deletedTime: TIMESTAMP
+created_at: TIMESTAMP
+updated_at: TIMESTAMP
+deleted_at: TIMESTAMP
 attributes: JSONB
 
 
@@ -28,11 +28,11 @@ serviceId: INTEGER
 profileId: INTEGER
 parentId: INTEGER
 type: TINYTEXT
-createdTime: TIMESTAMP
-modifiedTime: TIMESTAMP
-startTime: TIMESTAMP
-endTime: TIMESTAMP
-deletedTime: TIMESTAMP
+created_at: TIMESTAMP
+updated_at: TIMESTAMP
+start_at: TIMESTAMP
+end_at: TIMESTAMP
+deleted_at: TIMESTAMP
 attributes: JSONB
 
 
@@ -43,9 +43,9 @@ serviceId: INTEGER
 profileId: INTEGER
 entityId: INTEGER
 type: TINYTEXT
-createdTime: TIMESTAMP
-modifiedTime: TIMESTAMP
-startTime: TIMESTAMP
-endTime: TIMESTAMP
-deletedTime: TIMESTAMP
+created_at: TIMESTAMP
+updated_at: TIMESTAMP
+start_at: TIMESTAMP
+end_at: TIMESTAMP
+deleted_at: TIMESTAMP
 attributes: JSONB

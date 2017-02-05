@@ -2,91 +2,102 @@
 
 const assert = require('chai').assert;
 const sinon = require('sinon');
-const logger = require('__/logging')({
+
+// The first subject under test is a logger that pretty-prints everything.
+const sut1 = require('__/logging')({
   environment: 'developement',
   level: 'TRACE',
   pretty: 1,
   hostname: 'localhost'
 });
 
+// The second subject under test is a logger that do not pretty-print and only
+// lets errors through.
+const sut2 = require('__/logging')({
+  environment: 'developement',
+  level: 'ERROR',
+  pretty: 1,
+  hostname: 'localhost'
+});
+
 describe('logging', () => {
-  let sandbox;
-
-  beforeEach(() => {
-    sandbox = sinon.sandbox.create();
-  });
-
-  afterEach(() => {
-    sandbox.restore();
-  });
-
   it('should throw Error when setInfo is called without any args', () => {
-    assert.throws(logger.setInfo, Error);
+    assert.throws(sut1.setInfo, Error);
   });
 
   it('should throw Error when setInfo is called with array args', () => {
     const func = () => {
-      logger.setInfo([]);
+      sut1.setInfo([]);
     };
     assert.throws(func, Error);
   });
 
   it('should throw Error when setInfo is called with non-object args', () => {
     const func = () => {
-      logger.setInfo('string');
+      sut1.setInfo('string');
     };
     assert.throws(func, Error);
   });
 
   it('should not throw when given an object as argument', () => {
     const func = () => {
-      logger.setInfo({test: 'hest'});
+      sut1.setInfo({test: 'hest'});
     };
     assert.doesNotThrow(func, Error);
   });
 
   it('should set info field when argument is accepted', () => {
-    logger.setInfo({test: 'hest'});
-    const spy = sandbox.spy(console, 'log');
-    logger.log.log('info', 'test message');
-    assert.isTrue(spy.args.toString().includes('"test":"hest"'), 'Values set in setInfo method is present in log output');
+    sut1.setInfo({test: 'hest'});
+    const stub = sinon.stub(console, 'log');
+    sut1.log.log('info', 'test message');
+
+    stub.restore();
+    assert.isTrue(stub.args.toString().includes('"test":"hest"'), 'Values set in setInfo method is present in log output');
   });
 
   it('should log a message on the INFO level', () => {
-    const spy = sandbox.spy(console, 'log');
-
+    const stub = sinon.stub(console, 'log');
     const logMsg = 'this is a log message ';
     const level = 'INFO';
-    logger.log.log('info', logMsg);
-    const args = JSON.parse(spy.args);
+    sut1.log.log('info', logMsg);
 
+    stub.restore();
+    const args = JSON.parse(stub.args);
     assert.equal(args.msg, logMsg);
     assert.equal(args.level, level);
   });
 
   it('should log a message on each of the levels specified', () => {
     const levels = ['ERROR', 'WARN', 'INFO', 'DEBUG', 'TRACE'];
-
     levels.forEach((level) => {
-      const spy = sandbox.spy(console, 'log');
-      const logMsg = `this is an ${level} messge`;
+      const stub = sinon.stub(console, 'log');
+      const logMsg = `this is an ${level} message`;
       const method = level.toLowerCase();
-      logger.log[method](logMsg);
-      let args = null;
-      try {
-        args = JSON.parse(spy.args);
-      }
-      catch (e) {
-        console.error('Could not parse args', spy.args, level, logger.level); // eslint-disable-line no-console
-      }
+      sut1.log[method](logMsg);
 
+      stub.restore();
+      const args = JSON.parse(stub.args);
       assert.equal(args.msg, logMsg);
       assert.equal(args.level, level, `Log statement with ${level} was found`);
-      sandbox.restore();
     });
   });
 
-  it('should ignore lower level messages');
+  it('should ignore lower level messages', () => {
+    const stub = sinon.stub(console, 'log');
+    sut2.log.warn('this is a warning');
 
-  it('should be able to not prettify');
+    stub.restore();
+    sinon.assert.notCalled(stub);
+  });
+
+  it('should be able to not prettify', () => {
+    const stub = sinon.stub(console, 'log');
+    sut2.log.error({one: 'two', three: 4});
+
+    const args = stub.args;
+    stub.restore();
+    assert.equal(args.length, 1);
+    assert.equal(args[0].indexOf('\n'), -1);
+  });
+
 });

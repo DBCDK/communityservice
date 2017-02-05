@@ -1,13 +1,13 @@
+'use strict';
 
-exports.seed = function(knex, Promise) {
-  // Deletes ALL existing entries
-  return knex('table_name').del()
-    .then(function () {
+const serviceTable = 'services';
+
+exports.seed = (knex, Promise) => {
+  return knex(serviceTable).del()
+    .then(() => {
       return Promise.all([
-        // Inserts seed entries
-        knex('table_name').insert({id: 1, colName: 'rowValue1'}),
-        knex('table_name').insert({id: 2, colName: 'rowValue2'}),
-        knex('table_name').insert({id: 3, colName: 'rowValue3'})
+        knex(serviceTable).insert({id: 1, name: 'Biblo'}),
+        knex(serviceTable).insert({id: 2, name: 'LiteraturSiden'})
       ]);
     });
 };
