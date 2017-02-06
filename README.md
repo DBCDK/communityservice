@@ -13,19 +13,31 @@ Releases are found at GitHub [/releases](https://github.com/DBCDK/communityservi
 
 ## Deployment
 
-To start the server in development mode:
+To run the unit tests against the server:
 
     $ cd src
     $ . /nvm.sh
     $ nvm install
     $ npm install
-    $ npm run serve
+    $ cp environments/developer.env current.env
+    $ npm test
 
-To start the server in staging/production mode:
+To run the integration tests against the server (requires postgresql):
 
     $ cd src
+    $ . /nvm.sh
+    $ nvm install
+    $ npm install
+    $ cp environments/travis.env current.env
+    $ npm run integrationtest
+
+To start the server in staging mode:
+
+    $ cd src
+    $ . /nvm.sh
     $ nvm install
     $ npm install --production
+    $ cp environments/staging.env current.env
     $ npm run serve
 
 Administrative endpoints:

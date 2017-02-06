@@ -4,7 +4,11 @@ All development and testing takes place here in the `src` directory.  If you wan
 
 ## Setup
 
-You will need a PostgreSQL database server to run the service.  On MacOS, install [Postgres.app](http://postgresapp.com/).
+You will need a PostgreSQL database server to run the service.
+
+On MacOS, install [Postgres.app](http://postgresapp.com/) and put the following in a file `/etc/paths.d/postgresqlapp`:
+
+    /Applications/Postgres.app/Contents/Versions/latest/bin
 
 Create a test database:
 
@@ -25,9 +29,11 @@ Use `npm run lint` to run all code through eslint.
 
 ## Tests
 
-All files matching the pattern `*_test.js` are considered tests, and they will be included automatically when your run `npm run unittest`.  That means that you can (and should) put your unittest next to the files your are testing.
+All files matching the pattern `*_test.js` are considered unit tests, and they will be included automatically when your run `npm run unittest`.  That means that you can (and should) put your unittest next to the files your are testing.
 
 Use `npm test` to run all lints and test.
+
+All files matching the pattern `*_integration.js` are considered integration tests that need a running database, and they will be included automatically when your run `npm run integrationtest`.
 
 ## Coverage
 

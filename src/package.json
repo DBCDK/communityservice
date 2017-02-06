@@ -30,9 +30,11 @@
   "scripts": {
     "postinstall": "./setup-node-env.sh",
     "lint": "eslint *.js server/**/*.js lib/**/*.js",
+    "integrationtest": ". ./current.env && mocha server/**/*_integration.js",
     "unittest": ". ./current.env && mocha server/**/*_test.js lib/**/*_test.js",
-    "coverage": "istanbul cover _mocha -- server/**/*_test.js lib/**/*_test.js",
+    "coverage": "istanbul cover _mocha -- server/**/*_test.js lib/**/*_test.js server/**/*_integration.js",
     "test": "npm run lint && npm run unittest",
+    "alltests": "npm run unittest && npm run integrationtest",
     "serve": "nodemon --exec node app.js",
     "dev": ". ./current.env && npm run serve",
     "start": "node app.js"
