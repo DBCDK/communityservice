@@ -15,6 +15,6 @@ before_install:
   - cd src
   - cp environments/travis.env current.env
   - . ./current.env
-script: npm run alltest
+script: npm run alltests
 after_script:
   - npm run coverage && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage
