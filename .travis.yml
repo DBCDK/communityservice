@@ -15,7 +15,6 @@ before_install:
   - cd src
   - cp environments/travis.env current.env
   - . ./current.env
-  - psql -c "create database $DB_NAME;" -U $DB_USER
 script: npm test
 after_script:
   - npm run coverage && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage
