@@ -18,8 +18,6 @@
     "supertest": "^2.0.1"
   },
   "dependencies": {
-    "asyncawait": "^1.0.6",
-    "dbc-node-logger": "^2.0.9",
     "express": "^4.14.0",
     "helmet": "^3.4.0",
     "jsurl": "^0.1.5",
@@ -32,11 +30,11 @@
   "scripts": {
     "postinstall": "./setup-node-env.sh",
     "lint": "eslint *.js server/**/*.js lib/**/*.js",
-    "unittest": ". ./env.env && mocha server/**/*_test.js lib/**/*_test.js",
+    "unittest": ". ./current.env && mocha server/**/*_test.js lib/**/*_test.js",
     "coverage": "istanbul cover _mocha -- server/**/*_test.js lib/**/*_test.js",
     "test": "npm run lint && npm run unittest",
     "serve": "nodemon --exec node app.js",
-    "dev": ". ./env.env && npm run serve",
+    "dev": ". ./current.env && npm run serve",
     "start": "node app.js"
   }
 }

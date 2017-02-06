@@ -8,7 +8,7 @@ exports.up = (knex, Promise) => { // eslint-disable-line no-unused-vars
     table.timestamps();
     table.timestamp('deleted_at').nullable();
     table.string('name').notNullable();
-    table.jsonb('attributes').nullable();
+    table.json('attributes').nullable();
   });
 };
 

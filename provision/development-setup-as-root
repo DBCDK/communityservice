@@ -1,5 +1,13 @@
 #!/bin/bash -e
 
+echo "--> Cleaning up package status"
+apt-get update
+
+echo "--> Installing packages"
+apt-get install -y \
+  postgresql
+
 echo "--> Installing node 6.x"
 curl -sL https://deb.nodesource.com/setup_6.x | bash -
 apt-get install -y nodejs
+

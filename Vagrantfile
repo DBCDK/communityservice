@@ -1,5 +1,7 @@
 Vagrant.configure("2") do |config|
-  config.vm.box = "monolit/dockerhost"
+  config.vm.box = "ubuntu/trusty64"
+  config.vm.provision "shell",
+    path: "provision/set-utf8-locale"
   config.vm.provision "shell",
     path: "provision/development-setup-as-root"
   config.vm.provision "shell",

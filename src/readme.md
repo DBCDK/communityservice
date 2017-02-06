@@ -12,12 +12,12 @@ Create a test database:
     # create database elvis;
     # \q
 
-Then copy `template.env` to `env.env` and modify to match your local setup.
+Then copy `environments/developer.env` to `current.env` and modify to match your local setup.
 The various settings are [described in the main README](../README.md).
 
 ## Service
 
-Use `npm run dev` to start a local server according to the settings in `env.env`.  The server restarts when the source code changes.
+Use `npm run dev` to start a local server according to the settings in `current.env`.  The server restarts when the source code changes.
 
 ## Lint
 
