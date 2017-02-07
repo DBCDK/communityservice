@@ -5,8 +5,8 @@
   "homepage": "https://github.com/DBCDK/communityservice#readme",
   "license": "AGPL-3.0",
   "repository": {
-     "type": "git",
-     "url": "git+https://github.com/DBCDK/communityservice.git"
+    "type": "git",
+    "url": "git+https://github.com/DBCDK/communityservice.git"
   },
   "author": "DBCDK",
   "bugs": {
@@ -28,6 +28,7 @@
     "helmet": "^3.4.0",
     "jsurl": "^0.1.5",
     "knex": "^0.12.6",
+    "lodash": "^4.17.4",
     "nodemon": "^1.11.0",
     "pg": "^6.1.2",
     "sinon": "^1.17.7"
@@ -40,7 +41,7 @@
     "unittest": ". ./current.env && mocha server/**/*_test.js lib/**/*_test.js",
     "coverage": "istanbul cover _mocha -- server/**/*_test.js lib/**/*_test.js server/**/*_integration.js",
     "test": "npm run lint && npm run unittest",
-    "alltests": "npm run unittest && npm run integrationtest",
+    "alltests": "npm test && npm run integrationtest",
     "precommit": "npm run alltests",
     "serve": "nodemon --exec node app.js",
     "dev": ". ./current.env && npm run serve",

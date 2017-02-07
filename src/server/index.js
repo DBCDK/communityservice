@@ -3,6 +3,7 @@
 const config = require('server/config');
 const express = require('express');
 const helmet = require('helmet');
+// const _ = require('lodash');
 const queries = require('server/queries');
 const logger = require('__/logging')(config.logger);
 
@@ -24,11 +25,17 @@ app.get('/v1/pid', (req, res) => {
   res.send(process.pid.toString());
 });
 
-app.get('/v1/service', (req, res) => {
-  // res.status(200).json([]);
+app.get('/v1/service', (req, res, next) => {
   queries.getAll()
   .then(services => {
-    res.status(200).json(services);
+    try {
+      // logger.log.debug(services);
+      res.status(200).json(services);
+    }
+    catch (error) {
+      // Pass error to default error handler.
+      next(error);
+    }
   });
 });
 
@@ -42,7 +49,7 @@ app.use((req, res) => {
   res.type('txt').send(`${message.error}: ${message.resource}`);
 });
 
-app.use((err, req, res) => {
+app.use((err, req, res, next) => {
   logger.log.error('Internal error', err);
   res.status(err.status || 500);
   let error = {};
@@ -54,6 +61,7 @@ app.use((err, req, res) => {
     message: err.message,
     error
   });
+  next();
 });
 
 module.exports = app;

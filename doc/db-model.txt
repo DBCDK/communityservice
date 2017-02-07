@@ -2,10 +2,10 @@ Service
 -------
 id: INTEGER
 name: TINYTEXT
-created_at: TIMESTAMP
-updated_at: TIMESTAMP
-deleted_at: TIMESTAMP
-attributes: JSONB
+created_epoch: integer not null default extract('epoch' from now())
+modified_epoch: integer not null default extract('epoch' from now())
+deleted_epoch: integer
+attributes: JSON
 
 
 Profile
@@ -13,27 +13,33 @@ Profile
 id: INTEGER
 name: TINYTEXT
 serviceId: INTEGER
-created_at: TIMESTAMP
-updated_at: TIMESTAMP
-deleted_at: TIMESTAMP
-attributes: JSONB
+created_epoch: integer not null default extract('epoch' from now())
+updated_by: INTEGER
+modified_epoch: integer not null default extract('epoch' from now())
+deleted_by: INTEGER
+deleted_epoch: integer not null default extract('epoch' from now())
+log: JSON
+attributes: JSON
 
 
 Entity
 ------
 id: INTEGER
-title: TINYTEXT
+title: MEDIUMTEXT
 contents: MEDIUMTEXT
 serviceId: INTEGER
 profileId: INTEGER
 parentId: INTEGER
 type: TINYTEXT
-created_at: TIMESTAMP
-updated_at: TIMESTAMP
-start_at: TIMESTAMP
-end_at: TIMESTAMP
-deleted_at: TIMESTAMP
-attributes: JSONB
+created_epoch: integer not null default extract('epoch' from now())
+updated_by: INTEGER
+modified_epoch: integer not null default extract('epoch' from now())
+deleted_by: INTEGER
+deleted_epoch: integer not null default extract('epoch' from now())
+start_at: integer
+end_at: integer
+log: JSON
+attributes: JSON
 
 
 Action
@@ -43,9 +49,12 @@ serviceId: INTEGER
 profileId: INTEGER
 entityId: INTEGER
 type: TINYTEXT
-created_at: TIMESTAMP
-updated_at: TIMESTAMP
-start_at: TIMESTAMP
-end_at: TIMESTAMP
-deleted_at: TIMESTAMP
-attributes: JSONB
+created_epoch: integer not null default extract('epoch' from now())
+updated_by: INTEGER
+modified_epoch: integer not null default extract('epoch' from now())
+deleted_by: INTEGER
+deleted_epoch: integer not null default extract('epoch' from now())
+start_at: integer
+end_at: integer
+log: JSON
+attributes: JSON

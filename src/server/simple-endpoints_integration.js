@@ -29,6 +29,12 @@ describe('API v1 routes', () => {
         expect(res.body.length).to.equal(2);
         expect(res.body[0]).to.have.property('name');
         expect(res.body[0].name).to.equal('Biblo');
+        expect(res.body[0]).to.have.property('deleted_epoch');
+        expect(res.body[0].deleted_epoch).to.be.null;
+        expect(res.body[0]).to.have.property('created_epoch');
+        expect(res.body[0].created_epoch).to.match(/^[0-9]+$/);
+        expect(res.body[0]).to.have.property('modified_epoch');
+        expect(res.body[0].modified_epoch).to.match(/^[0-9]+$/);
         expect(res.body[1]).to.have.property('name');
         expect(res.body[1].name).to.equal('LiteraturSiden');
       })
