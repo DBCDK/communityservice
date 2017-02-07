@@ -6,14 +6,14 @@ const server = require('server');
 const config = require('server/config');
 const dbconfig = config.db;
 const knex = require('knex')(dbconfig);
-const schema = require('server/latest-schema');
+const schema = require('server/latest-schema')(knex);
 
 /* eslint-disable no-unused-expressions */
 describe('API v1 routes', () => {
   before(done => {
-    schema.destroy(knex)
+    schema.destroy()
     .then(() => {
-      return schema.setup(knex);
+      return schema.setup();
     })
     .then(() => {
       return knex.seed.run();

@@ -14,8 +14,8 @@ id: INTEGER
 name: TINYTEXT
 serviceId: INTEGER
 created_epoch: integer not null default extract('epoch' from now())
-updated_by: INTEGER
 modified_epoch: integer not null default extract('epoch' from now())
+modified_by: INTEGER
 deleted_by: INTEGER
 deleted_epoch: integer not null default extract('epoch' from now())
 log: JSON
@@ -32,7 +32,7 @@ profileId: INTEGER
 parentId: INTEGER
 type: TINYTEXT
 created_epoch: integer not null default extract('epoch' from now())
-updated_by: INTEGER
+modified_by: INTEGER
 modified_epoch: integer not null default extract('epoch' from now())
 deleted_by: INTEGER
 deleted_epoch: integer not null default extract('epoch' from now())
@@ -50,11 +50,10 @@ profileId: INTEGER
 entityId: INTEGER
 type: TINYTEXT
 created_epoch: integer not null default extract('epoch' from now())
-updated_by: INTEGER
+modified_by: INTEGER
 modified_epoch: integer not null default extract('epoch' from now())
 deleted_by: INTEGER
 deleted_epoch: integer not null default extract('epoch' from now())
 start_at: integer
 end_at: integer
-log: JSON
 attributes: JSON
