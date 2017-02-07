@@ -25,19 +25,19 @@ Use `npm run dev` to start a local server according to the settings in `current.
 
 ## Lint
 
-Use `npm run lint` to run all code through eslint.
+Use `npm run lint --silent` to run all code through eslint.
 
 ## Tests
 
-All files matching the pattern `*_test.js` are considered unit tests, and they will be included automatically when your run `npm run unittest`.  That means that you can (and should) put your unittest next to the files your are testing.
+All files matching the pattern `*_test.js` are considered unit tests, and they will be included automatically when your run `npm run unittest --silent`.  That means that you can (and should) put your unittest next to the files your are testing.
 
 Use `npm test` to run all lints and test.
 
-All files matching the pattern `*_integration.js` are considered integration tests that need a running database, and they will be included automatically when your run `npm run integrationtest`.
+All files matching the pattern `*_integration.js` are considered integration tests that need a running database, and they will be included automatically when your run `npm run integrationtest --silent`.
 
 ## Coverage
 
-Use the `npm run coverage` script to produce a code-coverage report, which will end up in `coverage/lcov-report/index.html`.
+Use the `npm run coverage --silent` script to produce a code-coverage report, which will end up in `coverage/lcov-report/index.html`.
 
 On the build server, the [config file](../.travis.yml) uses the `after_script` to instruct Travis to send coverage data to Coveralls, which has been configured through its UI to look in this `src` directory for the code.
 

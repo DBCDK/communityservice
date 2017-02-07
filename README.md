@@ -29,7 +29,7 @@ To run the integration tests against the server (requires postgresql):
     $ nvm install
     $ npm install
     $ cp environments/travis.env current.env
-    $ npm run integrationtest
+    $ npm run integrationtest --silent
 
 To start the server in staging mode:
 
