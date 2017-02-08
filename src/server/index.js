@@ -2,12 +2,14 @@
 
 const config = require('server/config');
 const express = require('express');
+const parser = require('body-parser');
 const helmet = require('helmet');
 const logger = require('__/logging')(config.logger);
 const routesV1 = require('server/api-v1');
 
 const app = express();
 app.use(helmet());
+app.use(parser.json());
 
 app.get('/status', (req, res) => {
   res.json({
@@ -36,7 +38,7 @@ app.use((req, res) => {
   res.type('txt').send(`${message.error}: ${message.resource}`);
 });
 
-app.use((err, req, res, next) => {
+app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
   logger.log.error('Internal error', err);
   res.status(err.status || 500);
   let error = {};
@@ -48,7 +50,6 @@ app.use((err, req, res, next) => {
     message: err.message,
     error
   });
-  next();
 });
 
 module.exports = app;

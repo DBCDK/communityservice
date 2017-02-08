@@ -8,6 +8,6 @@ exports.seed = (knex, Promise) => { // eslint-disable-line no-unused-vars
       return knex(communityTable).insert({name: 'Biblo'});
     })
     .then(() => {
-      return knex(communityTable).insert({name: 'LiteraturSiden'});
+      return knex(communityTable).insert({name: 'LitteraturSiden'});
     });
 };

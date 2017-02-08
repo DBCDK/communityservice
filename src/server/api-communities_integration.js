@@ -62,6 +62,23 @@ describe('API v1 community endpoints', () => {
       .expect(400)
       .end(done);
     });
-    it('should add a new community');
+    it('should add a new community with just a name' /* , done => {
+      request(server)
+      .post('/v1/community')
+      .send({name: 'Sære Litterater'})
+      .expect('location', '/v1/community/1')
+      .expect(201, {
+        links: {self: '/v1/community/1'},
+        data: {
+          id: 1,
+          name: 'Sære Litterater',
+          attributes: null,
+          created_epoch: 1,
+          modified_epoch: 2,
+          deleted_epoch: null
+        }
+      })
+      .end(done);
+    }*/);
   });
 });
