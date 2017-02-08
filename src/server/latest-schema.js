@@ -20,13 +20,13 @@ module.exports = knex => {
     table.foreign('modified_by').references(`${profileTable}.id`);
     table.integer('deleted_by');
     table.foreign('deleted_by').references(`${profileTable}.id`);
-    table.integer('service_id').nullable();
+    table.integer('service_id').notNullable();
     table.foreign('service_id').references(`${serviceTable}.id`);
   }
 
-  function addProfileReference(table) {
-    table.integer('profile_id');
-    table.foreign('profile_id').references(`${profileTable}.id`);
+  function addOwner(table) {
+    table.integer('owner_id').notNullable();
+    table.foreign('owner_id').references(`${profileTable}.id`);
   }
 
   function addActivePeriod(table) {
@@ -54,13 +54,13 @@ module.exports = knex => {
   function createEntityTable() {
     return knex.schema.createTable(entityTable, table => {
       addModifyByDeletedByServiceRef(table);
-      addProfileReference(table);
+      addOwner(table);
       addActivePeriod(table);
-      table.integer('parent_id');
-      table.foreign('parent_id').references(`${entityTable}.id`);
+      table.integer('entity_ref').notNullable();
+      table.foreign('entity_ref').references(`${entityTable}.id`);
       table.string('type').notNullable();
       table.string('title').notNullable();
-      table.string('contents').notNullable();
+      table.text('contents').nullable();
       table.json('attributes').nullable();
       table.json('log').nullable();
     });
@@ -69,10 +69,12 @@ module.exports = knex => {
   function createActionTable() {
     return knex.schema.createTable(actionTable, table => {
       addModifyByDeletedByServiceRef(table);
-      addProfileReference(table);
+      addOwner(table);
       addActivePeriod(table);
-      table.integer('entity_id');
-      table.foreign('entity_id').references(`${entityTable}.id`);
+      table.integer('entity_ref').nullable();
+      table.foreign('entity_ref').references(`${entityTable}.id`);
+      table.integer('profile_ref');
+      table.foreign('profile_ref').references(`${profileTable}.id`);
       table.string('type').notNullable();
       table.json('attributes').nullable();
     });

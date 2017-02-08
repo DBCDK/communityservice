@@ -70,7 +70,7 @@ See [Trello board](https://trello.com/b/cwxvuEYY/elvis).
 
 ## Data formats
 
-See the [endpoints](doc/endpoints.md), [query language](doc/query-language.md) and various [notes](doc/NOTES.md).
+See the [endpoints](doc/endpoints.md), [query language](doc/query-language.md), [database model](doc/db-model.md) and various [notes](doc/NOTES.md).
 
 ## Development
 

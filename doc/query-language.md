@@ -1,6 +1,6 @@
 # Query Language
 
-The purpose of the query language is to make it possible for a web service to extract complex data structures from a Community service [database](db-model.txt).  The database has three main "objects", namely `Profile`, `Entity`, and `Action`.
+The purpose of the query language is to make it possible for a web service to extract complex data structures from a Community service [database](db-model.md).  The database has three main "objects", namely `Profile`, `Entity`, and `Action`.
 
 (There is a fourth "object" `Service` which is used internally to use the same database for several services at the same time, a feature that will not be discussed here.)
 
