@@ -8,7 +8,7 @@ Creation, modification and retrieval of objects in the database are achieved by 
 
 | Endpoint                             | POST | PUT | GET |
 | ------------------------------------ |:----:|:---:|:---:|
-| `/community`                         | X    |     |     |
+| `/community`                         | X    |     | X   |
 | `/community/`*name*                  |      |     | X   |
 | `/community/`*id*                    |      | X   | X   |
 | `/community/`*id*`/name`             |      | X   | X   |

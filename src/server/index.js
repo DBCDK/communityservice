@@ -3,14 +3,13 @@
 const config = require('server/config');
 const express = require('express');
 const helmet = require('helmet');
-// const _ = require('lodash');
-const queries = require('server/queries');
 const logger = require('__/logging')(config.logger);
+const routesV1 = require('server/api-v1');
 
 const app = express();
 app.use(helmet());
 
-app.get('/v1/status', (req, res) => {
+app.get('/status', (req, res) => {
   res.json({
     siteversion: require('../package').version,
     apiversion: '1',
@@ -20,24 +19,12 @@ app.get('/v1/status', (req, res) => {
   });
 });
 
-app.get('/v1/pid', (req, res) => {
+app.get('/pid', (req, res) => {
   res.type('text/plain');
   res.send(process.pid.toString());
 });
 
-app.get('/v1/community', (req, res, next) => {
-  queries.getAll()
-  .then(communities => {
-    try {
-      // logger.log.debug(communities);
-      res.status(200).json(communities);
-    }
-    catch (error) {
-      // Pass error to default error handler.
-      next(error);
-    }
-  });
-});
+app.use('/v1', routesV1);
 
 app.use((req, res) => {
   const message = {error: 'unknown endpoint', resource: req.path};

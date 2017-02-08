@@ -95,6 +95,12 @@ module.exports = knex => {
     ]);
   }
 
+  function clear() {
+    return knex.raw(
+      `truncate table ${actionTable}, ${entityTable}, ${profileTable}, ${communityTable} cascade`
+    );
+  }
+
   function destroy() {
     return Promise.all([
       knex.schema.dropTableIfExists(actionTable)
@@ -112,6 +118,7 @@ module.exports = knex => {
 
   return {
     setup,
-    destroy
+    destroy,
+    clear
   };
 };

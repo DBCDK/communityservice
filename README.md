@@ -42,10 +42,10 @@ To start the server in staging mode:
 
 Administrative endpoints:
 
-| Endpoint     | Function |
-| ------------ | -------- |
-| `/v1/status` | Returns the service status as JSON   |
-| `/v1/pid`    | Returns the service's raw process id |
+| Endpoint  | Function |
+| --------- | -------- |
+| `/status` | Returns the service status as JSON   |
+| `/pid`    | Returns the service's raw process id |
 
 You can control the settings by the following environment variables.
 

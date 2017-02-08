@@ -4,11 +4,11 @@ const expect = require('chai').expect;
 const request = require('supertest');
 const app = require('server');
 
-describe('service API v1', () => {
+describe('service meta API', () => {
   describe('status', () => {
     it('should return a JSON structure with version and address', done => {
       request(app)
-      .get('/v1/status')
+      .get('/status')
       .set('Accept', 'application/json')
       .expect('Content-Type', /json/)
       .expect(200)
@@ -25,7 +25,7 @@ describe('service API v1', () => {
   describe('pid', () => {
     it('should return the process id', done => {
       request(app)
-      .get('/v1/pid')
+      .get('/pid')
       .set('Accept', 'text/plain')
       .expect(200)
       .expect('Content-Type', /text/)
