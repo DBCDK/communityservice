@@ -5,12 +5,12 @@ const config = require('server/config');
 // logger.log.debug('knex conf', config.db);
 const knex = require('knex')(config.db);
 
-function Services() {
-  return knex('services');
+function Communities() {
+  return knex('communities');
 }
 
 function getAll() {
-  const query = Services().select();
+  const query = Communities().select();
   // logger.log.debug({query: query.toString()});
   return query;
 }

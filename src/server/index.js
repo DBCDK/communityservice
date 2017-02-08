@@ -25,12 +25,12 @@ app.get('/v1/pid', (req, res) => {
   res.send(process.pid.toString());
 });
 
-app.get('/v1/service', (req, res, next) => {
+app.get('/v1/community', (req, res, next) => {
   queries.getAll()
-  .then(services => {
+  .then(communities => {
     try {
-      // logger.log.debug(services);
-      res.status(200).json(services);
+      // logger.log.debug(communities);
+      res.status(200).json(communities);
     }
     catch (error) {
       // Pass error to default error handler.

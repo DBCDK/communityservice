@@ -1,13 +1,13 @@
 'use strict';
 
-const serviceTable = 'services';
+const communityTable = 'communities';
 
 exports.seed = (knex, Promise) => { // eslint-disable-line no-unused-vars
-  return knex(serviceTable).del()
+  return knex(communityTable).del()
     .then(() => {
-      return knex(serviceTable).insert({name: 'Biblo'});
+      return knex(communityTable).insert({name: 'Biblo'});
     })
     .then(() => {
-      return knex(serviceTable).insert({name: 'LiteraturSiden'});
+      return knex(communityTable).insert({name: 'LiteraturSiden'});
     });
 };

@@ -4,51 +4,66 @@
 
 Creation, modification and retrieval of objects in the database are achieved by using the following service API:
 
+### Community
+
+| Endpoint                             | POST | PUT | GET |
+| ------------------------------------ |:----:|:---:|:---:|
+| `/community`                         | X    |     |     |
+| `/community/`*name*                  |      |     | X   |
+| `/community/`*id*                    |      | X   | X   |
+| `/community/`*id*`/name`             |      | X   | X   |
+| `/community/`*id*`/attributes`       | X    | X   | X   |
+| `/community/`*id*`/attributes/`*key* |      | X   | X   |
+
+- POST on `/community` sets `created_epoch`.
+- POST & PUT on other endpoints sets `modified_epoch` & `modified_by`.
+- PUT on `/community/`*id* can set `deleted_epoch`.
+
 ### Profile
 
-| Endpoint                           | POST | PUT | DELETE | GET |
-| ---------------------------------- |:----:|:---:|:------:|:---:|
-| `/profile`                         | X    |     |        |     |
-| `/profile/`*id*                    |      | X   | X      | X   |
-| `/profile/`*id*`/name`             |      | X   |        | X   |
-| `/profile/`*id*`/attributes`       | X    | X   |        | X   |
-| `/profile/`*id*`/attributes/`*key* | X    | X   | X      | X   |
+| Endpoint                                            | POST | PUT | GET |
+| --------------------------------------------------- |:----:|:---:|:---:|
+| `/community/`*id*`/profile`                         | X    |     |     |
+| `/community/`*id*`/profile/`*id*                    |      | X   | X   |
+| `/community/`*id*`/profile/`*id*`/name`             |      | X   | X   |
+| `/community/`*id*`/profile/`*id*`/attributes`       | X    | X   | X   |
+| `/community/`*id*`/profile/`*id*`/attributes/`*key* |      | X   | X   |
 
-- POST on `/profile` sets `createdTime` & `modifiedTime`.
-- DELETE on `/profile/`*id* sets `deletedTime`.
-- POST, PUT & DELETE on other endpoints sets `modifiedTime`.
+- POST on `/profile` sets `created_epoch`.
+- POST & PUT on other endpoints sets `modified_epoch` & `modified_by`.
+- PUT on `/profile/`*id* can set `deleted_epoch` & `deleted_by`.
 
 ### Entity
 
-| Endpoint                           | POST | PUT | DELETE | GET |
-| ---------------------------------- |:----:|:---:|:------:|:---:|
-| `/entity`                          | X    |     |        |     |
-| `/entity/`*id*                     |      | X   | X      | X   |
-| `/entity/`*id*`/title`             |      | X   |        | X   |
-| `/entity/`*id*`/contents`          |      | X   |        | X   |
-| `/entity/`*id*`/startTime`         |      | X   | X      | X   |
-| `/entity/`*id*`/endTime`           |      | X   | X      | X   |
-| `/entity/`*id*`/attributes`        | X    | X   |        | X   |
-| `/entity/`*id*`/attributes/`*key*  | X    | X   | X      | X   |
+| Endpoint                                            | POST | PUT | GET |
+| --------------------------------------------------- |:----:|:---:|:---:|
+| `/community/`*id*`/entity`                          | X    |     |     |
+| `/community/`*id*`/entity/`*id*                     |      | X   | X   |
+| `/community/`*id*`/entity/`*id*`/title`             |      | X   | X   |
+| `/community/`*id*`/entity/`*id*`/contents`          |      | X   | X   |
+| `/community/`*id*`/entity/`*id*`/startTime`         |      | X   | X   |
+| `/community/`*id*`/entity/`*id*`/endTime`           |      | X   | X   |
+| `/community/`*id*`/entity/`*id*`/attributes`        | X    | X   | X   |
+| `/community/`*id*`/entity/`*id*`/attributes/`*key*  |      | X   | X   |
 
-- POST on `/entity` sets `createdTime` & `modifiedTime`.
-- DELETE on `/entity/`*id* sets `deletedTime`.
-- POST, PUT & DELETE on other endpoints sets `modifiedTime`.
+- POST on `/entity` sets `created_epoch`.
+- POST & PUT on other endpoints sets `modified_epoch` & `modified_by`.
+- PUT on `/entity/`*id* can set `deleted_epoch` & `deleted_by`.
 
 ### Action
 
-| Endpoint                           | POST | PUT | DELETE | GET |
-| ---------------------------------- |:----:|:---:|:------:|:---:|
-| `/action`                          | X    |     |        |     |
-| `/action/`*id*                     |      |     | X      | X   |
-| `/action/`*id*`/startTime`         |      | X   | X      | X   |
-| `/action/`*id*`/endTime`           |      | X   | X      | X   |
-| `/action/`*id*`/attributes`        | X    | X   |        | X   |
-| `/action/`*id*`/attributes/`*key*  | X    | X   | X      | X   |
+| Endpoint                                            | POST | PUT | GET |
+| --------------------------------------------------- |:----:|:---:|:---:|
+| `/community/`*id*`/action`                          | X    |     |     |
+| `/community/`*id*`/action/`*id*                     |      |     | X   |
+| `/community/`*id*`/action/`*id*`/startTime`         |      | X   | X   |
+| `/community/`*id*`/action/`*id*`/endTime`           |      | X   | X   |
+| `/community/`*id*`/action/`*id*`/attributes`        | X    | X   | X   |
+| `/community/`*id*`/action/`*id*`/attributes/`*key*  |      | X   | X   |
 
-- POST on `/action` sets `createdTime` & `modifiedTime`.
-- DELETE on `/action/`*id* sets `deletedTime`.
-- POST, PUT & DELETE on other endpoints sets `modifiedTime`.
+- POST on `/action` sets `created_epoch`.
+- POST & PUT on other endpoints sets `modified_epoch` & `modified_by`.
+- PUT on `/action/`*id* can set `deleted_epoch` & `deleted_by`.
 
 ## Complex queries
 

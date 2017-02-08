@@ -2,7 +2,7 @@
 
 module.exports = knex => {
 
-  const serviceTable = 'services';
+  const communityTable = 'communities';
   const profileTable = 'profiles';
   const entityTable = 'entities';
   const actionTable = 'actions';
@@ -10,18 +10,18 @@ module.exports = knex => {
   function addCreatedModifiedDeletedTimestamp(table) {
     table.increments('id').primary();
     table.integer('created_epoch').notNullable().defaultTo(knex.raw('extract(\'epoch\' from now())'));
-    table.integer('modified_epoch').notNullable().defaultTo(knex.raw('extract(\'epoch\' from now())'));
+    table.integer('modified_epoch').nullable();
     table.integer('deleted_epoch').nullable();
   }
 
-  function addModifyByDeletedByServiceRef(table) {
+  function addModifyByDeletedByCommunityRef(table) {
     addCreatedModifiedDeletedTimestamp(table);
     table.integer('modified_by');
     table.foreign('modified_by').references(`${profileTable}.id`);
     table.integer('deleted_by');
     table.foreign('deleted_by').references(`${profileTable}.id`);
-    table.integer('service_id').notNullable();
-    table.foreign('service_id').references(`${serviceTable}.id`);
+    table.integer('community_id').notNullable();
+    table.foreign('community_id').references(`${communityTable}.id`);
   }
 
   function addOwner(table) {
@@ -34,8 +34,8 @@ module.exports = knex => {
     table.integer('end_epoch').nullable();
   }
 
-  function createServiceTable() {
-    return knex.schema.createTable(serviceTable, table => {
+  function createcommunityTable() {
+    return knex.schema.createTable(communityTable, table => {
       addCreatedModifiedDeletedTimestamp(table);
       table.string('name').notNullable();
       table.json('attributes').nullable();
@@ -44,7 +44,7 @@ module.exports = knex => {
 
   function createProfileTable() {
     return knex.schema.createTable(profileTable, table => {
-      addModifyByDeletedByServiceRef(table);
+      addModifyByDeletedByCommunityRef(table);
       table.string('name').notNullable();
       table.json('attributes').nullable();
       table.json('log').nullable();
@@ -53,7 +53,7 @@ module.exports = knex => {
 
   function createEntityTable() {
     return knex.schema.createTable(entityTable, table => {
-      addModifyByDeletedByServiceRef(table);
+      addModifyByDeletedByCommunityRef(table);
       addOwner(table);
       addActivePeriod(table);
       table.integer('entity_ref').notNullable();
@@ -68,7 +68,7 @@ module.exports = knex => {
 
   function createActionTable() {
     return knex.schema.createTable(actionTable, table => {
-      addModifyByDeletedByServiceRef(table);
+      addModifyByDeletedByCommunityRef(table);
       addOwner(table);
       addActivePeriod(table);
       table.integer('entity_ref').nullable();
@@ -82,7 +82,7 @@ module.exports = knex => {
 
   function setup() {
     return Promise.all([
-      createServiceTable(knex)
+      createcommunityTable(knex)
       .then(() => {
         return createProfileTable(knex);
       })
@@ -105,7 +105,7 @@ module.exports = knex => {
         return knex.schema.dropTableIfExists(profileTable);
       })
       .then(() => {
-        return knex.schema.dropTableIfExists(serviceTable);
+        return knex.schema.dropTableIfExists(communityTable);
       })
     ]);
   }

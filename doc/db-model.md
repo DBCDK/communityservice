@@ -1,23 +1,23 @@
 # Community Service database model
 
-## Services
+## Communities
 
 ```
-                                                         Table "public.services"
+                                                         Table "public.communities"
      Column     |          Type          |                       Modifiers                       | Storage  | Stats target | Description
 ----------------+------------------------+-------------------------------------------------------+----------+--------------+-------------
- id             | integer                | not null default nextval('services_id_seq'::regclass) | plain    |              |
+ id             | integer                | not null default nextval('communities_id_seq'::regclass) | plain    |              |
  created_epoch  | integer                | not null default date_part('epoch'::text, now())      | plain    |              |
  modified_epoch | integer                | not null default date_part('epoch'::text, now())      | plain    |              |
  deleted_epoch  | integer                |                                                       | plain    |              |
  name           | character varying(255) | not null                                              | extended |              |
  attributes     | json                   |                                                       | extended |              |
 Indexes:
-    "services_pkey" PRIMARY KEY, btree (id)
+    "communities_pkey" PRIMARY KEY, btree (id)
 Referenced by:
-    TABLE "actions" CONSTRAINT "actions_service_id_foreign" FOREIGN KEY (service_id) REFERENCES services(id)
-    TABLE "entities" CONSTRAINT "entities_service_id_foreign" FOREIGN KEY (service_id) REFERENCES services(id)
-    TABLE "profiles" CONSTRAINT "profiles_service_id_foreign" FOREIGN KEY (service_id) REFERENCES services(id)
+    TABLE "actions" CONSTRAINT "actions_community_id_foreign" FOREIGN KEY (community_id) REFERENCES communities(id)
+    TABLE "entities" CONSTRAINT "entities_community_id_foreign" FOREIGN KEY (community_id) REFERENCES communities(id)
+    TABLE "profiles" CONSTRAINT "profiles_community_id_foreign" FOREIGN KEY (community_id) REFERENCES communities(id)
 ```
 
 ## Profiles
@@ -32,7 +32,7 @@ Referenced by:
  deleted_epoch  | integer                |                                                       | plain    |              |
  modified_by    | integer                |                                                       | plain    |              |
  deleted_by     | integer                |                                                       | plain    |              |
- service_id     | integer                | not null                                              | plain    |              |
+ community_id     | integer                | not null                                              | plain    |              |
  name           | character varying(255) | not null                                              | extended |              |
  attributes     | json                   |                                                       | extended |              |
  log            | json                   |                                                       | extended |              |
@@ -41,7 +41,7 @@ Indexes:
 Foreign-key constraints:
     "profiles_deleted_by_foreign" FOREIGN KEY (deleted_by) REFERENCES profiles(id)
     "profiles_modified_by_foreign" FOREIGN KEY (modified_by) REFERENCES profiles(id)
-    "profiles_service_id_foreign" FOREIGN KEY (service_id) REFERENCES services(id)
+    "profiles_community_id_foreign" FOREIGN KEY (community_id) REFERENCES communities(id)
 Referenced by:
     TABLE "actions" CONSTRAINT "actions_deleted_by_foreign" FOREIGN KEY (deleted_by) REFERENCES profiles(id)
     TABLE "actions" CONSTRAINT "actions_modified_by_foreign" FOREIGN KEY (modified_by) REFERENCES profiles(id)
@@ -66,7 +66,7 @@ Referenced by:
  deleted_epoch  | integer                |                                                       | plain    |              |
  modified_by    | integer                |                                                       | plain    |              |
  deleted_by     | integer                |                                                       | plain    |              |
- service_id     | integer                | not null                                              | plain    |              |
+ community_id     | integer                | not null                                              | plain    |              |
  owner_id       | integer                | not null                                              | plain    |              |
  start_epoch    | integer                |                                                       | plain    |              |
  end_epoch      | integer                |                                                       | plain    |              |
@@ -83,7 +83,7 @@ Foreign-key constraints:
     "entities_entity_ref_foreign" FOREIGN KEY (entity_ref) REFERENCES entities(id)
     "entities_modified_by_foreign" FOREIGN KEY (modified_by) REFERENCES profiles(id)
     "entities_owner_id_foreign" FOREIGN KEY (owner_id) REFERENCES profiles(id)
-    "entities_service_id_foreign" FOREIGN KEY (service_id) REFERENCES services(id)
+    "entities_community_id_foreign" FOREIGN KEY (community_id) REFERENCES communities(id)
 Referenced by:
     TABLE "actions" CONSTRAINT "actions_entity_ref_foreign" FOREIGN KEY (entity_ref) REFERENCES entities(id)
     TABLE "entities" CONSTRAINT "entities_entity_ref_foreign" FOREIGN KEY (entity_ref) REFERENCES entities(id)
@@ -101,7 +101,7 @@ Referenced by:
  deleted_epoch  | integer                |                                                      | plain    |              |
  modified_by    | integer                |                                                      | plain    |              |
  deleted_by     | integer                |                                                      | plain    |              |
- service_id     | integer                | not null                                             | plain    |              |
+ community_id     | integer                | not null                                             | plain    |              |
  owner_id       | integer                | not null                                             | plain    |              |
  start_epoch    | integer                |                                                      | plain    |              |
  end_epoch      | integer                |                                                      | plain    |              |
@@ -117,5 +117,5 @@ Foreign-key constraints:
     "actions_modified_by_foreign" FOREIGN KEY (modified_by) REFERENCES profiles(id)
     "actions_owner_id_foreign" FOREIGN KEY (owner_id) REFERENCES profiles(id)
     "actions_profile_ref_foreign" FOREIGN KEY (profile_ref) REFERENCES profiles(id)
-    "actions_service_id_foreign" FOREIGN KEY (service_id) REFERENCES services(id)
+    "actions_community_id_foreign" FOREIGN KEY (community_id) REFERENCES communities(id)
 ```

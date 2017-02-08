@@ -22,10 +22,10 @@ describe('API v1 routes', () => {
       done();
     });
   });
-  describe('GET /v1/service', () => {
-    it('should return all services', done => {
+  describe('GET /v1/community', () => {
+    it('should return all communities', done => {
       request(server)
-      .get('/v1/service')
+      .get('/v1/community')
       .expect(200)
       .expect('Content-Type', /json/)
       .expect(res => {
@@ -38,7 +38,7 @@ describe('API v1 routes', () => {
         expect(res.body[0]).to.have.property('created_epoch');
         expect(res.body[0].created_epoch).to.match(/^[0-9]+$/);
         expect(res.body[0]).to.have.property('modified_epoch');
-        expect(res.body[0].modified_epoch).to.match(/^[0-9]+$/);
+        expect(res.body[0].modified_epoch).to.be.null;
         expect(res.body[1]).to.have.property('name');
         expect(res.body[1].name).to.equal('LiteraturSiden');
       })
