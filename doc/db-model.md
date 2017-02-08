@@ -86,7 +86,8 @@ Foreign-key constraints:
     "entities_owner_id_foreign" FOREIGN KEY (owner_id) REFERENCES profiles(id)
 Referenced by:
     TABLE "actions" CONSTRAINT "actions_entity_ref_foreign" FOREIGN KEY (entity_ref) REFERENCES entities(id)
-    TABLE "entities" CONSTRAINT "entities_entity_ref_foreign" FOREIGN KEY (entity_ref) REFERENCES entities(id)```
+    TABLE "entities" CONSTRAINT "entities_entity_ref_foreign" FOREIGN KEY (entity_ref) REFERENCES entities(id)
+```
 
 ## Actions
 
