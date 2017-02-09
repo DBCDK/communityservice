@@ -1,15 +1,37 @@
 'use strict';
 
+/*
+ * Configuration
+ */
 const config = require('server/config');
-const express = require('express');
-const parser = require('body-parser');
-const helmet = require('helmet');
-const logger = require('__/logging')(config.logger);
-const routesV1 = require('server/api-v1');
+// const logger = require('__/logging')(config.logger);
 
+/*
+ * Web server.
+ */
+const express = require('express');
 const app = express();
+
+/*
+ * Securing headers.
+ */
+const helmet = require('helmet');
 app.use(helmet());
-app.use(parser.json());
+
+/*
+ * All request bodies must be JSON.
+ */
+const parser = require('body-parser');
+app.use(parser.json({
+  // Always assume JSON.
+  type: '*/*',
+  // Allow lone values.
+  strict: false
+}));
+
+/*
+ * Administrative API
+ */
 
 app.get('/status', (req, res) => {
   res.json({
@@ -26,30 +48,82 @@ app.get('/pid', (req, res) => {
   res.send(process.pid.toString());
 });
 
-app.use('/v1', routesV1);
-
-app.use((req, res) => {
-  const message = {error: 'unknown endpoint', resource: req.path};
-  res.status(404);
-  if (req.accepts('json')) {
-    res.send(message);
-    return;
+app.get('/crash', (req, res, next) => { // eslint-disable-line no-unused-vars
+  if (config.server.environment !== 'production') {
+    throw new Error('Deliberate water landing');
   }
-  res.type('txt').send(`${message.error}: ${message.resource}`);
+  next();
 });
 
-app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
-  logger.log.error('Internal error', err);
-  res.status(err.status || 500);
-  let error = {};
-  if (config.server.environment === 'development') {
-    // Return stack trace on errors in development mode.
-    error = err;
-  }
-  res.json({
-    message: err.message,
-    error
+/*
+ * Versioned API routes
+ */
+
+const routesV1 = require('server/api-v1');
+app.use('/v1', routesV1);
+
+/*
+ * Error handlers
+ */
+
+app.use((req, res, next) => {
+  next({
+    status: 404,
+    title: 'Unknown endpoint',
+    meta: {resource: req.path}
   });
+});
+
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    // logger.log.info({problem: 'JSON syntax error', body: err.body});
+    next({
+      status: err.status,
+      title: 'Malformed body',
+      detail: 'JSON syntax error',
+      meta: {body: err.body}
+    });
+  }
+  else {
+    next(err);
+  }
+});
+
+/*
+ * General error handler.
+ *
+ * err properties supported (in accordance with http://jsonapi.org/format/#errors):
+ * @param {status} HTTP status code to return.
+ * @param {title} Stable identification of the error.
+ * @param {detail} Detailed identification of the error.
+ * @param {meta} Additional information.
+ *
+ * Additionally, in non-production mode, any stack trace and other properties
+ * from err are included.
+ */
+app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
+  // logger.log.debug(err);
+  err.status = err.status || 500;
+  let returnedError = {
+    status: err.status,
+    code: err.code || err.status.toString(),
+    title: err.title || (err.message || 'Unknown error')
+  };
+  if (err.detail) {
+    returnedError.detail = err.detail;
+  }
+  if (err.meta) {
+    returnedError.meta = err.meta;
+  }
+  res.status(returnedError.status);
+  if (config.server.environment !== 'production') {
+    // More information for non-produciton.
+    Object.assign(returnedError, err);
+    if (err.stack) {
+      returnedError.stack = err.stack;
+    }
+  }
+  res.json({errors: returnedError});
 });
 
 module.exports = app;

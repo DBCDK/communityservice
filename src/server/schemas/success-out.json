@@ -1,0 +1,20 @@
+{
+  "required": true,
+  "type": "object",
+  "properties": {
+    "data": {
+      "required": true,
+      "type": "object"
+    },
+    "links": {
+      "required": false,
+      "type": "object",
+      "properties": {
+        "self": {
+          "required": true,
+          "type": "string"
+        }
+      }
+    }
+  }
+}

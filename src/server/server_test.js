@@ -34,16 +34,6 @@ describe('service meta API', () => {
     });
   });
   describe('default handler should return error', () => {
-    it('as text', done => {
-      const endpoint = '/v2/status';
-      request(app)
-      .get(endpoint)
-      .set('Accept', 'text/plain')
-      .expect(404)
-      .expect(/unknown endpoint/)
-      .expect(new RegExp(endpoint))
-      .end(done);
-    });
     it('as JSON', done => {
       const endpoint = '/doesNotExist';
       request(app)
@@ -51,10 +41,12 @@ describe('service meta API', () => {
       .set('Accept', 'application/json')
       .expect(404)
       .expect(res => {
-        expect(res.body).to.have.property('error');
-        expect(res.body.error).to.equal('unknown endpoint');
-        expect(res.body).to.have.property('resource');
-        expect(res.body.resource).to.equal(endpoint);
+        expect(res.body).to.have.property('errors');
+        expect(res.body.errors).to.have.property('title');
+        expect(res.body.errors.title).to.equal('Unknown endpoint');
+        expect(res.body.errors).to.have.property('meta');
+        expect(res.body.errors.meta).to.have.property('resource');
+        expect(res.body.errors.meta.resource).to.equal(endpoint);
       })
       .end(done);
     });

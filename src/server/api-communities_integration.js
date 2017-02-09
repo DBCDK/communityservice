@@ -6,21 +6,43 @@ const server = require('server');
 const config = require('server/config');
 const dbconfig = config.db;
 const knex = require('knex')(dbconfig);
-const schema = require('server/latest-schema')(knex);
+const db = require('server/latest-schema')(knex);
+const validator = require('is-my-json-valid/require');
+
+// const logger = require('__/logging')(config.logger);
+
+function expectSuccess(document, next) {
+  const validate = validator('schemas/success-out.json');
+  validate(document);
+  const errors = JSON.stringify(validate.errors);
+  expect(errors).to.equal('null');
+  expect(document).to.have.property('links');
+  const links = document.links;
+  expect(document).to.have.property('data');
+  const data = document.data;
+  next(links, data);
+}
+
+function expectValidate(document, schema) {
+  const validate = validator(schema);
+  validate(document);
+  const errors = JSON.stringify(validate.errors);
+  expect(errors).to.equal('null');
+}
 
 /* eslint-disable no-unused-expressions */
 describe('API v1 community endpoints', () => {
   before(done => {
-    schema.destroy()
+    db.destroy()
     .then(() => {
-      return schema.setup();
+      return db.setup();
     })
     .then(() => {
       done();
     });
   });
   beforeEach(done => {
-    schema.clear()
+    db.clear()
     .then(() => {
       done();
     });
@@ -55,6 +77,13 @@ describe('API v1 community endpoints', () => {
     });
   });
   describe('POST /community', () => {
+    it('should reject missing data', done => {
+      request(server)
+      .post('/v1/community')
+      .send('')
+      .expect(400)
+      .end(done);
+    });
     it('should reject malformed data', done => {
       request(server)
       .post('/v1/community')
@@ -62,23 +91,40 @@ describe('API v1 community endpoints', () => {
       .expect(400)
       .end(done);
     });
-    it('should add a new community with just a name' /* , done => {
+    it('should reject non-conformant JSON', done => {
       request(server)
       .post('/v1/community')
-      .send({name: 'Sære Litterater'})
+      .send('{"ost": "My community"}')
+      .expect(400)
+      .end(done);
+    });
+    it('should add a new community with just a name', done => {
+      const name = 'Sære Litterater';
+      request(server)
+      .post('/v1/community')
+      .send({name})
       .expect('location', '/v1/community/1')
-      .expect(201, {
-        links: {self: '/v1/community/1'},
-        data: {
-          id: 1,
-          name: 'Sære Litterater',
-          attributes: null,
-          created_epoch: 1,
-          modified_epoch: 2,
-          deleted_epoch: null
-        }
+      .expect(201)
+      .expect(res => {
+        expectSuccess(res.body, (links, data) => {
+          expect(links).to.have.property('self');
+          expect(links.self).to.equal('/v1/community/1');
+          expectValidate(data, 'schemas/community-out.json');
+          expect(data).to.have.property('id');
+          expect(data.id).to.equal(1);
+          expect(data).to.have.property('name');
+          expect(data.name).to.equal(name);
+          expect(data).to.have.property('attributes');
+          expect(data.attributes).to.be.null;
+          expect(data).to.have.property('created_epoch');
+          expect(data.created_epoch).to.match(/^[0-9]+$/);
+          expect(data).to.have.property('modified_epoch');
+          expect(data.modified_epoch).to.be.null;
+          expect(data).to.have.property('deleted_epoch');
+          expect(data.deleted_epoch).to.be.null;
+        });
       })
       .end(done);
-    }*/);
+    });
   });
 });
