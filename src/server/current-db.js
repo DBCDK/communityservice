@@ -81,18 +81,16 @@ module.exports = knex => {
   }
 
   function setup() {
-    return Promise.all([
-      createcommunityTable(knex)
-      .then(() => {
-        return createProfileTable(knex);
-      })
-      .then(() => {
-        return createEntityTable(knex);
-      })
-      .then(() => {
-        return createActionTable(knex);
-      })
-    ]);
+    return createcommunityTable(knex)
+    .then(() => {
+      return createProfileTable(knex);
+    })
+    .then(() => {
+      return createEntityTable(knex);
+    })
+    .then(() => {
+      return createActionTable(knex);
+    });
   }
 
   function clear() {
@@ -102,18 +100,16 @@ module.exports = knex => {
   }
 
   function destroy() {
-    return Promise.all([
-      knex.schema.dropTableIfExists(actionTable)
-      .then(() => {
-        return knex.schema.dropTableIfExists(entityTable);
-      })
-      .then(() => {
-        return knex.schema.dropTableIfExists(profileTable);
-      })
-      .then(() => {
-        return knex.schema.dropTableIfExists(communityTable);
-      })
-    ]);
+    return knex.schema.dropTableIfExists(actionTable)
+    .then(() => {
+      return knex.schema.dropTableIfExists(entityTable);
+    })
+    .then(() => {
+      return knex.schema.dropTableIfExists(profileTable);
+    })
+    .then(() => {
+      return knex.schema.dropTableIfExists(communityTable);
+    });
   }
 
   return {

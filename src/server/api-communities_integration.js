@@ -6,7 +6,7 @@ const server = require('server');
 const config = require('server/config');
 const dbconfig = config.db;
 const knex = require('knex')(dbconfig);
-const db = require('server/latest-schema')(knex);
+const db = require('server/current-db')(knex);
 const validator = require('is-my-json-valid/require');
 
 // const logger = require('__/logging')(config.logger);
@@ -34,9 +34,7 @@ function expectValidate(document, schema) {
 describe('API v1 community endpoints', () => {
   before(done => {
     db.destroy()
-    .then(() => {
-      return db.setup();
-    })
+    .then(db.setup)
     .then(() => {
       done();
     });
@@ -125,6 +123,12 @@ describe('API v1 community endpoints', () => {
         });
       })
       .end(done);
+    });
+    describe('PUT /community/:id', () => {
+      it('should update existing community');
+    });
+    describe('GET /community/:id', () => {
+      it('should retrieve updated community');
     });
   });
 });
