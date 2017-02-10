@@ -31,7 +31,7 @@ Use `npm run lint --silent` to run all code through eslint.
 
 All files matching the pattern `*_test.js` are considered unit tests, and they will be included automatically when your run `npm run unittest --silent`.  That means that you can (and should) put your unittest next to the files your are testing.
 
-Use `npm test` to run all lints and test.
+Use `npm test` to run all tests that do not require a database..
 
 All files matching the pattern `*_integration.js` are considered integration tests that need a running database, and they will be included automatically when your run `npm run integrationtest --silent`.
 

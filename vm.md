@@ -32,4 +32,9 @@ The scripts that set up the VM are mounted at `/provision` inside the VM, so you
 
 ## Development outside the VM
 
-For examples of how to run commands inside the VM from the outside, see the [SublimeText project file](community-service.sublime-project).
+For examples of how to run commands inside the VM from the outside, use commands like
+
+    $ vagrant ssh -c "cd /vagrant; npm run alltests --silent"
+    $ vagrant ssh -c "cd /vagrant; npm run unittest --silent"
+    $ vagrant ssh -c "cd /vagrant; npm run integrationtest --silent"
+    $ vagrant ssh -c "cd /vagrant; npm run coverage --silent"
