@@ -26,6 +26,12 @@ function validateInput(req, schema) {
   });
 }
 
+function setModifiedEpoch(community) {
+  return Object.assign(community, {
+    modified_epoch: knex.raw('extract(\'epoch\' from now())')
+  });
+}
+
 router.route('/')
   .get((req, res) => {
     knex('communities').select()
@@ -66,14 +72,28 @@ router.route('/:id')
   .put((req, res, next) => {
     validateInput(req, 'schemas/community-in.json')
     .then(() => {
+      const id = req.params.id;
+      const update = setModifiedEpoch(req.body);
       knex('communities')
-      .where('id', req.params.id)
-      .update(req.body, '*')
+      .where('id', id)
+      .update(update, '*')
       .then(communities => {
-        logger.log.debug(communities);
+        if (communities.length === 0) {
+          return next({
+            status: 404,
+            title: 'Community does not exist',
+            detail: `Community ${id} unknown`,
+            meta: {resource: req.path}
+          });
+        }
+        const community = communities[0];
+        const location = req.baseUrl + '/' + community.id;
         res
-        .status(204)
-        .send();
+        .status(200)
+        .json({
+          links: {self: location},
+          data: community
+        });
       });
     })
     .catch(error => {

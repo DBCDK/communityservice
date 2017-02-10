@@ -7,6 +7,7 @@ const config = require('server/config');
 const dbconfig = config.db;
 const knex = require('knex')(dbconfig);
 const db = require('server/current-db')(knex);
+const seedBigDb = require('server/seeds/integration-test-big').seed;
 const validator = require('is-my-json-valid/require');
 
 // const logger = require('__/logging')(config.logger);
@@ -74,6 +75,15 @@ describe('API v1 community endpoints', () => {
       .end(done);
     });
   });
+  describe('PUT /community/:id', () => {
+    it('should return Not Found on any non-existing community', done => {
+      request(server)
+      .put('/v1/community/1')
+      .send({name: 'Name'})
+      .expect(404)
+      .end(done);
+    });
+  });
   describe('POST /community', () => {
     it('should reject missing data', done => {
       request(server)
@@ -124,5 +134,45 @@ describe('API v1 community endpoints', () => {
       })
       .end(done);
     });
+  });
+  describe('PUT /community/:id', () => {
+    beforeEach(done => {
+      seedBigDb(knex)
+      .then(() => {
+        done();
+      });
+    });
+    it('should update existing community', done => {
+      const name = 'Søde Litterater';
+      const attributes = {test: true};
+      request(server)
+      .put('/v1/community/2')
+      .send({name, attributes})
+      .expect(200)
+      .expect(res => {
+        expectSuccess(res.body, (links, data) => {
+          expect(links).to.have.property('self');
+          expect(links.self).to.equal('/v1/community/2');
+          expectValidate(data, 'schemas/community-out.json');
+          expect(data).to.have.property('id');
+          expect(data.id).to.equal(2);
+          expect(data).to.have.property('name');
+          expect(data.name).to.equal(name);
+          expect(data).to.have.property('attributes');
+          expect(data.attributes).to.deep.equal(attributes);
+          expect(data).to.have.property('created_epoch');
+          expect(data.created_epoch).to.match(/^[0-9]+$/);
+          expect(data).to.have.property('modified_epoch');
+          expect(data.modified_epoch).to.match(/^[0-9]+$/);
+          expect(data.modified_epoch).to.not.be.below(data.created_epoch);
+          expect(data).to.have.property('deleted_epoch');
+          expect(data.deleted_epoch).to.be.null;
+        });
+      })
+      .end(done);
+    });
+  });
+  describe('GET /community/:id', () => {
+    it('should retrieve updated community');
   });
 });
