@@ -124,11 +124,5 @@ describe('API v1 community endpoints', () => {
       })
       .end(done);
     });
-    describe('PUT /community/:id', () => {
-      it('should update existing community');
-    });
-    describe('GET /community/:id', () => {
-      it('should retrieve updated community');
-    });
   });
 });
