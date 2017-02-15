@@ -10,26 +10,7 @@ const db = require('server/current-db')(knex);
 const seedBigDb = require('server/seeds/integration-test-big').seed;
 const validator = require('is-my-json-valid/require');
 
-// const logger = require('__/logging')(config.logger);
-
-function expectSuccess(document, next) {
-  const validate = validator('schemas/success-out.json');
-  validate(document);
-  const errors = JSON.stringify(validate.errors);
-  expect(errors).to.equal('null');
-  expect(document).to.have.property('links');
-  const links = document.links;
-  expect(document).to.have.property('data');
-  const data = document.data;
-  next(links, data);
-}
-
-function expectValidate(document, schema) {
-  const validate = validator(schema);
-  validate(document);
-  const errors = JSON.stringify(validate.errors);
-  expect(errors).to.equal('null');
-}
+const logger = require('__/logging')(config.logger);
 
 /* eslint-disable no-unused-expressions */
 describe('API v1 community endpoints', () => {
@@ -43,18 +24,40 @@ describe('API v1 community endpoints', () => {
   beforeEach(done => {
     db.clear()
     .then(() => {
+      return seedBigDb(knex);
+    })
+    .then(() => {
       done();
     });
   });
   describe('GET /community', () => {
-    it('should return no communities on empty database', done => {
+    it('should return seeded communities', done => {
+      const url = '/v1/community';
       request(server)
-      .get('/v1/community')
+      .get(url)
       .expect(200)
       .expect('Content-Type', /json/)
       .expect(res => {
-        expect(res.body).to.be.json;
-        expect(res.body.length).to.equal(0);
+        expectSuccess(res.body, (links, list) => {
+          expect(links).to.have.property('self');
+          expect(links.self).to.equal(url);
+          expect(list.length).to.equal(2);
+          list.forEach(data => {
+            expectValidate(data, 'schemas/community-out.json');
+            expect(data).to.have.property('id');
+            expect(data).to.have.property('name');
+            expect(data).to.have.property('attributes');
+            expect(data).to.have.property('created_epoch');
+            expect(data.created_epoch).to.match(/^[0-9]+$/);
+            expect(data).to.have.property('modified_epoch');
+            expect(data.modified_epoch).to.be.null;
+            expect(data).to.have.property('deleted_epoch');
+            expect(data.deleted_epoch).to.be.null;
+          });
+          expect(list[0].name).to.equal('Biblo');
+          expect(list[1].name).to.equal('LitteraturSiden');
+          expect(list[1].attributes).to.deep.equal({production: false});
+        });
       })
       .end(done);
     });
@@ -62,15 +65,33 @@ describe('API v1 community endpoints', () => {
   describe('GET /community/:name', () => {
     it('should return Not Found on any community name', done => {
       request(server)
-      .get('/v1/community/biblo')
-      .expect(404)
+      .get('/v1/community/Biblo')
+      .expect(200)
+      .expect(res => {
+        expectSuccess(res.body, (links, data) => {
+          expect(links).to.have.property('self');
+          expect(links.self).to.equal('/v1/community/1');
+          expect(data).to.have.property('id');
+          expect(data.id).to.equal(1);
+          expect(data).to.have.property('name');
+          expect(data.name).to.equal('Biblo');
+          expect(data).to.have.property('attributes');
+          expect(data.attributes).to.be.null;
+          expect(data).to.have.property('created_epoch');
+          expect(data.created_epoch).to.match(/^[0-9]+$/);
+          expect(data).to.have.property('modified_epoch');
+          expect(data.modified_epoch).to.be.null;
+          expect(data).to.have.property('deleted_epoch');
+          expect(data.deleted_epoch).to.be.null;
+        });
+      })
       .end(done);
     });
   });
   describe('GET /community/:id', () => {
     it('should return Not Found on any community id', done => {
       request(server)
-      .get('/v1/community/1')
+      .get('/v1/community/10')
       .expect(404)
       .end(done);
     });
@@ -78,7 +99,7 @@ describe('API v1 community endpoints', () => {
   describe('PUT /community/:id', () => {
     it('should return Not Found on any non-existing community', done => {
       request(server)
-      .put('/v1/community/1')
+      .put('/v1/community/3')
       .send({name: 'Name'})
       .expect(404)
       .end(done);
@@ -108,18 +129,19 @@ describe('API v1 community endpoints', () => {
     });
     it('should add a new community with just a name', done => {
       const name = 'Sære Litterater';
+      const id = 3;
       request(server)
       .post('/v1/community')
       .send({name})
-      .expect('location', '/v1/community/1')
+      .expect('location', `/v1/community/${id}`)
       .expect(201)
       .expect(res => {
         expectSuccess(res.body, (links, data) => {
           expect(links).to.have.property('self');
-          expect(links.self).to.equal('/v1/community/1');
+          expect(links.self).to.equal(`/v1/community/${id}`);
           expectValidate(data, 'schemas/community-out.json');
           expect(data).to.have.property('id');
-          expect(data.id).to.equal(1);
+          expect(data.id).to.equal(id);
           expect(data).to.have.property('name');
           expect(data.name).to.equal(name);
           expect(data).to.have.property('attributes');
@@ -136,26 +158,23 @@ describe('API v1 community endpoints', () => {
     });
   });
   describe('PUT /community/:id', () => {
-    beforeEach(done => {
-      seedBigDb(knex)
-      .then(() => {
-        done();
-      });
-    });
-    it('should update existing community', done => {
-      const name = 'Søde Litterater';
-      const attributes = {test: true};
-      request(server)
-      .put('/v1/community/2')
+    const name = 'Søde Litterater';
+    const attributes = {test: true};
+    const id = 2;
+    const url = `/v1/community/${id}`;
+    it('should update existing community and retrieve the update', done => {
+      const service = request(server);
+      service
+      .put(url)
       .send({name, attributes})
       .expect(200)
       .expect(res => {
         expectSuccess(res.body, (links, data) => {
           expect(links).to.have.property('self');
-          expect(links.self).to.equal('/v1/community/2');
+          expect(links.self).to.equal(url);
           expectValidate(data, 'schemas/community-out.json');
           expect(data).to.have.property('id');
-          expect(data.id).to.equal(2);
+          expect(data.id).to.equal(id);
           expect(data).to.have.property('name');
           expect(data.name).to.equal(name);
           expect(data).to.have.property('attributes');
@@ -169,10 +188,54 @@ describe('API v1 community endpoints', () => {
           expect(data.deleted_epoch).to.be.null;
         });
       })
-      .end(done);
+      .then(() => {
+        service
+        .get(url)
+        .expect(200)
+        .expect(res => {
+          // logger.log.debug(res);
+          expectSuccess(res.body, (links, data) => {
+            expect(links).to.have.property('self');
+            expect(links.self).to.equal(url);
+            expectValidate(data, 'schemas/community-out.json');
+            expect(data).to.have.property('id');
+            expect(data.id).to.equal(id);
+            expect(data).to.have.property('name');
+            expect(data.name).to.equal(name);
+            expect(data).to.have.property('attributes');
+            expect(data.attributes).to.deep.equal(attributes);
+            expect(data).to.have.property('created_epoch');
+            expect(data.created_epoch).to.match(/^[0-9]+$/);
+            expect(data).to.have.property('modified_epoch');
+            expect(data.modified_epoch).to.match(/^[0-9]+$/);
+            expect(data.modified_epoch).to.not.be.below(data.created_epoch);
+            expect(data).to.have.property('deleted_epoch');
+            expect(data.deleted_epoch).to.be.null;
+          });
+        })
+        .end(done);
+      });
     });
   });
-  describe('GET /community/:id', () => {
-    it('should retrieve updated community');
-  });
 });
+
+function expectSuccess(document, next) {
+  // logger.log.debug(document);
+  const validate = validator('schemas/success-out.json');
+  validate(document);
+  const errors = JSON.stringify(validate.errors);
+  expect(errors).to.equal('null');
+  expect(document).to.have.property('links');
+  const links = document.links;
+  expect(document).to.have.property('data');
+  const data = document.data;
+  // logger.log.debug(data);
+  next(links, data);
+}
+
+function expectValidate(document, schema) {
+  const validate = validator(schema);
+  validate(document);
+  const errors = JSON.stringify(validate.errors);
+  expect(errors).to.equal('null');
+}

@@ -37,7 +37,7 @@ module.exports = knex => {
   function createcommunityTable() {
     return knex.schema.createTable(communityTable, table => {
       addCreatedModifiedDeletedTimestamp(table);
-      table.string('name').notNullable();
+      table.string('name').unique();
       table.json('attributes').nullable();
     });
   }

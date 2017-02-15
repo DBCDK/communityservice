@@ -2,7 +2,8 @@
 
 ## Manipulation & retrieval of objects
 
-Creation, modification and retrieval of objects in the database are achieved by using the following service API:
+Creation, modification and retrieval of objects in the database are achieved by using the following service API.
+Parts in parentheses are not implemented yet.
 
 ### Community
 
@@ -11,13 +12,13 @@ Creation, modification and retrieval of objects in the database are achieved by 
 | `/community`                         | X    |     | X   |
 | `/community/`*name*                  |      |     | X   |
 | `/community/`*id*                    |      | X   | X   |
-| `/community/`*id*`/name`             |      | X   | X   |
-| `/community/`*id*`/attributes`       | X    | X   | X   |
-| `/community/`*id*`/attributes/`*key* |      | X   | X   |
+| `/community/`*id*`/name`             |      |     |     |
+| `/community/`*id*`/attributes`       | (X)  | (X) | (X) |
+| `/community/`*id*`/attributes/`*key* |      | (X) | (X) |
 
 - POST on `/community` sets `created_epoch`.
-- POST & PUT on other endpoints sets `modified_epoch` & `modified_by`.
-- PUT on `/community/`*id* can set `deleted_epoch`.
+- POST & PUT on other endpoints sets `modified_epoch`.
+- (PUT on `/community/`*id* can set `deleted_epoch`.)
 
 ### Profile
 

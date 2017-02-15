@@ -3,7 +3,7 @@
 const communityTable = 'communities';
 
 exports.seed = (knex, Promise) => { // eslint-disable-line no-unused-vars
-  return knex(communityTable).del()
+  return knex.raw(`alter sequence ${communityTable}_id_seq restart with 1`)
     .then(() => {
       return knex(communityTable).insert({
         name: 'Biblo'
@@ -12,7 +12,7 @@ exports.seed = (knex, Promise) => { // eslint-disable-line no-unused-vars
     .then(() => {
       return knex(communityTable).insert({
         name: 'LitteraturSiden',
-        attributes: {produciton: false}
+        attributes: {production: false}
       });
     });
 };
