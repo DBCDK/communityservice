@@ -1,0 +1,42 @@
+{
+  "required": true,
+  "type": "object",
+  "properties": {
+    "id": {
+      "required": true,
+      "type": "integer"
+    },
+    "created_epoch": {
+      "required": true,
+      "type": "integer"
+    },
+    "modified_epoch": {
+      "required": false,
+      "type": ["null", "integer"]
+    },
+    "modified_by": {
+      "required": false,
+      "type": ["null", "integer"]
+    },
+    "deleted_epoch": {
+      "required": false,
+      "type": ["null", "integer"]
+    },
+    "deleted_by": {
+      "required": false,
+      "type": ["null", "integer"]
+    },
+    "name": {
+      "required": true,
+      "type": "string"
+    },
+    "attributes": {
+      "required": false,
+      "type": ["null", "object"]
+    },
+    "log": {
+      "required": false,
+      "type": ["null", "array"]
+    }
+  }
+}

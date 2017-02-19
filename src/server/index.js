@@ -4,7 +4,7 @@
  * Configuration
  */
 const config = require('server/config');
-// const logger = require('__/logging')(config.logger);
+const logger = require('__/logging')(config.logger);
 
 /*
  * Web server.
@@ -122,6 +122,9 @@ app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
     if (err.stack) {
       returnedError.stack = err.stack;
     }
+  }
+  if (returnedError.status >= 500 && config.server.logServiceErrors === '1') {
+    logger.log.error(returnedError);
   }
   res.json({errors: returnedError});
 });

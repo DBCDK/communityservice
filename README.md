@@ -37,7 +37,7 @@ To start the server in staging mode:
     $ . /nvm.sh
     $ nvm install
     $ npm install --production
-    $ cp environments/staging.env current.env
+    $ cp environments/production.env current.env
     $ npm run serve
 
 Administrative endpoints:
@@ -49,19 +49,19 @@ Administrative endpoints:
 
 You can control the settings by the following environment variables.
 
-| Environment variable    | Default      | Effect                           |
-| ----------------------- | ------------ | -------------------------------- |
-| PORT                    | 3000         | TCP port for the service |
-| PRETTY_LOG              | 1            | Pretty printed log statements (1), or one-line log statements |
-| LOG_LEVEL               | INFO         | Verbosity of service log: OFF, ERROR, WARN, WARNING, INFO, DEBUG, TRACE |
-| DB_HOST                 | 127.0.0.1    | Database host                  |
-| DB_NAME                 |              | Name of the database |
-| DB_USER                 |              | Database user |
-| DB_USER_PASSWORD        |              | Database password |
-| DB_CONNECTIONS_POOL_MIN | 2            | Minimum connections in DB pool |
-| DB_CONNECTIONS_POOL_MAX | 10           | Maximum connections in DB pool |
-| NODE_ENV                | development  | Controls other service settings |
-
+| Environment variable    | Default     | Effect                           |
+| ----------------------- | ----------- | -------------------------------- |
+| PORT                    | 3000        | TCP port for the service |
+| PRETTY_LOG              | 1           | Pretty printed log statements (1), or one-line log statements |
+| LOG_LEVEL               | INFO        | Verbosity of service log: OFF, ERROR, WARN, WARNING, INFO, DEBUG, TRACE |
+| DB_HOST                 | 127.0.0.1   | Database host                  |
+| DB_NAME                 |             | Name of the database |
+| DB_USER                 |             | Database user |
+| DB_USER_PASSWORD        |             | Database password |
+| DB_CONNECTIONS_POOL_MIN | 2           | Minimum connections in DB pool |
+| DB_CONNECTIONS_POOL_MAX | 10          | Maximum connections in DB pool |
+| NODE_ENV                | development | Controls other service settings |
+| LOG_SERVICE_ERRORS      | 1           | Record all 5xx errors (1), or ignore errors. |
 
 
 ## Project management

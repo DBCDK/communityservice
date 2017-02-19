@@ -35,6 +35,8 @@ Use `npm test` to run all tests that do not require a database..
 
 All files matching the pattern `*_integration.js` are considered integration tests that need a running database, and they will be included automatically when your run `npm run integrationtest --silent`.
 
+To debug the service during test, make sure you set `LOG_SERVICE_ERRORS=1` in your `current.env`.
+
 ## Coverage
 
 Use the `npm run coverage --silent` script to produce a code-coverage report, which will end up in `coverage/lcov-report/index.html`.

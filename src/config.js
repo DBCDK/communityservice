@@ -24,10 +24,12 @@ function Defaults() {
   let port = tcp.normalizePort(process.env.PORT) || 3000;
   let prettyLog = process.env.PRETTY_LOG || 1;
   let logLevel = process.env.LOG_LEVEL || 'INFO';
+  let logServiceErrors = process.env.LOG_SERVICE_ERRORS || 1;
   return {
     environment,
     hostname: hostname(),
     port,
+    logServiceErrors,
     prettyLog,
     logLevel
   };
@@ -41,6 +43,7 @@ const defaults = new Defaults();
 
 exports.server = {
   environment: defaults.environment,
+  logServiceErrors: defaults.logServiceErrors,
   port: defaults.port,
   hostname: 'elvis.com',
   testTimeoutMs: 20*1000

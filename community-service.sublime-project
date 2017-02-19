@@ -28,6 +28,7 @@
       ]
     , "file_exclude_patterns":
       [ "npm-debug.log"
+      , "src/nvm.sh"
       , "src/server/config.js"
       ]
     }

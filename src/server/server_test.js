@@ -51,4 +51,12 @@ describe('service meta API', () => {
       .end(done);
     });
   });
+  describe('server crashes', () => {
+    it('should be catched', done => {
+      request(app)
+      .get('/crash')
+      .expect(500)
+      .end(done);
+    });
+  });
 });
