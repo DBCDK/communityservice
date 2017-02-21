@@ -1,0 +1,10 @@
+{
+  "required": true,
+  "type": "object",
+  "properties": {
+    "deleted_by": {
+      "required": true,
+      "type": "number"
+    }
+  }
+}

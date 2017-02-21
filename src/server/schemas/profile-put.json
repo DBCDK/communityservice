@@ -1,0 +1,18 @@
+{
+  "required": true,
+  "type": "object",
+  "properties": {
+    "modified_by": {
+      "required": true,
+      "type": "number"
+    },
+    "name": {
+      "required": false,
+      "type": "string"
+    },
+    "attributes": {
+      "required": false,
+      "type": "object"
+    }
+  }
+}

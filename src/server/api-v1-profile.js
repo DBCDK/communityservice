@@ -7,7 +7,7 @@
 const express = require('express');
 const config = require('server/config');
 const knex = require('knex')(config.db);
-const validateInput = require('server/validators').validateInput;
+const validators = require('server/validators');
 const injectors = require('server/injectors');
 const profileTable = 'profiles';
 const logger = require('__/logging')(config.logger);
@@ -28,9 +28,8 @@ router.route('/')
     });
   })
   .post((req, res, next) => {
-    // logger.log.debug(req.params);
     const community = req.params.community;
-    validateInput(req, 'schemas/profile-in.json')
+    validators.validateInput(req, 'schemas/profile-in.json')
     .then(() => {
       return injectors.setCommunityId(req.body, community);
     })
@@ -45,6 +44,42 @@ router.route('/')
         data: profile
       });
     })
+    .catch(error => {
+      next(error);
+    });
+  })
+  ;
+
+router.route('/:id')
+  .get((req, res, next) => {
+    next();
+  })
+  .put((req, res, next) => {
+    const community = req.params.community;
+    const id = req.params.id;
+    logger.log.debug(`Updating profile ${id} in community ${community}`);
+    /*if (validators.isSchema(req, 'schemas/profile-del.json')) {
+      next(new Error('not implemented'));
+      return;
+    }*/
+    validators.validateInput(req, 'schemas/profile-put.json')
+    .then(() => {
+      next(new Error('not implemented'));
+      return;
+    })
+    /*.then(() => {
+      const update = injectors.setModifiedEpoch(req.body);
+      logger.log.debug(`Updated profile is ${update}`);
+      return knex(profileTable).where('id', id).update(update, '*');
+    })*/
+    /*.then(profiles => {
+      const profile = profiles[0];
+      const location = `${req.baseUrl}/${profile.id}`;
+      res.status(200).location(location).json({
+        links: {self: location},
+        data: profile
+      });
+    })*/
     .catch(error => {
       next(error);
     });
