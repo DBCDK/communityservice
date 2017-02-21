@@ -16,7 +16,7 @@ function validateInput(req, schema) {
       const error = JSON.stringify(validate.errors);
       reject({
         status: 400,
-        title: `Input data does not adhere to schema ${schema}`,
+        title: `Input data does not adhere to ${schema}`,
         meta: {resource: req.baseUrl, body: req.body, problems: error}
       });
     }

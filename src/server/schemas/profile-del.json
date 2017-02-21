@@ -6,5 +6,6 @@
       "required": true,
       "type": "number"
     }
-  }
+  },
+  "additionalProperties": false
 }

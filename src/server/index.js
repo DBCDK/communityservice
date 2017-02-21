@@ -126,7 +126,7 @@ app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
   if (returnedError.status >= 500 && config.server.logServiceErrors === '1') {
     logger.log.error(returnedError);
   }
-  res.json({errors: returnedError});
+  res.json({errors: [returnedError]});
 });
 
 module.exports = app;

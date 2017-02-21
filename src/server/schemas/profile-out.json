@@ -26,6 +26,10 @@
       "required": false,
       "type": ["null", "integer"]
     },
+    "community_id": {
+      "required": true,
+      "type": "integer"
+    },
     "name": {
       "required": true,
       "type": "string"
@@ -38,5 +42,6 @@
       "required": false,
       "type": ["null", "array"]
     }
-  }
+  },
+  "additionalProperties": false
 }

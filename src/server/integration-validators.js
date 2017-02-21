@@ -25,6 +25,19 @@ function expectSuccess(document, next) {
 }
 exports.expectSuccess = expectSuccess;
 
+function expectFailure(document, next) {
+  // logger.log.debug(document);
+  const validate = validator('schemas/failure-out.json');
+  validate(document);
+  const problems = JSON.stringify(validate.errors);
+  expect(problems).to.equal('null');
+  expect(document).to.have.property('errors');
+  const errors = document.errors;
+  expect(errors).to.be.an('array');
+  next(errors);
+}
+exports.expectFailure = expectFailure;
+
 function expectValidate(document, schema) {
   const validate = validator(schema);
   validate(document);
