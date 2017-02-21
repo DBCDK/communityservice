@@ -57,29 +57,31 @@ router.route('/:id')
   .put((req, res, next) => {
     const community = req.params.community;
     const id = req.params.id;
-    logger.log.debug(`Updating profile ${id} in community ${community}`);
-    /*if (validators.isSchema(req, 'schemas/profile-del.json')) {
-      next(new Error('not implemented'));
-      return;
-    }*/
+    // logger.log.debug(`Updating profile ${id} in community ${community}`);
     validators.validateInput(req, 'schemas/profile-put.json')
     .then(() => {
-      next(new Error('not implemented'));
-      return;
+      return knex(profileTable).where('id', id).select();
     })
-    /*.then(() => {
+    .then(matches => {
+      if (!matches || matches.length !== 1) {
+        throw {
+          status: 404,
+          title: `profile ${id} does not exist`,
+          meta: {resource: req.path}
+        };
+      }
       const update = injectors.setModifiedEpoch(req.body);
       logger.log.debug(`Updated profile is ${update}`);
       return knex(profileTable).where('id', id).update(update, '*');
-    })*/
-    /*.then(profiles => {
+    })
+    .then(profiles => {
       const profile = profiles[0];
       const location = `${req.baseUrl}/${profile.id}`;
       res.status(200).location(location).json({
         links: {self: location},
         data: profile
       });
-    })*/
+    })
     .catch(error => {
       next(error);
     });
