@@ -4,7 +4,7 @@
  * Configuration
  */
 const config = require('server/config');
-// const logger = require('__/logging')(config.logger);
+const logger = require('__/logging')(config.logger);
 
 /*
  * Web server.
@@ -76,7 +76,6 @@ app.use((req, res, next) => {
 
 app.use((err, req, res, next) => {
   if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
-    // logger.log.info({problem: 'JSON syntax error', body: err.body});
     next({
       status: err.status,
       title: 'Malformed body',
@@ -102,7 +101,6 @@ app.use((err, req, res, next) => {
  * from err are included.
  */
 app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
-  // logger.log.debug(err);
   err.status = err.status || 500;
   let returnedError = {
     status: err.status,
@@ -123,7 +121,10 @@ app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
       returnedError.stack = err.stack;
     }
   }
-  res.json({errors: returnedError});
+  if (returnedError.status >= 500 && config.server.logServiceErrors === '1') {
+    logger.log.error(returnedError);
+  }
+  res.json({errors: [returnedError]});
 });
 
 module.exports = app;

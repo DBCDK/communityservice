@@ -2,6 +2,7 @@
 
 const expect = require('chai').expect;
 const request = require('supertest');
+const expectFailure = require('./integration-validators').expectFailure;
 const app = require('server');
 
 describe('service meta API', () => {
@@ -41,13 +42,24 @@ describe('service meta API', () => {
       .set('Accept', 'application/json')
       .expect(404)
       .expect(res => {
-        expect(res.body).to.have.property('errors');
-        expect(res.body.errors).to.have.property('title');
-        expect(res.body.errors.title).to.equal('Unknown endpoint');
-        expect(res.body.errors).to.have.property('meta');
-        expect(res.body.errors.meta).to.have.property('resource');
-        expect(res.body.errors.meta.resource).to.equal(endpoint);
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          const error = errors[0];
+          expect(error).to.have.property('title');
+          expect(error.title).to.equal('Unknown endpoint');
+          expect(error).to.have.property('meta');
+          expect(error.meta).to.have.property('resource');
+          expect(error.meta.resource).to.equal(endpoint);
+        });
       })
+      .end(done);
+    });
+  });
+  describe('server crashes', () => {
+    it('should be catched', done => {
+      request(app)
+      .get('/crash')
+      .expect(500)
       .end(done);
     });
   });

@@ -31,37 +31,37 @@ To run the integration tests against the server (requires postgresql):
     $ cp environments/travis.env current.env
     $ npm run integrationtest --silent
 
-To start the server in staging mode:
+To start the server in staging or production mode:
 
     $ cd src
     $ . /nvm.sh
     $ nvm install
     $ npm install --production
-    $ cp environments/staging.env current.env
+    $ cp environments/production.env current.env
     $ npm run serve
 
-Administrative endpoints:
+You can edit `current.env` after the above steps to further control the settings.  The web service obeys the following environment variables.
+
+| Environment variable    | Default     | Effect                           |
+| ----------------------- | ----------- | -------------------------------- |
+| DB_CONNECTIONS_POOL_MAX | 10          | Maximum connections in DB pool   |
+| DB_CONNECTIONS_POOL_MIN | 2           | Minimum connections in DB pool   |
+| DB_HOST                 | 127.0.0.1   | Database host                    |
+| DB_NAME                 |             | Name of the database             |
+| DB_USER                 |             | Database user                    |
+| DB_USER_PASSWORD        |             | Database password                |
+| LOG_LEVEL               | INFO        | Verbosity of service log (OFF, ERROR, WARN, WARNING, INFO, DEBUG, TRACE) |
+| LOG_SERVICE_ERRORS      | 1           | Record all 5xx errors (1), or ignore errors (0) |
+| NODE_ENV                | development | Controls other service settings  |
+| PORT                    | 3000        | TCP port for the service |
+| PRETTY_LOG              | 1           | Pretty printed log statements (1), or one-line log statements (0) |
+
+The web service has the following administrative endpoints:
 
 | Endpoint  | Function |
 | --------- | -------- |
-| `/status` | Returns the service status as JSON   |
-| `/pid`    | Returns the service's raw process id |
-
-You can control the settings by the following environment variables.
-
-| Environment variable    | Default      | Effect                           |
-| ----------------------- | ------------ | -------------------------------- |
-| PORT                    | 3000         | TCP port for the service |
-| PRETTY_LOG              | 1            | Pretty printed log statements (1), or one-line log statements |
-| LOG_LEVEL               | INFO         | Verbosity of service log: OFF, ERROR, WARN, WARNING, INFO, DEBUG, TRACE |
-| DB_HOST                 | 127.0.0.1    | Database host                  |
-| DB_NAME                 |              | Name of the database |
-| DB_USER                 |              | Database user |
-| DB_USER_PASSWORD        |              | Database password |
-| DB_CONNECTIONS_POOL_MIN | 2            | Minimum connections in DB pool |
-| DB_CONNECTIONS_POOL_MAX | 10           | Maximum connections in DB pool |
-| NODE_ENV                | development  | Controls other service settings |
-
+| `/status` | Returns the service status as JSON |
+| `/pid`    | Returns the service's process id   |
 
 
 ## Project management

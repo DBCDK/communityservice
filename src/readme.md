@@ -1,6 +1,6 @@
 # Development
 
-All development and testing takes place here in the `src` directory.  If you want to take advantage of the virtual-environment setup to separate your local machine from the project, follow the [VM instructions](../vm.md).  Otherwise you have to run `npm install` to install the dependencies.
+All development and testing takes place here in the `src` directory.  If you want to take advantage of the virtual-environment setup to separate your local machine from the project, follow the [VM instructions](../vm.md).  Otherwise you have to run `npm install` to install the dependencies and [setup Node environment](setup-node-env.sh).
 
 ## Setup
 
@@ -16,7 +16,7 @@ Create a test database:
     # create database elvis;
     # \q
 
-Then copy `environments/developer.env` to `current.env` and modify to match your local setup.
+Then copy `environments/developer.env` to `current.env` and modify if needed.
 The various settings are [described in the main README](../README.md).
 
 ## Service
@@ -25,27 +25,31 @@ Use `npm run dev` to start a local server according to the settings in `current.
 
 ## Lint
 
-Use `npm run lint --silent` to run all code through eslint.
+Use `npm run lint --silent` to run all code through ESLint.
 
 ## Tests
 
-All files matching the pattern `*_test.js` are considered unit tests, and they will be included automatically when your run `npm run unittest --silent`.  That means that you can (and should) put your unittest next to the files your are testing.
+All files matching the pattern `*_test.js` are considered unit tests, and they will be included automatically when you `npm run unittest --silent`.  This means that you can (and should) put your unittest next to the files your are testing.
 
-Use `npm test` to run all tests that do not require a database..
+Use `npm test --silent` to run all tests that do not require a database..
 
-All files matching the pattern `*_integration.js` are considered integration tests that need a running database, and they will be included automatically when your run `npm run integrationtest --silent`.
+All files matching the pattern `*_integration.js` are considered integration tests that need a running database, and they will be included automatically when you `npm run integrationtest --silent`.
+
+To debug the service during test, make sure you set `LOG_SERVICE_ERRORS=1` in your `current.env`.
 
 ## Coverage
 
-Use the `npm run coverage --silent` script to produce a code-coverage report, which will end up in `coverage/lcov-report/index.html`.
+Use `npm run coverage --silent` to produce a code-coverage report, which will end up in `coverage/lcov-report/index.html`.
 
-On the build server, the [config file](../.travis.yml) uses the `after_script` to instruct Travis to send coverage data to Coveralls, which has been configured through its UI to look in this `src` directory for the code.
+On the build server, the [config file](../.travis.yml) uses the `after_script` to instruct Travis to send coverage data to Coveralls, which has been configured (through its UI) to look in this `src` directory for the code.
 
 ##  Directory structure
 
-The web service is located in `server` and all other local (but possibly reusable) utilities and libraries are located in `lib`.  The [setup](setup-node-env.sh), which is run as a result of `npm install`, ensures that there are symbolic links `node_modules/server` and `node_modules/__` pointing to each location respectively, so that any part of the server or the local libraries can include any other part by using
+The web service is located in `server` and all other local (but possibly reusable) utilities and libraries are located in `lib`.  The script [setup-node-env.sh`](setup-node-env.sh), which is run as a result of `npm install`, ensures that there are symbolic links `node_modules/server` and `node_modules/__` pointing to `server` and `lib` respectively, so that any part of the server or the local libraries can include any other part by using
 
 ```javascript
 const mySpiff = require('__/mySpiffyLib');
 const config = require('server/config.js');
 ```
+
+Each directory can have a `readme.md` file that further explains the contents of that particular directory.
