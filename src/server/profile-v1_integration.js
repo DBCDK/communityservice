@@ -9,9 +9,8 @@ const knex = require('knex')(dbconfig);
 const db = require('server/current-db')(knex);
 const seedBigDb = require('server/seeds/integration-test-big').seed;
 const expectSuccess = require('./integration-validators').expectSuccess;
+const expectFailure = require('./integration-validators').expectFailure;
 const expectValidate = require('./integration-validators').expectValidate;
-
-const logger = require('__/logging')(config.logger);
 
 /* eslint-disable no-unused-expressions */
 describe('API v1 profile endpoints', () => {
@@ -79,18 +78,39 @@ describe('API v1 profile endpoints', () => {
       service.post('/v1/community/1/profile')
       .send('')
       .expect(400)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          const error = JSON.stringify(errors[0]);
+          expect(error).to.match(/field.*name.*is required/);
+        });
+      })
       .end(done);
     });
     it('should reject malformed data', done => {
       service.post('/v1/community/1/profile')
       .send('My profile')
       .expect(400)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          const error = JSON.stringify(errors[0]);
+          expect(error).to.match(/JSON syntax error/);
+        });
+      })
       .end(done);
     });
     it('should reject non-conformant JSON', done => {
       service.post('/v1/community/1/profile')
-      .send('{ost: "My profile"}')
+      .send({name: 'My profile', piggyback: 'I just wanna be in'})
       .expect(400)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          const error = JSON.stringify(errors[0]);
+          expect(error).to.match(/has additional properties/);
+        });
+      })
       .end(done);
     });
     it('should add a new profile with just a name', done => {
@@ -122,5 +142,37 @@ describe('API v1 profile endpoints', () => {
       })
       .end(done);
     });
+  });
+  describe('GET /community/:id/profile/:id', () => {
+    it('should return Not Found on unknown profile', done => {
+      service.get('/v1/community/1/profile/100')
+      .expect(404)
+      .end(done);
+    });
+    it('should return ? when profile does not belong to community');
+  });
+  describe('PUT /community/:id/profile/:id', () => {
+    it('should return ? when profile does not belong to community');
+    it('should return Not Found on any non-existing profile', done => {
+      service.put('/v1/community/1/profile/100')
+      .send({name: 'Name', modified_by: 1})
+      .expect(404)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          const error = JSON.stringify(errors[0]);
+          expect(error).to.match(/does not exist/);
+        });
+      })
+      .end(done);
+    });
+    it('should mark as deleted when modified_by in only field');
+  });
+  describe('PUT /community/:id/profile/:id', () => {
+    const name = 'Snurre Snup';
+    const attributes = {test: true, interests: ['carrots', 'rabbit holes']};
+    const id = 3;
+    const url = `/v1/community/1/profile/${id}`;
+    it('should update existing profile and retrieve the update');
   });
 });

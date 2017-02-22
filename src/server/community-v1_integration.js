@@ -9,9 +9,8 @@ const knex = require('knex')(dbconfig);
 const db = require('server/current-db')(knex);
 const seedBigDb = require('server/seeds/integration-test-big').seed;
 const expectSuccess = require('./integration-validators').expectSuccess;
+const expectFailure = require('./integration-validators').expectFailure;
 const expectValidate = require('./integration-validators').expectValidate;
-
-const logger = require('__/logging')(config.logger);
 
 /* eslint-disable no-unused-expressions */
 describe('API v1 community endpoints', () => {
@@ -113,18 +112,39 @@ describe('API v1 community endpoints', () => {
       service.post('/v1/community')
       .send('')
       .expect(400)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          const error = JSON.stringify(errors[0]);
+          expect(error).to.match(/field.*name.*is required/);
+        });
+      })
       .end(done);
     });
     it('should reject malformed data', done => {
       service.post('/v1/community')
       .send('My community')
       .expect(400)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          const error = JSON.stringify(errors[0]);
+          expect(error).to.match(/JSON syntax error/);
+        });
+      })
       .end(done);
     });
-    it('should reject non-conformant JSON', done => {
+    it('should reject JSON with excess fields', done => {
       service.post('/v1/community')
-      .send('{"ost": "My community"}')
+      .send({name: 'My community', ost: 'Extra field'})
       .expect(400)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          const error = JSON.stringify(errors[0]);
+          expect(error).to.match(/has additional properties/);
+        });
+      })
       .end(done);
     });
     it('should add a new community with just a name', done => {
@@ -190,7 +210,6 @@ describe('API v1 community endpoints', () => {
         service.get(url)
         .expect(200)
         .expect(res => {
-          // logger.log.debug(res);
           expectSuccess(res.body, (links, data) => {
             expect(links).to.have.property('self');
             expect(links.self).to.equal(url);

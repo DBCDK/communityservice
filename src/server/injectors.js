@@ -20,3 +20,11 @@ function setModifiedEpoch(community) {
   });
 }
 exports.setModifiedEpoch = setModifiedEpoch;
+
+function setModifiedByAndEpoch(object, who) {
+  return Object.assign(object, {
+    modified_epoch: knex.raw('extract(\'epoch\' from now())'),
+    modified_by: who
+  });
+}
+exports.setModifiedByAndEpoch = setModifiedByAndEpoch;

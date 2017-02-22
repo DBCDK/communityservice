@@ -2,33 +2,37 @@
   "required": true,
   "type": "object",
   "properties": {
-    "error": {
+    "errors": {
       "required": true,
-      "type": "object",
-      "properties": {
-        "status": {
-          "required": true,
-          "type": "integer"
-        },
-        "code": {
-          "required": true,
-          "type": "string"
-        },
-        "title": {
-          "required": true,
-          "type": "string"
-        },
-        "details": {
-          "required": false,
-          "type": "object"
-        },
-        "meta": {
-          "required": false,
-          "type": "object"
-        },
-        "stack": {
-          "required": false,
-          "type": "object"
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "required": true,
+            "type": "integer"
+          },
+          "code": {
+            "required": true,
+            "type": "string"
+          },
+          "title": {
+            "required": true,
+            "type": "string"
+          },
+          "details": {
+            "required": false,
+            "type": "object"
+          },
+          "meta": {
+            "required": false,
+            "type": "object"
+          },
+          "stack": {
+            "required": false,
+            "type": "object"
+          }
         }
       }
     },
@@ -42,5 +46,6 @@
         }
       }
     }
-  }
+  },
+  "additionalProperties": false
 }

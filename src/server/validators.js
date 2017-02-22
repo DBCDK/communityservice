@@ -16,7 +16,7 @@ function validateInput(req, schema) {
       const error = JSON.stringify(validate.errors);
       reject({
         status: 400,
-        title: 'Community data does not adhere to schema',
+        title: `Input data does not adhere to ${schema}`,
         meta: {resource: req.baseUrl, body: req.body, problems: error}
       });
     }
@@ -25,5 +25,10 @@ function validateInput(req, schema) {
     }
   });
 }
-
 exports.validateInput = validateInput;
+
+function isSchema(req, schema) {
+  const validate = validator(schema);
+  return validate(req.body);
+}
+exports.isSchema = isSchema;

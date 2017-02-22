@@ -7,10 +7,9 @@
 const express = require('express');
 const config = require('server/config');
 const knex = require('knex')(config.db);
-const validateInput = require('server/validators').validateInput;
+const validators = require('server/validators');
 const injectors = require('server/injectors');
 const profileTable = 'profiles';
-const logger = require('__/logging')(config.logger);
 
 // Make sure the {community} parameter is passed through the preceeding router.
 const router = express.Router({mergeParams: true});
@@ -28,9 +27,8 @@ router.route('/')
     });
   })
   .post((req, res, next) => {
-    // logger.log.debug(req.params);
     const community = req.params.community;
-    validateInput(req, 'schemas/profile-in.json')
+    validators.validateInput(req, 'schemas/profile-post.json')
     .then(() => {
       return injectors.setCommunityId(req.body, community);
     })
@@ -41,6 +39,42 @@ router.route('/')
       const profile = profiles[0];
       const location = `${req.baseUrl}/${profile.id}`;
       res.status(201).location(location).json({
+        links: {self: location},
+        data: profile
+      });
+    })
+    .catch(error => {
+      next(error);
+    });
+  })
+  ;
+
+router.route('/:id')
+  .get((req, res, next) => {
+    next();
+  })
+  .put((req, res, next) => {
+    const community = req.params.community;
+    const id = req.params.id;
+    validators.validateInput(req, 'schemas/profile-put.json')
+    .then(() => {
+      return knex(profileTable).where('id', id).select();
+    })
+    .then(matches => {
+      if (!matches || matches.length !== 1) {
+        throw {
+          status: 404,
+          title: `profile ${id} does not exist`,
+          meta: {resource: req.path}
+        };
+      }
+      const update = injectors.setModifiedEpoch(req.body);
+      return knex(profileTable).where('id', id).update(update, '*');
+    })
+    .then(profiles => {
+      const profile = profiles[0];
+      const location = `${req.baseUrl}/${profile.id}`;
+      res.status(200).location(location).json({
         links: {self: location},
         data: profile
       });
