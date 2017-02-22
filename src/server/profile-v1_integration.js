@@ -149,10 +149,10 @@ describe('API v1 profile endpoints', () => {
       .expect(404)
       .end(done);
     });
-    it('should return ? when profile does not belong to community');
+    it('should return Not Found when profile does not belong to community');
   });
   describe('PUT /community/:id/profile/:id', () => {
-    it('should return ? when profile does not belong to community');
+    it('should return Not Found when profile does not belong to community');
     it('should return Not Found on any non-existing profile', done => {
       service.put('/v1/community/1/profile/100')
       .send({name: 'Name', modified_by: 1})

@@ -26,9 +26,3 @@ function validateInput(req, schema) {
   });
 }
 exports.validateInput = validateInput;
-
-function isSchema(req, schema) {
-  const validate = validator(schema);
-  return validate(req.body);
-}
-exports.isSchema = isSchema;
