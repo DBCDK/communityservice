@@ -113,6 +113,7 @@ function locateCommunityId(name) {
     if (!isNaN(number)) {
       return resolve(number);
     }
+    // TODO: eliminate returns.
     return knex(communityTable).where({name}).select('id')
     .then(ids => {
       if (ids.length !== 1) {

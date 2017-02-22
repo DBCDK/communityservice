@@ -4,7 +4,10 @@
 
 'use strict';
 
+const config = require('server/config');
+const knex = require('knex')(config.db);
 const validator = require('is-my-json-valid/require');
+const communityTable = 'communities';
 
 function validateInput(req, schema) {
   return new Promise((resolve, reject) => {
@@ -25,3 +28,23 @@ function validateInput(req, schema) {
   });
 }
 exports.validateInput = validateInput;
+
+function verifyCommunityExists(id, url) {
+  return new Promise((resolve, reject) => {
+    knex(communityTable).where('id', id).select()
+    .then(communities => {
+      if (!communities || communities.length !== 1) {
+        reject({
+          status: 404,
+          title: 'Community does not exist',
+          meta: {resource: url}
+        });
+      }
+      resolve();
+    })
+    .catch(error => {
+      reject(error);
+    });
+  });
+}
+exports.verifyCommunityExists = verifyCommunityExists;

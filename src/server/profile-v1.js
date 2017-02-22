@@ -9,14 +9,21 @@ const config = require('server/config');
 const knex = require('knex')(config.db);
 const validators = require('server/validators');
 const injectors = require('server/injectors');
+const _ = require('lodash');
 const profileTable = 'profiles';
+
+const logger = require('__/logging')(config.logger);
 
 // Make sure the {community} parameter is passed through the preceeding router.
 const router = express.Router({mergeParams: true});
 
 router.route('/')
-  .get((req, res) => {
-    knex(profileTable).select()
+  .get((req, res, next) => {
+    const community = req.params.community;
+    validators.verifyCommunityExists(community, req.baseUrl)
+    .then(() => {
+      return knex(profileTable).where('community_id', community).select();
+    })
     .then(profiles => {
       res
       .status(200)
@@ -24,11 +31,17 @@ router.route('/')
         links: {self: req.baseUrl},
         data: profiles
       });
+    })
+    .catch(error => {
+      next(error);
     });
   })
   .post((req, res, next) => {
     const community = req.params.community;
     validators.validateInput(req, 'schemas/profile-post.json')
+    .then(() => {
+      return validators.verifyCommunityExists(community, req.baseUrl);
+    })
     .then(() => {
       return injectors.setCommunityId(req.body, community);
     })
@@ -51,12 +64,41 @@ router.route('/')
 
 router.route('/:id')
   .get((req, res, next) => {
-    next();
+    const community = req.params.community;
+    const id = req.params.id;
+    validators.verifyCommunityExists(community, `${req.baseUrl}/${id}`)
+    .then(() => {
+      return knex(profileTable).where('id', id).select();
+    })
+    .then(profiles => {
+      if (!profiles || profiles.length !== 1) {
+        throw {
+          status: 404,
+          title: 'Profile does not exist',
+          detail: `Profile ${id} unknown`,
+          meta: {resource: `${req.baseUrl}/${id}`}
+        };
+      }
+      const profile = profiles[0];
+      const location = `${req.baseUrl}/${profile.id}`;
+      res
+      .status(200)
+      .json({
+        links: {self: location},
+        data: profile
+      });
+    })
+    .catch(error => {
+      next(error);
+    });
   })
   .put((req, res, next) => {
     const community = req.params.community;
     const id = req.params.id;
     validators.validateInput(req, 'schemas/profile-put.json')
+    .then(() => {
+      return validators.verifyCommunityExists(community, `${req.baseUrl}/${id}`);
+    })
     .then(() => {
       return knex(profileTable).where('id', id).select();
     })
@@ -64,11 +106,13 @@ router.route('/:id')
       if (!matches || matches.length !== 1) {
         throw {
           status: 404,
-          title: `profile ${id} does not exist`,
-          meta: {resource: req.path}
+          title: 'Profile does not exist',
+          detail: `Profile ${id} unknown`,
+          meta: {resource: `${req.baseUrl}/${id}`}
         };
       }
-      const update = injectors.setModifiedEpoch(req.body);
+      const profile = matches[0];
+      const update = updateOrDelete(req.body, profile);
       return knex(profileTable).where('id', id).update(update, '*');
     })
     .then(profiles => {
@@ -85,4 +129,28 @@ router.route('/:id')
   })
   ;
 
+function updateOrDelete(after, before) {
+  const afters = _.toPairs(after);
+  if (afters.length === 1) {
+    // Delete intead of update modified_by.
+    return injectors.setDeletedBy(before, after.modified_by);
+  }
+  let logEntry = {
+    modified_by: after.modified_by
+  };
+  const keys = ['name', 'attributes'];
+  const oldKeyValues = _.pick(before, keys);
+  _.forEach(oldKeyValues, (value, key) => {
+    if (after[key] !== value) {
+      logEntry[key] = value;
+    }
+  });
+
+  logger.log.debug(logEntry);
+  const update = injectors.setModifiedEpoch(after);
+  return update;
+}
+
 module.exports = router;
+
+// TODO: check modified_by is a existing profile in the right community.

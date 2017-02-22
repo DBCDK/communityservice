@@ -20,3 +20,18 @@ function setModifiedEpoch(community) {
   });
 }
 exports.setModifiedEpoch = setModifiedEpoch;
+
+function setDeletedEpoch(object) {
+  return Object.assign(object, {
+    deleted_epoch: knex.raw('extract(\'epoch\' from now())')
+  });
+}
+exports.setDeletedEpoch = setDeletedEpoch;
+
+function setDeletedBy(object, who) {
+  return Object.assign(setDeletedEpoch(object), {
+    deleted_epoch: knex.raw('extract(\'epoch\' from now())'),
+    deleted_by: who
+  });
+}
+exports.setDeletedBy = setDeletedBy;

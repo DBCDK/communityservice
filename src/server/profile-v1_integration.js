@@ -50,13 +50,14 @@ describe('API v1 profile endpoints', () => {
             expect(data.attributes).to.have.property('description');
             expect(data.attributes).to.have.property('email');
             expect(data.attributes).to.have.property('libraryId');
-            expect(data).to.have.property('log');
             expect(data).to.have.property('created_epoch');
             expect(data.created_epoch).to.match(/^[0-9]+$/);
             expect(data).to.have.property('modified_epoch');
             expect(data.modified_epoch).to.be.null;
             expect(data).to.have.property('deleted_epoch');
             expect(data.deleted_epoch).to.be.null;
+            expect(data).to.have.property('log');
+            expect(data.log).to.be.null;
           });
           expect(list[0].name).to.equal('Pink ');
           expect(list[0].attributes.description).to.deep.equal(
@@ -72,8 +73,39 @@ describe('API v1 profile endpoints', () => {
       })
       .end(done);
     });
+    it('should return Not Found for non-existent community', done => {
+      service.get('/v1/community/99/profile')
+      .expect(404)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          const error = errors[0];
+          expect(error).to.have.property('title');
+          expect(error.title).to.match(/Community does not exist/);
+          expect(error).to.have.property('meta');
+          expect(error.meta).to.have.property('resource');
+        });
+      })
+      .end(done);
+    });
   });
   describe('POST /community/:id/profile', () => {
+    it('should return Not Found for non-existent community', done => {
+      service.post('/v1/community/99/profile')
+      .send({name: 'Låtte Østergærde'})
+      .expect(404)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          const error = errors[0];
+          expect(error).to.have.property('title');
+          expect(error.title).to.match(/Community does not exist/);
+          expect(error).to.have.property('meta');
+          expect(error.meta).to.have.property('resource');
+        });
+      })
+      .end(done);
+    });
     it('should reject missing data', done => {
       service.post('/v1/community/1/profile')
       .send('')
@@ -138,6 +170,8 @@ describe('API v1 profile endpoints', () => {
           expect(data.modified_epoch).to.be.null;
           expect(data).to.have.property('deleted_epoch');
           expect(data.deleted_epoch).to.be.null;
+          expect(data).to.have.property('log');
+          expect(data.log).to.be.null;
         });
       })
       .end(done);
@@ -149,10 +183,39 @@ describe('API v1 profile endpoints', () => {
       .expect(404)
       .end(done);
     });
-    it('should return Not Found when profile does not belong to community');
+    it('should return Not Found when profile does not belong to community', done => {
+      service.get('/v1/community/99/profile/1')
+      .expect(404)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          const error = errors[0];
+          expect(error).to.have.property('title');
+          expect(error.title).to.match(/Community does not exist/);
+          expect(error).to.have.property('meta');
+          expect(error.meta).to.have.property('resource');
+        });
+      })
+      .end(done);
+    });
   });
   describe('PUT /community/:id/profile/:id', () => {
-    it('should return Not Found when profile does not belong to community');
+    it('should return Not Found when profile does not belong to community', done => {
+      service.put('/v1/community/99/profile/1')
+      .send({name: 'Name', modified_by: 1})
+      .expect(404)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          const error = errors[0];
+          expect(error).to.have.property('title');
+          expect(error.title).to.match(/Community does not exist/);
+          expect(error).to.have.property('meta');
+          expect(error.meta).to.have.property('resource');
+        });
+      })
+      .end(done);
+    });
     it('should return Not Found on any non-existing profile', done => {
       service.put('/v1/community/1/profile/100')
       .send({name: 'Name', modified_by: 1})
@@ -166,13 +229,99 @@ describe('API v1 profile endpoints', () => {
       })
       .end(done);
     });
-    it('should mark as deleted when modified_by in only field');
   });
   describe('PUT /community/:id/profile/:id', () => {
     const name = 'Snurre Snup';
     const attributes = {test: true, interests: ['carrots', 'rabbit holes']};
     const id = 3;
+    const admin_id = 1;
     const url = `/v1/community/1/profile/${id}`;
-    it('should update existing profile and retrieve the update');
+    it('should update existing profile and retrieve the update', done => {
+      service.put(url)
+      .send({name, attributes, modified_by: admin_id})
+      .expect(200)
+      .expect(res => {
+        expectSuccess(res.body, (links, data) => {
+          expect(links).to.have.property('self');
+          expect(links.self).to.equal(url);
+          expectValidate(data, 'schemas/profile-out.json');
+          expect(data).to.have.property('id');
+          expect(data.id).to.equal(id);
+          expect(data).to.have.property('name');
+          expect(data.name).to.equal(name);
+          expect(data).to.have.property('attributes');
+          expect(data.attributes).to.deep.equal(attributes);
+          expect(data).to.have.property('created_epoch');
+          expect(data.created_epoch).to.match(/^[0-9]+$/);
+          expect(data).to.have.property('modified_epoch');
+          expect(data.modified_epoch).to.match(/^[0-9]+$/);
+          expect(data.modified_epoch).to.not.be.below(data.created_epoch);
+          expect(data).to.have.property('modified_by');
+          expect(data.modified_by).to.be.equal(admin_id);
+          expect(data).to.have.property('deleted_epoch');
+          expect(data.deleted_epoch).to.be.null;
+          expect(data).to.have.property('log');
+          expect(data.log).to.be.null;
+        });
+      })
+      .then(() => {
+        service.get(url)
+        .expect(200)
+        .expect(res => {
+          expectSuccess(res.body, (links, data) => {
+            expect(links).to.have.property('self');
+            expect(links.self).to.equal(url);
+            expectValidate(data, 'schemas/profile-out.json');
+            expect(data).to.have.property('id');
+            expect(data.id).to.equal(id);
+            expect(data).to.have.property('name');
+            expect(data.name).to.equal(name);
+            expect(data).to.have.property('attributes');
+            expect(data.attributes).to.deep.equal(attributes);
+            expect(data).to.have.property('created_epoch');
+            expect(data.created_epoch).to.match(/^[0-9]+$/);
+            expect(data).to.have.property('modified_epoch');
+            expect(data.modified_epoch).to.match(/^[0-9]+$/);
+            expect(data.modified_epoch).to.not.be.below(data.created_epoch);
+            expect(data).to.have.property('modified_by');
+            expect(data.modified_by).to.be.equal(admin_id);
+            expect(data).to.have.property('deleted_epoch');
+            expect(data.deleted_epoch).to.be.null;
+            expect(data).to.have.property('log');
+            expect(data.log).to.be.null;
+          });
+        })
+        .end(done);
+      });
+    });
+    it('should mark as deleted when modified_by is only field', done => {
+      service.put(url)
+      .send({modified_by: id})
+      .expect(200)
+      .expect(res => {
+        expectSuccess(res.body, (links, data) => {
+          expect(links).to.have.property('self');
+          expect(links.self).to.equal(url);
+          expectValidate(data, 'schemas/profile-out.json');
+          expect(data).to.have.property('id');
+          expect(data.id).to.equal(id);
+          expect(data).to.have.property('name');
+          expect(data.name).to.equal('BiblioteKaren');
+          expect(data).to.have.property('attributes');
+          expect(data).to.have.property('created_epoch');
+          expect(data.created_epoch).to.match(/^[0-9]+$/);
+          expect(data).to.have.property('modified_epoch');
+          expect(data.modified_epoch).to.be.null;
+          expect(data).to.have.property('modified_by');
+          expect(data.modified_by).to.be.null;
+          expect(data).to.have.property('deleted_epoch');
+          expect(data.deleted_epoch).to.match(/^[0-9]+$/);
+          expect(data.deleted_epoch).to.not.be.below(data.created_epoch);
+          expect(data).to.have.property('log');
+          expect(data.log).to.be.null;
+        });
+      })
+      .end(done);
+    });
   });
 });
