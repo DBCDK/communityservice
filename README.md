@@ -31,7 +31,7 @@ To run the integration tests against the server (requires postgresql):
     $ cp environments/travis.env current.env
     $ npm run integrationtest --silent
 
-To start the server in staging mode:
+To start the server in staging or production mode:
 
     $ cd src
     $ . /nvm.sh
@@ -40,14 +40,7 @@ To start the server in staging mode:
     $ cp environments/production.env current.env
     $ npm run serve
 
-Administrative endpoints:
-
-| Endpoint  | Function |
-| --------- | -------- |
-| `/status` | Returns the service status as JSON   |
-| `/pid`    | Returns the service's raw process id |
-
-You can control the settings by the following environment variables.
+You can edit `current.env` after the above steps to further control the settings.  The web service obeys the following environment variables.
 
 | Environment variable    | Default     | Effect                           |
 | ----------------------- | ----------- | -------------------------------- |
@@ -62,6 +55,13 @@ You can control the settings by the following environment variables.
 | NODE_ENV                | development | Controls other service settings  |
 | PORT                    | 3000        | TCP port for the service |
 | PRETTY_LOG              | 1           | Pretty printed log statements (1), or one-line log statements (0) |
+
+The web service has the following administrative endpoints:
+
+| Endpoint  | Function |
+| --------- | -------- |
+| `/status` | Returns the service status as JSON |
+| `/pid`    | Returns the service's process id   |
 
 
 ## Project management
