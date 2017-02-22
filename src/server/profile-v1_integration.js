@@ -12,8 +12,6 @@ const expectSuccess = require('./integration-validators').expectSuccess;
 const expectFailure = require('./integration-validators').expectFailure;
 const expectValidate = require('./integration-validators').expectValidate;
 
-const logger = require('__/logging')(config.logger);
-
 /* eslint-disable no-unused-expressions */
 describe('API v1 profile endpoints', () => {
   const service = request(server);

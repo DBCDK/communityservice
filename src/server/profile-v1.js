@@ -10,7 +10,6 @@ const knex = require('knex')(config.db);
 const validators = require('server/validators');
 const injectors = require('server/injectors');
 const profileTable = 'profiles';
-const logger = require('__/logging')(config.logger);
 
 // Make sure the {community} parameter is passed through the preceeding router.
 const router = express.Router({mergeParams: true});
@@ -29,7 +28,7 @@ router.route('/')
   })
   .post((req, res, next) => {
     const community = req.params.community;
-    validators.validateInput(req, 'schemas/profile-in.json')
+    validators.validateInput(req, 'schemas/profile-post.json')
     .then(() => {
       return injectors.setCommunityId(req.body, community);
     })
@@ -57,7 +56,6 @@ router.route('/:id')
   .put((req, res, next) => {
     const community = req.params.community;
     const id = req.params.id;
-    // logger.log.debug(`Updating profile ${id} in community ${community}`);
     validators.validateInput(req, 'schemas/profile-put.json')
     .then(() => {
       return knex(profileTable).where('id', id).select();
@@ -71,7 +69,6 @@ router.route('/:id')
         };
       }
       const update = injectors.setModifiedEpoch(req.body);
-      logger.log.debug(`Updated profile is ${update}`);
       return knex(profileTable).where('id', id).update(update, '*');
     })
     .then(profiles => {

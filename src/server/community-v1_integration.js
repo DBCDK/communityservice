@@ -12,8 +12,6 @@ const expectSuccess = require('./integration-validators').expectSuccess;
 const expectFailure = require('./integration-validators').expectFailure;
 const expectValidate = require('./integration-validators').expectValidate;
 
-const logger = require('__/logging')(config.logger);
-
 /* eslint-disable no-unused-expressions */
 describe('API v1 community endpoints', () => {
   const service = request(server);
@@ -212,7 +210,6 @@ describe('API v1 community endpoints', () => {
         service.get(url)
         .expect(200)
         .expect(res => {
-          // logger.log.debug(res);
           expectSuccess(res.body, (links, data) => {
             expect(links).to.have.property('self');
             expect(links.self).to.equal(url);

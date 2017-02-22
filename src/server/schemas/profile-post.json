@@ -2,9 +2,13 @@
   "required": true,
   "type": "object",
   "properties": {
-    "deleted_by": {
+    "name": {
       "required": true,
-      "type": "number"
+      "type": "string"
+    },
+    "attributes": {
+      "required": false,
+      "type": "object"
     }
   },
   "additionalProperties": false

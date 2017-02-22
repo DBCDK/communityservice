@@ -51,3 +51,5 @@ The web service is located in `server` and all other local (but possibly reusabl
 const mySpiff = require('__/mySpiffyLib');
 const config = require('server/config.js');
 ```
+
+Each directory can have a `readme.md` file that further explains the contents of that particular directory.
