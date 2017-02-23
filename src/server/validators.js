@@ -8,6 +8,7 @@ const config = require('server/config');
 const knex = require('knex')(config.db);
 const validator = require('is-my-json-valid/require');
 const communityTable = 'communities';
+const profileTable = 'profiles';
 
 function validatingInput(req, schema) {
   return new Promise((resolve, reject) => {
@@ -48,3 +49,23 @@ function verifyingCommunityExists(id, url) {
   });
 }
 exports.verifyingCommunityExists = verifyingCommunityExists;
+
+function verifyingProfileExists(id, url) {
+  return new Promise((resolve, reject) => {
+    knex(profileTable).where('id', id).select()
+    .then(profiles => {
+      if (!profiles || profiles.length !== 1) {
+        reject({
+          status: 404,
+          title: 'Profile does not exist',
+          meta: {resource: url}
+        });
+      }
+      resolve();
+    })
+    .catch(error => {
+      reject(error);
+    });
+  });
+}
+exports.verifyingProfileExists = verifyingProfileExists;

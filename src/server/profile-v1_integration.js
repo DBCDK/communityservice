@@ -229,8 +229,19 @@ describe('API v1 profile endpoints', () => {
       })
       .end(done);
     });
-  });
-  describe('PUT /community/:id/profile/:id', () => {
+    it('should return Bad Request on any non-existing profile for modifier', done => {
+      service.put('/v1/community/1/profile/1')
+      .send({name: 'Name', modified_by: 98})
+      .expect(404)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          const error = JSON.stringify(errors[0]);
+          expect(error).to.match(/does not exist/);
+        });
+      })
+      .end(done);
+    });
     const attributes = {libraryId: 526443, interests: ['carrots', 'rabbit holes']};
     const id = 3;
     const admin_id = 1;
@@ -264,6 +275,29 @@ describe('API v1 profile endpoints', () => {
       })
       .end(done);
     });
+    it('should update log with minimal attributes', done => {
+      const url2 = '/v1/community/1/profile/2';
+      service.get(url2)
+      .expect(200)
+      .expect(res => {
+        expectSuccess(res.body, (links, data) => {
+          service.put(url2)
+          .send({name: 'Onkel Reje', attributes: data.attributes, modified_by: 2})
+          .expect(200)
+          .expect(res2 => {
+            expectSuccess(res2.body, (links2, data2) => {
+              const log = data2.log[0];
+              expect(log).to.have.property('name');
+              expect(log).to.not.have.property('attributes');
+            });
+          })
+          .end(done);
+        });
+      })
+      .catch(error => {
+        done(error);
+      });
+    });
     it('should update existing profile and retrieve the update', done => {
       service.put(url)
       .send({attributes, name: 'BiblioteKaren', modified_by: admin_id})
@@ -296,7 +330,7 @@ describe('API v1 profile endpoints', () => {
           expect(log).to.have.property('attributes');
           const attribs = log.attributes;
           expect(attribs).to.have.property('description');
-            expect(attribs).to.have.property('email');
+          expect(attribs).to.have.property('email');
           expect(attribs).to.not.have.property('libraryId');
         });
       })

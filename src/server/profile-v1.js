@@ -100,6 +100,9 @@ router.route('/:id')
       return validators.verifyingCommunityExists(community, `${req.baseUrl}/${id}`);
     })
     .then(() => {
+      return validators.verifyingProfileExists(req.body.modified_by, req.baseUrl);
+    })
+    .then(() => {
       return knex(profileTable).where('id', id).select();
     })
     .then(matches => {
@@ -112,15 +115,15 @@ router.route('/:id')
         };
       }
       // Sequence several results together.
-      return Promise.all([matches[0], injectors.gettingCurrentTimeAsEpoch()]);
+      return Promise.all([
+        matches[0],
+        injectors.gettingCurrentTimeAsEpoch()
+      ]);
     })
     .then(results => {
       const profile = results[0];
       const epochNow = results[1];
-      // TODO: check update.modified_by
       const update = updateOrDelete(req.body, profile, epochNow);
-      // const query = knex(profileTable).where('id', id).update(update, '*').toString();
-      // logger.log.debug(query);
       return knex(profileTable).where('id', id).update(update, '*');
     })
     .then(profiles => {
@@ -177,5 +180,3 @@ function updateOrDelete(after, before, epochNow) {
 }
 
 module.exports = router;
-
-// TODO: check modified_by is a existing profile in the right community.

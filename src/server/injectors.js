@@ -7,14 +7,11 @@
 const config = require('server/config');
 const knex = require('knex')(config.db);
 
-const logger = require('__/logging')(config.logger);
-
 function gettingCurrentTimeAsEpoch() {
   return new Promise((resolve, reject) => {
     knex.select(knex.raw('extract(\'epoch\' from CURRENT_TIMESTAMP)'))
     .then(response => {
       try {
-        // logger.log.debug('Getting epoch');
         // Apparently PostgreSQL uses rounding when putting a float in an int column.
         const epoch = Math.round(response[0].date_part);
         resolve(epoch);
@@ -66,7 +63,6 @@ function updateModificationLog(update, before, logEntry) {
     modifiactionLog = [];
   }
   modifiactionLog.push(logEntry);
-  // logger.log.debug(update.log);
   update.log = JSON.stringify(modifiactionLog);
   return update;
 }
