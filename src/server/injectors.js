@@ -7,6 +7,8 @@
 const config = require('server/config');
 const knex = require('knex')(config.db);
 
+const logger = require('__/logging')(config.logger);
+
 function setCommunityId(object, communityId) {
   return Object.assign(object, {
     community_id: communityId
@@ -14,8 +16,8 @@ function setCommunityId(object, communityId) {
 }
 exports.setCommunityId = setCommunityId;
 
-function setModifiedEpoch(community) {
-  return Object.assign(community, {
+function setModifiedEpoch(object) {
+  return Object.assign(object, {
     modified_epoch: knex.raw('extract(\'epoch\' from now())')
   });
 }
@@ -35,3 +37,18 @@ function setDeletedBy(object, who) {
   });
 }
 exports.setDeletedBy = setDeletedBy;
+
+function updateModificationLog(update, before, logEntry) {
+  let modifiactionLog = before.log;
+  if (!modifiactionLog) {
+    modifiactionLog = [];
+  }
+  modifiactionLog.push(logEntry);
+  //logger.log.debug(update.log);
+  const object = setModifiedEpoch(update);
+  // const object = update;
+  //logger.log.debug(object);
+  object.log = JSON.stringify(modifiactionLog);
+  return object;
+}
+exports.updateModificationLog = updateModificationLog;

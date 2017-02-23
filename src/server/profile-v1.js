@@ -113,6 +113,8 @@ router.route('/:id')
       }
       const profile = matches[0];
       const update = updateOrDelete(req.body, profile);
+      const query = knex(profileTable).where('id', id).update(update, '*').toString();
+      // logger.log.debug(query);
       return knex(profileTable).where('id', id).update(update, '*');
     })
     .then(profiles => {
@@ -132,11 +134,16 @@ router.route('/:id')
 function updateOrDelete(after, before) {
   const afters = _.toPairs(after);
   if (afters.length === 1) {
-    // Delete intead of update modified_by.
+    // Delete intead of update modify.
     return injectors.setDeletedBy(before, after.modified_by);
   }
+  let last_epoch = before.modified_epoch;
+  if (!last_epoch) {
+    last_epoch = before.created_epoch;
+  }
   let logEntry = {
-    modified_by: after.modified_by
+    modified_by: after.modified_by,
+    last_epoch
   };
   const keys = ['name', 'attributes'];
   const oldKeyValues = _.pick(before, keys);
@@ -145,9 +152,8 @@ function updateOrDelete(after, before) {
       logEntry[key] = value;
     }
   });
-
-  logger.log.debug(logEntry);
-  const update = injectors.setModifiedEpoch(after);
+  const update = injectors.updateModificationLog(after, before, logEntry);
+  // logger.log.debug(update);
   return update;
 }
 

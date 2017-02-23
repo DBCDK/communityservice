@@ -230,6 +230,9 @@ describe('API v1 community endpoints', () => {
           });
         })
         .end(done);
+      })
+      .catch(error => {
+        done(error);
       });
     });
   });

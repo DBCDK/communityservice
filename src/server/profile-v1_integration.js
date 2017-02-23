@@ -236,64 +236,6 @@ describe('API v1 profile endpoints', () => {
     const id = 3;
     const admin_id = 1;
     const url = `/v1/community/1/profile/${id}`;
-    it('should update existing profile and retrieve the update', done => {
-      service.put(url)
-      .send({name, attributes, modified_by: admin_id})
-      .expect(200)
-      .expect(res => {
-        expectSuccess(res.body, (links, data) => {
-          expect(links).to.have.property('self');
-          expect(links.self).to.equal(url);
-          expectValidate(data, 'schemas/profile-out.json');
-          expect(data).to.have.property('id');
-          expect(data.id).to.equal(id);
-          expect(data).to.have.property('name');
-          expect(data.name).to.equal(name);
-          expect(data).to.have.property('attributes');
-          expect(data.attributes).to.deep.equal(attributes);
-          expect(data).to.have.property('created_epoch');
-          expect(data.created_epoch).to.match(/^[0-9]+$/);
-          expect(data).to.have.property('modified_epoch');
-          expect(data.modified_epoch).to.match(/^[0-9]+$/);
-          expect(data.modified_epoch).to.not.be.below(data.created_epoch);
-          expect(data).to.have.property('modified_by');
-          expect(data.modified_by).to.be.equal(admin_id);
-          expect(data).to.have.property('deleted_epoch');
-          expect(data.deleted_epoch).to.be.null;
-          expect(data).to.have.property('log');
-          expect(data.log).to.be.null;
-        });
-      })
-      .then(() => {
-        service.get(url)
-        .expect(200)
-        .expect(res => {
-          expectSuccess(res.body, (links, data) => {
-            expect(links).to.have.property('self');
-            expect(links.self).to.equal(url);
-            expectValidate(data, 'schemas/profile-out.json');
-            expect(data).to.have.property('id');
-            expect(data.id).to.equal(id);
-            expect(data).to.have.property('name');
-            expect(data.name).to.equal(name);
-            expect(data).to.have.property('attributes');
-            expect(data.attributes).to.deep.equal(attributes);
-            expect(data).to.have.property('created_epoch');
-            expect(data.created_epoch).to.match(/^[0-9]+$/);
-            expect(data).to.have.property('modified_epoch');
-            expect(data.modified_epoch).to.match(/^[0-9]+$/);
-            expect(data.modified_epoch).to.not.be.below(data.created_epoch);
-            expect(data).to.have.property('modified_by');
-            expect(data.modified_by).to.be.equal(admin_id);
-            expect(data).to.have.property('deleted_epoch');
-            expect(data.deleted_epoch).to.be.null;
-            expect(data).to.have.property('log');
-            expect(data.log).to.be.null;
-          });
-        })
-        .end(done);
-      });
-    });
     it('should mark as deleted when modified_by is only field', done => {
       service.put(url)
       .send({modified_by: id})
@@ -322,6 +264,69 @@ describe('API v1 profile endpoints', () => {
         });
       })
       .end(done);
+    });
+    it('should update existing profile and retrieve the update', done => {
+      service.put(url)
+      .send({name, attributes, modified_by: admin_id})
+      .expect(200)
+      .expect(res => {
+        expectSuccess(res.body, (links, data) => {
+          expect(links).to.have.property('self');
+          expect(links.self).to.equal(url);
+          expectValidate(data, 'schemas/profile-out.json');
+          expect(data).to.have.property('id');
+          expect(data.id).to.equal(id);
+          expect(data).to.have.property('name');
+          expect(data.name).to.equal(name);
+          expect(data).to.have.property('attributes');
+          expect(data.attributes).to.deep.equal(attributes);
+          expect(data).to.have.property('created_epoch');
+          expect(data.created_epoch).to.match(/^[0-9]+$/);
+          expect(data).to.have.property('modified_epoch');
+          expect(data.modified_epoch).to.match(/^[0-9]+$/);
+          expect(data.modified_epoch).to.not.be.below(data.created_epoch);
+          expect(data).to.have.property('modified_by');
+          expect(data.modified_by).to.be.equal(admin_id);
+          expect(data).to.have.property('deleted_epoch');
+          expect(data.deleted_epoch).to.be.null;
+          expect(data).to.have.property('log');
+          expect(data.log).to.not.be.null;
+          expect(data.log.length).to.be.equal(1);
+        });
+      })
+      .then(() => {
+        service.get(url)
+        .expect(200)
+        .expect(res => {
+          expectSuccess(res.body, (links, data) => {
+            expect(links).to.have.property('self');
+            expect(links.self).to.equal(url);
+            expectValidate(data, 'schemas/profile-out.json');
+            expect(data).to.have.property('id');
+            expect(data.id).to.equal(id);
+            expect(data).to.have.property('name');
+            expect(data.name).to.equal(name);
+            expect(data).to.have.property('attributes');
+            expect(data.attributes).to.deep.equal(attributes);
+            expect(data).to.have.property('created_epoch');
+            expect(data.created_epoch).to.match(/^[0-9]+$/);
+            expect(data).to.have.property('modified_epoch');
+            expect(data.modified_epoch).to.match(/^[0-9]+$/);
+            expect(data.modified_epoch).to.not.be.below(data.created_epoch);
+            expect(data).to.have.property('modified_by');
+            expect(data.modified_by).to.be.equal(admin_id);
+            expect(data).to.have.property('deleted_epoch');
+            expect(data.deleted_epoch).to.be.null;
+            expect(data).to.have.property('log');
+            expect(data.log).to.not.be.null;
+            expect(data.log.length).to.be.equal(1);
+          });
+        })
+        .end(done);
+      })
+      .catch(error => {
+        done(error);
+      });
     });
   });
 });
