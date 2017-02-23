@@ -9,6 +9,27 @@ const knex = require('knex')(config.db);
 
 const logger = require('__/logging')(config.logger);
 
+function gettingCurrentTimeAsEpoch() {
+  return new Promise((resolve, reject) => {
+    knex.select(knex.raw('extract(\'epoch\' from CURRENT_TIMESTAMP)'))
+    .then(response => {
+      try {
+        // logger.log.debug('Getting epoch');
+        // Apparently PostgreSQL uses rounding when putting a float in an int column.
+        const epoch = Math.round(response[0].date_part);
+        resolve(epoch);
+      }
+      catch (error) {
+        reject(error);
+      }
+    })
+    .catch(error => {
+      reject(error);
+    });
+  });
+}
+exports.gettingCurrentTimeAsEpoch = gettingCurrentTimeAsEpoch;
+
 function setCommunityId(object, communityId) {
   return Object.assign(object, {
     community_id: communityId
@@ -16,27 +37,28 @@ function setCommunityId(object, communityId) {
 }
 exports.setCommunityId = setCommunityId;
 
-function setModifiedEpoch(object) {
+function setModifiedEpoch(object, epoch) {
   return Object.assign(object, {
-    modified_epoch: knex.raw('extract(\'epoch\' from now())')
+    modified_epoch: epoch
   });
 }
 exports.setModifiedEpoch = setModifiedEpoch;
 
-function setDeletedEpoch(object) {
+function setDeletedBy(object, who, epoch) {
   return Object.assign(object, {
-    deleted_epoch: knex.raw('extract(\'epoch\' from now())')
-  });
-}
-exports.setDeletedEpoch = setDeletedEpoch;
-
-function setDeletedBy(object, who) {
-  return Object.assign(setDeletedEpoch(object), {
-    deleted_epoch: knex.raw('extract(\'epoch\' from now())'),
+    deleted_epoch: epoch,
     deleted_by: who
   });
 }
 exports.setDeletedBy = setDeletedBy;
+
+function setModifiedBy(object, who, epoch) {
+  return Object.assign(setModifiedEpoch(object, epoch), {
+    modified_epoch: epoch,
+    modified_by: who
+  });
+}
+exports.setModifiedBy = setModifiedBy;
 
 function updateModificationLog(update, before, logEntry) {
   let modifiactionLog = before.log;
@@ -44,11 +66,8 @@ function updateModificationLog(update, before, logEntry) {
     modifiactionLog = [];
   }
   modifiactionLog.push(logEntry);
-  //logger.log.debug(update.log);
-  const object = setModifiedEpoch(update);
-  // const object = update;
-  //logger.log.debug(object);
-  object.log = JSON.stringify(modifiactionLog);
-  return object;
+  // logger.log.debug(update.log);
+  update.log = JSON.stringify(modifiactionLog);
+  return update;
 }
 exports.updateModificationLog = updateModificationLog;

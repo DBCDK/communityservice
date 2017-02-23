@@ -231,8 +231,7 @@ describe('API v1 profile endpoints', () => {
     });
   });
   describe('PUT /community/:id/profile/:id', () => {
-    const name = 'Snurre Snup';
-    const attributes = {test: true, interests: ['carrots', 'rabbit holes']};
+    const attributes = {libraryId: 526443, interests: ['carrots', 'rabbit holes']};
     const id = 3;
     const admin_id = 1;
     const url = `/v1/community/1/profile/${id}`;
@@ -267,7 +266,7 @@ describe('API v1 profile endpoints', () => {
     });
     it('should update existing profile and retrieve the update', done => {
       service.put(url)
-      .send({name, attributes, modified_by: admin_id})
+      .send({attributes, name: 'BiblioteKaren', modified_by: admin_id})
       .expect(200)
       .expect(res => {
         expectSuccess(res.body, (links, data) => {
@@ -277,7 +276,7 @@ describe('API v1 profile endpoints', () => {
           expect(data).to.have.property('id');
           expect(data.id).to.equal(id);
           expect(data).to.have.property('name');
-          expect(data.name).to.equal(name);
+          expect(data.name).to.equal('BiblioteKaren');
           expect(data).to.have.property('attributes');
           expect(data.attributes).to.deep.equal(attributes);
           expect(data).to.have.property('created_epoch');
@@ -292,6 +291,13 @@ describe('API v1 profile endpoints', () => {
           expect(data).to.have.property('log');
           expect(data.log).to.not.be.null;
           expect(data.log.length).to.be.equal(1);
+          const log = data.log[0];
+          expect(log).to.not.have.property('name');
+          expect(log).to.have.property('attributes');
+          const attribs = log.attributes;
+          expect(attribs).to.have.property('description');
+            expect(attribs).to.have.property('email');
+          expect(attribs).to.not.have.property('libraryId');
         });
       })
       .then(() => {
@@ -305,7 +311,7 @@ describe('API v1 profile endpoints', () => {
             expect(data).to.have.property('id');
             expect(data.id).to.equal(id);
             expect(data).to.have.property('name');
-            expect(data.name).to.equal(name);
+            expect(data.name).to.equal('BiblioteKaren');
             expect(data).to.have.property('attributes');
             expect(data.attributes).to.deep.equal(attributes);
             expect(data).to.have.property('created_epoch');
@@ -320,6 +326,13 @@ describe('API v1 profile endpoints', () => {
             expect(data).to.have.property('log');
             expect(data.log).to.not.be.null;
             expect(data.log.length).to.be.equal(1);
+            const log = data.log[0];
+            expect(log).to.not.have.property('name');
+            expect(log).to.have.property('attributes');
+            const attribs = log.attributes;
+            expect(attribs).to.have.property('description');
+            expect(attribs).to.have.property('email');
+            expect(attribs).to.not.have.property('libraryId');
           });
         })
         .end(done);

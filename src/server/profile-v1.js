@@ -20,7 +20,7 @@ const router = express.Router({mergeParams: true});
 router.route('/')
   .get((req, res, next) => {
     const community = req.params.community;
-    validators.verifyCommunityExists(community, req.baseUrl)
+    validators.verifyingCommunityExists(community, req.baseUrl)
     .then(() => {
       return knex(profileTable).where('community_id', community).select();
     })
@@ -38,9 +38,9 @@ router.route('/')
   })
   .post((req, res, next) => {
     const community = req.params.community;
-    validators.validateInput(req, 'schemas/profile-post.json')
+    validators.validatingInput(req, 'schemas/profile-post.json')
     .then(() => {
-      return validators.verifyCommunityExists(community, req.baseUrl);
+      return validators.verifyingCommunityExists(community, req.baseUrl);
     })
     .then(() => {
       return injectors.setCommunityId(req.body, community);
@@ -66,7 +66,7 @@ router.route('/:id')
   .get((req, res, next) => {
     const community = req.params.community;
     const id = req.params.id;
-    validators.verifyCommunityExists(community, `${req.baseUrl}/${id}`)
+    validators.verifyingCommunityExists(community, `${req.baseUrl}/${id}`)
     .then(() => {
       return knex(profileTable).where('id', id).select();
     })
@@ -95,9 +95,9 @@ router.route('/:id')
   .put((req, res, next) => {
     const community = req.params.community;
     const id = req.params.id;
-    validators.validateInput(req, 'schemas/profile-put.json')
+    validators.validatingInput(req, 'schemas/profile-put.json')
     .then(() => {
-      return validators.verifyCommunityExists(community, `${req.baseUrl}/${id}`);
+      return validators.verifyingCommunityExists(community, `${req.baseUrl}/${id}`);
     })
     .then(() => {
       return knex(profileTable).where('id', id).select();
@@ -111,9 +111,15 @@ router.route('/:id')
           meta: {resource: `${req.baseUrl}/${id}`}
         };
       }
-      const profile = matches[0];
-      const update = updateOrDelete(req.body, profile);
-      const query = knex(profileTable).where('id', id).update(update, '*').toString();
+      // Sequence several results together.
+      return Promise.all([matches[0], injectors.gettingCurrentTimeAsEpoch()]);
+    })
+    .then(results => {
+      const profile = results[0];
+      const epochNow = results[1];
+      // TODO: check update.modified_by
+      const update = updateOrDelete(req.body, profile, epochNow);
+      // const query = knex(profileTable).where('id', id).update(update, '*').toString();
       // logger.log.debug(query);
       return knex(profileTable).where('id', id).update(update, '*');
     })
@@ -131,29 +137,42 @@ router.route('/:id')
   })
   ;
 
-function updateOrDelete(after, before) {
+function getMinimalDifference(after, before) {
+  if (typeof after === typeof before) {
+    if (typeof after === 'object') {
+      const diff = _.omitBy(before, (v, k) => {
+        return after[k] === v;
+      });
+      if (_.isEmpty(diff)) {
+        return null;
+      }
+      return diff;
+    }
+    else if (after === before) {
+      return null;
+    }
+  }
+  return before;
+}
+
+function updateOrDelete(after, before, epochNow) {
   const afters = _.toPairs(after);
   if (afters.length === 1) {
     // Delete intead of update modify.
-    return injectors.setDeletedBy(before, after.modified_by);
+    return injectors.setDeletedBy(before, after.modified_by, epochNow);
   }
-  let last_epoch = before.modified_epoch;
-  if (!last_epoch) {
-    last_epoch = before.created_epoch;
-  }
-  let logEntry = {
-    modified_by: after.modified_by,
-    last_epoch
-  };
-  const keys = ['name', 'attributes'];
+  let logEntry = injectors.setModifiedBy({}, after.modified_by, epochNow);
+  const potentialKeys = ['name', 'attributes'];
+  const keys = _.intersection(_.keys(after), potentialKeys);
   const oldKeyValues = _.pick(before, keys);
   _.forEach(oldKeyValues, (value, key) => {
-    if (after[key] !== value) {
-      logEntry[key] = value;
+    const diffValue = getMinimalDifference(after[key], value);
+    if (diffValue) {
+      logEntry[key] = diffValue;
     }
   });
-  const update = injectors.updateModificationLog(after, before, logEntry);
-  // logger.log.debug(update);
+  let update = injectors.setModifiedBy(after, after.modified_by, epochNow);
+  update = injectors.updateModificationLog(update, before, logEntry);
   return update;
 }
 

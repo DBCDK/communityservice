@@ -9,7 +9,7 @@ const knex = require('knex')(config.db);
 const validator = require('is-my-json-valid/require');
 const communityTable = 'communities';
 
-function validateInput(req, schema) {
+function validatingInput(req, schema) {
   return new Promise((resolve, reject) => {
     try {
       const validate = validator(schema, {verbose: true});
@@ -27,9 +27,9 @@ function validateInput(req, schema) {
     }
   });
 }
-exports.validateInput = validateInput;
+exports.validatingInput = validatingInput;
 
-function verifyCommunityExists(id, url) {
+function verifyingCommunityExists(id, url) {
   return new Promise((resolve, reject) => {
     knex(communityTable).where('id', id).select()
     .then(communities => {
@@ -47,4 +47,4 @@ function verifyCommunityExists(id, url) {
     });
   });
 }
-exports.verifyCommunityExists = verifyCommunityExists;
+exports.verifyingCommunityExists = verifyingCommunityExists;

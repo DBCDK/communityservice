@@ -5,7 +5,7 @@ The web server accepts HTTP request bodies in JSON, which has to adhere to a [ce
 The service answers in [JSONAPI](http://jsonapi.org) format, which basically means that responses are either of the form
 ```json
 {
-  "data": ...,
+  "data": "... some result",
 }
 ```
 or
@@ -13,9 +13,8 @@ or
 {
   "errors": [
     {
-      "status": ...,
-      "title": ...,
-      ...
+      "status": 404,
+      "title": "... some stable title",
     }
   ]
 }
