@@ -53,3 +53,8 @@ const config = require('server/config.js');
 ```
 
 Each directory can have a `readme.md` file that further explains the contents of that particular directory.
+
+## Naming conventions
+
+Functions returning [promises](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise) are named with an initial verb in present participle, like `validatingInput` to signify that the operation will span some time.
+

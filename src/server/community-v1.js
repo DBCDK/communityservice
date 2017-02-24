@@ -9,7 +9,7 @@ const router = express.Router();
 const config = require('server/config');
 const logger = require('__/logging')(config.logger);
 const knex = require('knex')(config.db);
-const validateInput = require('server/validators').validateInput;
+const validatingInput = require('server/validators').validatingInput;
 const injectors = require('server/injectors');
 const communityTable = 'communities';
 
@@ -24,7 +24,7 @@ router.route('/')
     });
   })
   .post((req, res, next) => {
-    validateInput(req, 'schemas/community-post.json')
+    validatingInput(req, 'schemas/community-post.json')
     .then(() => {
       return knex(communityTable).insert(req.body, '*');
     })
@@ -44,9 +44,12 @@ router.route('/')
 router.route('/:id')
   .put((req, res, next) => {
     const id = req.params.id;
-    validateInput(req, 'schemas/community-put.json')
+    validatingInput(req, 'schemas/community-put.json')
     .then(() => {
-      const update = injectors.setModifiedEpoch(req.body);
+      return injectors.gettingCurrentTimeAsEpoch();
+    })
+    .then(epoch => {
+      const update = injectors.setModifiedEpoch(req.body, epoch);
       return knex(communityTable).where('id', id).update(update, '*');
     })
     .then(communities => {
@@ -74,6 +77,7 @@ router.route('/:id')
     locateCommunityId(name)
     .then(id => {
       const selector = knex(communityTable).where('id', id).select();
+      // Sequence several results together.
       return Promise.all([id, selector]);
     })
     .then(results => {
@@ -113,6 +117,7 @@ function locateCommunityId(name) {
     if (!isNaN(number)) {
       return resolve(number);
     }
+    // TODO: eliminate returns.
     return knex(communityTable).where({name}).select('id')
     .then(ids => {
       if (ids.length !== 1) {

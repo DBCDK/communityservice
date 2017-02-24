@@ -1,9 +1,11 @@
 'use strict';
 
+const localDatabase = process.env.DB_NAME || 'elvis';
+
 module.exports = {
   development: {
     client: 'pg',
-    connection: `postgres://localhost/${process.env.DB_NAME}`,
+    connection: `postgres://localhost/${localDatabase}`,
     migrations: {
       directory: 'migrations'
     },

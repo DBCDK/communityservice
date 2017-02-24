@@ -1,6 +1,6 @@
 # Community Service database model
 
-The database is created from scratch by [`src/server/current-db.js`](../src/server/current-db.js).
+The database is created from scratch by [`src/server/current-db-v1.js`](../src/server/current-db-v1.js).
 Migrations will be located in [`src/migrations`](../src/migrations/).
 
 Here are the raw schemas as seen by PostgreSQL.
@@ -15,10 +15,11 @@ Here are the raw schemas as seen by PostgreSQL.
  created_epoch  | integer                | not null default date_part('epoch'::text, now())         | plain    |              |
  modified_epoch | integer                |                                                          | plain    |              |
  deleted_epoch  | integer                |                                                          | plain    |              |
- name           | character varying(255) | not null                                                 | extended |              |
- attributes     | json                   |                                                          | extended |              |
+ name           | character varying(255) |                                                          | extended |              |
+ attributes     | json                   | not null default '{}'::json                              | extended |              |
 Indexes:
     "communities_pkey" PRIMARY KEY, btree (id)
+    "communities_name_unique" UNIQUE CONSTRAINT, btree (name)
 Referenced by:
     TABLE "actions" CONSTRAINT "actions_community_id_foreign" FOREIGN KEY (community_id) REFERENCES communities(id)
     TABLE "entities" CONSTRAINT "entities_community_id_foreign" FOREIGN KEY (community_id) REFERENCES communities(id)
@@ -39,7 +40,7 @@ Referenced by:
  deleted_by     | integer                |                                                       | plain    |              |
  community_id   | integer                | not null                                              | plain    |              |
  name           | character varying(255) | not null                                              | extended |              |
- attributes     | json                   |                                                       | extended |              |
+ attributes     | json                   | not null default '{}'::json                           | extended |              |
  log            | json                   |                                                       | extended |              |
 Indexes:
     "profiles_pkey" PRIMARY KEY, btree (id)
@@ -79,7 +80,7 @@ Referenced by:
  type           | character varying(255) | not null                                              | extended |              |
  title          | character varying(255) | not null                                              | extended |              |
  contents       | text                   |                                                       | extended |              |
- attributes     | json                   |                                                       | extended |              |
+ attributes     | json                   | not null default '{}'::json                           | extended |              |
  log            | json                   |                                                       | extended |              |
 Indexes:
     "entities_pkey" PRIMARY KEY, btree (id)
@@ -113,7 +114,7 @@ Referenced by:
  entity_ref     | integer                |                                                      | plain    |              |
  profile_ref    | integer                |                                                      | plain    |              |
  type           | character varying(255) | not null                                             | extended |              |
- attributes     | json                   |                                                      | extended |              |
+ attributes     | json                   | not null default '{}'::json                          | extended |              |
 Indexes:
     "actions_pkey" PRIMARY KEY, btree (id)
 Foreign-key constraints:

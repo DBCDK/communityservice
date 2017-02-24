@@ -38,7 +38,7 @@ module.exports = knex => {
     return knex.schema.createTable(communityTable, table => {
       addCreatedModifiedDeletedTimestamp(table);
       table.string('name').unique();
-      table.json('attributes').nullable();
+      table.json('attributes').notNullable().defaultTo('{}');
     });
   }
 
@@ -46,7 +46,7 @@ module.exports = knex => {
     return knex.schema.createTable(profileTable, table => {
       addModifyByDeletedByCommunityRef(table);
       table.string('name').notNullable();
-      table.json('attributes').nullable();
+      table.json('attributes').notNullable().defaultTo('{}');
       table.json('log').nullable();
     });
   }
@@ -61,7 +61,7 @@ module.exports = knex => {
       table.string('type').notNullable();
       table.string('title').notNullable();
       table.text('contents').nullable();
-      table.json('attributes').nullable();
+      table.json('attributes').notNullable().defaultTo('{}');
       table.json('log').nullable();
     });
   }
@@ -76,7 +76,7 @@ module.exports = knex => {
       table.integer('profile_ref');
       table.foreign('profile_ref').references(`${profileTable}.id`);
       table.string('type').notNullable();
-      table.json('attributes').nullable();
+      table.json('attributes').notNullable().defaultTo('{}');
     });
   }
 

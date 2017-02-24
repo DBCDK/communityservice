@@ -4,9 +4,13 @@
 
 'use strict';
 
+const config = require('server/config');
+const knex = require('knex')(config.db);
 const validator = require('is-my-json-valid/require');
+const communityTable = 'communities';
+const profileTable = 'profiles';
 
-function validateInput(req, schema) {
+function validatingInput(req, schema) {
   return new Promise((resolve, reject) => {
     try {
       const validate = validator(schema, {verbose: true});
@@ -24,4 +28,44 @@ function validateInput(req, schema) {
     }
   });
 }
-exports.validateInput = validateInput;
+exports.validatingInput = validatingInput;
+
+function verifyingCommunityExists(id, url) {
+  return new Promise((resolve, reject) => {
+    knex(communityTable).where('id', id).select()
+    .then(communities => {
+      if (!communities || communities.length !== 1) {
+        reject({
+          status: 404,
+          title: 'Community does not exist',
+          meta: {resource: url}
+        });
+      }
+      resolve();
+    })
+    .catch(error => {
+      reject(error);
+    });
+  });
+}
+exports.verifyingCommunityExists = verifyingCommunityExists;
+
+function verifyingProfileExists(id, url) {
+  return new Promise((resolve, reject) => {
+    knex(profileTable).where('id', id).select()
+    .then(profiles => {
+      if (!profiles || profiles.length !== 1) {
+        reject({
+          status: 404,
+          title: 'Profile does not exist',
+          meta: {resource: url}
+        });
+      }
+      resolve();
+    })
+    .catch(error => {
+      reject(error);
+    });
+  });
+}
+exports.verifyingProfileExists = verifyingProfileExists;

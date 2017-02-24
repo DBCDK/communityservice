@@ -6,7 +6,7 @@ const server = require('server');
 const config = require('server/config');
 const dbconfig = config.db;
 const knex = require('knex')(dbconfig);
-const db = require('server/current-db')(knex);
+const db = require('server/current-db-v1')(knex);
 const seedBigDb = require('server/seeds/integration-test-big').seed;
 const expectSuccess = require('./integration-validators').expectSuccess;
 const expectFailure = require('./integration-validators').expectFailure;
@@ -80,7 +80,7 @@ describe('API v1 community endpoints', () => {
           expect(data).to.have.property('name');
           expect(data.name).to.equal('Biblo');
           expect(data).to.have.property('attributes');
-          expect(data.attributes).to.be.null;
+          expect(data.attributes).to.not.be.null;
           expect(data).to.have.property('created_epoch');
           expect(data.created_epoch).to.match(/^[0-9]+$/);
           expect(data).to.have.property('modified_epoch');
@@ -165,7 +165,7 @@ describe('API v1 community endpoints', () => {
           expect(data).to.have.property('name');
           expect(data.name).to.equal(name);
           expect(data).to.have.property('attributes');
-          expect(data.attributes).to.be.null;
+          expect(data.attributes).to.not.be.null;
           expect(data).to.have.property('created_epoch');
           expect(data.created_epoch).to.match(/^[0-9]+$/);
           expect(data).to.have.property('modified_epoch');
@@ -230,6 +230,9 @@ describe('API v1 community endpoints', () => {
           });
         })
         .end(done);
+      })
+      .catch(error => {
+        done(error);
       });
     });
   });
