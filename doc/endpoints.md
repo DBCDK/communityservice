@@ -48,12 +48,14 @@ Parts in parentheses are not implemented yet.  Parts with O might not be impleme
 | ------------------------------------------------------ |:----:|:---:|:---:|
 | `/v1/community/`*id*`/entity`                          | (X)  |     | (X) |
 | `/v1/community/`*id*`/entity/`*id*                     |      | (X) | (X) |
-| `/v1/community/`*id*`/entity/`*id*`/title`             |      | (O) | (O) |
-| `/v1/community/`*id*`/entity/`*id*`/contents`          |      | (O) | (O) |
-| `/v1/community/`*id*`/entity/`*id*`/start_epoch`       |      | (O) | (O) |
-| `/v1/community/`*id*`/entity/`*id*`/end_epoch`         |      | (O) | (O) |
-| `/v1/community/`*id*`/entity/`*id*`/attributes`        | (X)  | (X) | (X) |
-| `/v1/community/`*id*`/entity/`*id*`/attributes/`*key*  |      | (O) | (O) |
+| `/v1/community/`*id*`/entity/`*id*`/type`              |      |     | (O) |
+| `/v1/community/`*id*`/entity/`*id*`/title`             |      |     | (O) |
+| `/v1/community/`*id*`/entity/`*id*`/contents`          |      |     | (O) |
+| `/v1/community/`*id*`/action/`*id*`/entity_ref`        |      |     | (O) |
+| `/v1/community/`*id*`/entity/`*id*`/start_epoch`       |      |     | (O) |
+| `/v1/community/`*id*`/entity/`*id*`/end_epoch`         |      |     | (O) |
+| `/v1/community/`*id*`/entity/`*id*`/attributes`        | (X)  |     | (X) |
+| `/v1/community/`*id*`/entity/`*id*`/attributes/`*key*  |      | (O) | (X) |
 
 - POST on `/entity` sets `created_epoch`.
 - POST & PUT on other endpoints sets `modified_epoch` & `modified_by`.
@@ -65,10 +67,13 @@ Parts in parentheses are not implemented yet.  Parts with O might not be impleme
 | ------------------------------------------------------ |:----:|:---:|:---:|
 | `/v1/community/`*id*`/action`                          | (X)  |     | (X) |
 | `/v1/community/`*id*`/action/`*id*                     |      |     | (X) |
-| `/v1/community/`*id*`/action/`*id*`/start_epoch`       |      | (O) | (O) |
-| `/v1/community/`*id*`/action/`*id*`/end_epoch`         |      | (O) | (O) |
-| `/v1/community/`*id*`/action/`*id*`/attributes`        | (X)  | (X) | (X) |
-| `/v1/community/`*id*`/action/`*id*`/attributes/`*key*  |      | (O) | (O) |
+| `/v1/community/`*id*`/action/`*id*`/type`              |      |     | (O) |
+| `/v1/community/`*id*`/action/`*id*`/entity_ref`        |      |     | (O) |
+| `/v1/community/`*id*`/action/`*id*`/profile_ref`       |      |     | (O) |
+| `/v1/community/`*id*`/action/`*id*`/start_epoch`       |      |     | (O) |
+| `/v1/community/`*id*`/action/`*id*`/end_epoch`         |      |     | (O) |
+| `/v1/community/`*id*`/action/`*id*`/attributes`        | (X)  |     | (X) |
+| `/v1/community/`*id*`/action/`*id*`/attributes/`*key*  |      | (O) | (X) |
 
 - POST on `/action` sets `created_epoch`.
 - POST & PUT on other endpoints sets `modified_epoch` & `modified_by`.

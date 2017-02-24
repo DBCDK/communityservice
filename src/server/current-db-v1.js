@@ -56,11 +56,11 @@ module.exports = knex => {
       addModifyByDeletedByCommunityRef(table);
       addOwner(table);
       addActivePeriod(table);
-      table.integer('entity_ref').notNullable();
+      table.integer('entity_ref').nullable();
       table.foreign('entity_ref').references(`${entityTable}.id`);
       table.string('type').notNullable();
       table.string('title').notNullable();
-      table.text('contents').nullable();
+      table.text('contents').notNullable();
       table.json('attributes').notNullable().defaultTo('{}');
       table.json('log').nullable();
     });
@@ -73,7 +73,7 @@ module.exports = knex => {
       addActivePeriod(table);
       table.integer('entity_ref').nullable();
       table.foreign('entity_ref').references(`${entityTable}.id`);
-      table.integer('profile_ref');
+      table.integer('profile_ref').nullable();
       table.foreign('profile_ref').references(`${profileTable}.id`);
       table.string('type').notNullable();
       table.json('attributes').notNullable().defaultTo('{}');

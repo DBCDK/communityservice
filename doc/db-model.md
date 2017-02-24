@@ -76,10 +76,10 @@ Referenced by:
  owner_id       | integer                | not null                                              | plain    |              |
  start_epoch    | integer                |                                                       | plain    |              |
  end_epoch      | integer                |                                                       | plain    |              |
- entity_ref     | integer                | not null                                              | plain    |              |
+ entity_ref     | integer                |                                                       | plain    |              |
  type           | character varying(255) | not null                                              | extended |              |
  title          | character varying(255) | not null                                              | extended |              |
- contents       | text                   |                                                       | extended |              |
+ contents       | text                   | not null                                              | extended |              |
  attributes     | json                   | not null default '{}'::json                           | extended |              |
  log            | json                   |                                                       | extended |              |
 Indexes:
