@@ -57,5 +57,11 @@ Og laver lerpotter på en drejebænk.`,
         }
       });
     })
+    .then(() => {
+      return knex(profileTable).insert({
+        community_id: 1,
+        name: 'Anonymous'
+      });
+    })
     ;
 };

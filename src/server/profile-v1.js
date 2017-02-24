@@ -184,7 +184,37 @@ router.route('/:id/attribute')
     .catch(error => {
       next(error);
     });
-  });
+  })
+  .get((req, res, next) => {
+    const community = req.params.community;
+    const id = req.params.id;
+    const location = `${req.baseUrl}${req.url}`;
+    validators.verifyingCommunityExists(community, location)
+    .then(() => {
+      return knex(profileTable).where('id', id).select();
+    })
+    .then(profiles => {
+      if (!profiles || profiles.length !== 1) {
+        throw {
+          status: 404,
+          title: 'Profile does not exist',
+          detail: `Profile ${id} unknown`,
+          meta: {resource: location}
+        };
+      }
+      return profiles[0];
+    })
+    .then(profile => {
+      res.status(200).json({
+        links: {self: location},
+        data: profile.attributes
+      });
+    })
+    .catch(error => {
+      next(error);
+    });
+  })
+  ;
 
 router.route('/:id/attribute/:key')
   .get((req, res, next) => {

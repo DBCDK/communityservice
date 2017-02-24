@@ -6,7 +6,7 @@ const server = require('server');
 const config = require('server/config');
 const dbconfig = config.db;
 const knex = require('knex')(dbconfig);
-const db = require('server/current-db')(knex);
+const db = require('server/current-db-v1')(knex);
 const seedBigDb = require('server/seeds/integration-test-big').seed;
 const expectSuccess = require('./integration-validators').expectSuccess;
 const expectFailure = require('./integration-validators').expectFailure;
@@ -41,15 +41,12 @@ describe('API v1 profile endpoints', () => {
         expectSuccess(res.body, (links, list) => {
           expect(links).to.have.property('self');
           expect(links.self).to.equal(url);
-          expect(list.length).to.equal(3);
+          expect(list.length).to.equal(4);
           list.forEach(data => {
             expectValidate(data, 'schemas/profile-out.json');
             expect(data).to.have.property('id');
             expect(data).to.have.property('name');
             expect(data).to.have.property('attributes');
-            expect(data.attributes).to.have.property('description');
-            expect(data.attributes).to.have.property('email');
-            expect(data.attributes).to.have.property('libraryId');
             expect(data).to.have.property('created_epoch');
             expect(data.created_epoch).to.match(/^[0-9]+$/);
             expect(data).to.have.property('modified_epoch');
@@ -60,10 +57,13 @@ describe('API v1 profile endpoints', () => {
             expect(data.log).to.be.null;
           });
           expect(list[0].name).to.equal('Pink ');
+          expect(list[0].attributes).to.have.property('description');
           expect(list[0].attributes.description).to.deep.equal(
             'Jeg er en pige på 11 år og jeg elsker at høre musik og at være sammen med mine venner.'
           );
+          expect(list[0].attributes).to.have.property('email');
           expect(list[0].attributes.email).to.deep.equal('pink@gmail.com');
+          expect(list[0].attributes).to.have.property('libraryId');
           expect(list[0].attributes.libraryId).to.deep.equal(654321);
           expect(list[1].name).to.equal('Kaptajn underhyler');
           expect(list[1].attributes.description).to.deep.equal('Jeg er superhelt\nuden bukser på.');
@@ -147,7 +147,7 @@ describe('API v1 profile endpoints', () => {
     });
     it('should add a new profile with just a name', done => {
       const name = 'Miss Mia';
-      const id = 4;
+      const id = 5;
       const location = `/v1/community/1/profile/${id}`;
       service.post('/v1/community/1/profile')
       .send({name})
@@ -163,7 +163,7 @@ describe('API v1 profile endpoints', () => {
           expect(data).to.have.property('name');
           expect(data.name).to.equal(name);
           expect(data).to.have.property('attributes');
-          expect(data.attributes).to.be.null;
+          expect(data.attributes).to.not.be.null;
           expect(data).to.have.property('created_epoch');
           expect(data.created_epoch).to.match(/^[0-9]+$/);
           expect(data).to.have.property('modified_epoch');
@@ -431,6 +431,69 @@ describe('API v1 profile endpoints', () => {
           expect(links).to.have.property('self');
           expect(links.self).to.equal(url);
           expect(data).to.equal('pink@gmail.com');
+        });
+      })
+      .end(done);
+    });
+  });
+  describe('GET /community/:id/profile/:id/attribute', () => {
+    it('should return Not Found for non-existent community', done => {
+      service.get('/v1/community/99/profile/1/attribute')
+      .expect(404)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          const error = errors[0];
+          expect(error).to.have.property('title');
+          expect(error.title).to.match(/Community does not exist/);
+          expect(error).to.have.property('meta');
+          expect(error.meta).to.have.property('resource');
+        });
+      })
+      .end(done);
+    });
+    it('should return Not Found on any non-existing profile', done => {
+      service.get('/v1/community/1/profile/95/attribute')
+      .expect(404)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          const error = errors[0];
+          expect(error).to.have.property('title');
+          expect(error.title).to.match(/Profile does not exist/);
+          expect(error).to.have.property('meta');
+          expect(error.meta).to.have.property('resource');
+        });
+      })
+      .end(done);
+    });
+    it('should retrieve all attributes', done => {
+      const url = '/v1/community/1/profile/1/attribute';
+      service.get(url)
+      .expect(200)
+      .expect(res => {
+        expectSuccess(res.body, (links, data) => {
+          expect(links).to.have.property('self');
+          expect(links.self).to.equal(url);
+          expectValidate(data, 'schemas/attributes-out.json');
+          expect(data).to.have.property('email');
+          expect(data.email).to.equal('pink@gmail.com');
+          expect(data).to.have.property('libraryId');
+          expect(data).to.have.property('description');
+        });
+      })
+      .end(done);
+    });
+    it('should retrieve empty set of attributes', done => {
+      const url = '/v1/community/1/profile/4/attribute';
+      service.get(url)
+      .expect(200)
+      .expect(res => {
+        expectSuccess(res.body, (links, data) => {
+          expect(links).to.have.property('self');
+          expect(links.self).to.equal(url);
+          expectValidate(data, 'schemas/attributes-out.json');
+          expect(data).to.be.empty;
         });
       })
       .end(done);

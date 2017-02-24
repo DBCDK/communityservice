@@ -35,7 +35,7 @@ Parts in parentheses are not implemented yet.  Parts with O might not be impleme
 | `/v1/community/`*id*`/profile`                         | X    |     | X   |
 | `/v1/community/`*id*`/profile/`*id*                    |      | X   | X   |
 | `/v1/community/`*id*`/profile/`*id*`/name`             |      |     | (O) |
-| `/v1/community/`*id*`/profile/`*id*`/attributes`       | X    |     | (O) |
+| `/v1/community/`*id*`/profile/`*id*`/attributes`       | X    |     | X   |
 | `/v1/community/`*id*`/profile/`*id*`/attributes/`*key* |      | (O) | X   |
 
 - POST on `/profile` sets `created_epoch`.
