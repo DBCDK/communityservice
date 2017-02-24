@@ -185,21 +185,18 @@ Inspired by [JSON-API](http://jsonapi.org/), the community service returns eithe
 Satisfied query:
 ```json
 { "data": "..."
-, "jsonapi": { "version": "1" }
 , "meta": { "ms": 32, "sql-queries": 3 }
 }
 ```
 
 Failed query:
 ```json
-{ "error":
-  { "id": "..."
-  , "status": "400"
+{ "errors":
+  { "status": "400"
   , "title": "Unknown object type"
   , "detail": "Object 'Entities' does not exist"
   , "source": { "pointer": "/List/Entities" }
   }
-, "jsonapi": "..."
 , "meta": "..."
 }
 ```

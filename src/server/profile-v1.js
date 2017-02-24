@@ -140,6 +140,95 @@ router.route('/:id')
   })
   ;
 
+router.route('/:id/attribute')
+  .post((req, res, next) => {
+    const community = req.params.community;
+    const id = req.params.id;
+    const location = `${req.baseUrl}${req.url}`;
+    validators.validatingInput(req, 'schemas/attributes-post.json')
+    .then(() => {
+      return validators.verifyingCommunityExists(community, location);
+    })
+    .then(() => {
+      return knex(profileTable).where('id', id).select();
+    })
+    .then(profiles => {
+      if (!profiles || profiles.length !== 1) {
+        throw {
+          status: 404,
+          title: 'Profile does not exist',
+          detail: `Profile ${id} unknown`,
+          meta: {resource: location}
+        };
+      }
+      return profiles[0];
+    })
+    .then(profile => {
+      const attributes = profile.attributes;
+      _.forEach(req.body, (value, key) => {
+        if (_.has(attributes, key)) {
+          throw {
+            status: 409,
+            title: 'Attribute already exists',
+            detail: `Attribute ${key} has value ${attributes.key}`,
+            meta: {resource: location}
+          };
+        }
+        attributes[key] = value;
+      });
+      res.status(201).location(location).json({
+        links: {self: location},
+        data: attributes
+      });
+    })
+    .catch(error => {
+      next(error);
+    });
+  });
+
+router.route('/:id/attribute/:key')
+  .get((req, res, next) => {
+    const community = req.params.community;
+    const id = req.params.id;
+    const key = req.params.key;
+    const location = `${req.baseUrl}${req.url}`;
+    validators.verifyingCommunityExists(community, location)
+    .then(() => {
+      return knex(profileTable).where('id', id).select();
+    })
+    .then(profiles => {
+      if (!profiles || profiles.length !== 1) {
+        throw {
+          status: 404,
+          title: 'Profile does not exist',
+          detail: `Profile ${id} unknown`,
+          meta: {resource: location}
+        };
+      }
+      return profiles[0];
+    })
+    .then(profile => {
+      const value = profile.attributes[key];
+      if (typeof value === 'undefined') {
+        throw {
+          status: 404,
+          title: 'Attribute does not exist',
+          detail: `Attribute ${key} unknown`,
+          meta: {resource: location}
+        };
+      }
+      res
+      .status(200)
+      .json({
+        links: {self: location},
+        data: value
+      });
+    })
+    .catch(error => {
+      next(error);
+    });
+  });
+
 function getMinimalDifference(after, before) {
   if (typeof after === typeof before) {
     if (typeof after === 'object') {
