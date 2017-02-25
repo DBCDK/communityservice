@@ -6,11 +6,11 @@ const server = require('server');
 const config = require('server/config');
 const dbconfig = config.db;
 const knex = require('knex')(dbconfig);
-const db = require('server/current-db-v1')(knex);
+const db = require('server/v1/current-db')(knex);
 const seedBigDb = require('server/seeds/integration-test-big').seed;
-const expectSuccess = require('./integration-validators').expectSuccess;
-const expectFailure = require('./integration-validators').expectFailure;
-const expectValidate = require('./integration-validators').expectValidate;
+const expectSuccess = require('server/integration-verifiers').expectSuccess;
+const expectFailure = require('server/integration-verifiers').expectFailure;
+const expectValidate = require('server/integration-verifiers').expectValidate;
 
 /* eslint-disable no-unused-expressions */
 describe('API v1 community endpoints', () => {
@@ -43,7 +43,7 @@ describe('API v1 community endpoints', () => {
           expect(links.self).to.equal(url);
           expect(list.length).to.equal(2);
           list.forEach(data => {
-            expectValidate(data, './schemas/community-out.json');
+            expectValidate(data, 'v1/schemas/community-out.json');
             expect(data).to.have.property('id');
             expect(data).to.have.property('name');
             expect(data).to.have.property('attributes');
@@ -159,7 +159,7 @@ describe('API v1 community endpoints', () => {
         expectSuccess(res.body, (links, data) => {
           expect(links).to.have.property('self');
           expect(links.self).to.equal(location);
-          expectValidate(data, 'schemas/community-out.json');
+          expectValidate(data, 'v1/schemas/community-out.json');
           expect(data).to.have.property('id');
           expect(data.id).to.equal(id);
           expect(data).to.have.property('name');
@@ -190,7 +190,7 @@ describe('API v1 community endpoints', () => {
         expectSuccess(res.body, (links, data) => {
           expect(links).to.have.property('self');
           expect(links.self).to.equal(url);
-          expectValidate(data, 'schemas/community-out.json');
+          expectValidate(data, 'v1/schemas/community-out.json');
           expect(data).to.have.property('id');
           expect(data.id).to.equal(id);
           expect(data).to.have.property('name');
@@ -213,7 +213,7 @@ describe('API v1 community endpoints', () => {
           expectSuccess(res.body, (links, data) => {
             expect(links).to.have.property('self');
             expect(links.self).to.equal(url);
-            expectValidate(data, 'schemas/community-out.json');
+            expectValidate(data, 'v1/schemas/community-out.json');
             expect(data).to.have.property('id');
             expect(data.id).to.equal(id);
             expect(data).to.have.property('name');

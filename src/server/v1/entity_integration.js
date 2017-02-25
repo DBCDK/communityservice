@@ -1,20 +1,20 @@
 'use strict';
 
-const expect = require('chai').expect;
-const request = require('supertest');
-const server = require('server');
+// const expect = require('chai').expect;
+// const request = require('supertest');
+// const server = require('server');
 const config = require('server/config');
 const dbconfig = config.db;
 const knex = require('knex')(dbconfig);
-const db = require('server/current-db-v1')(knex);
+const db = require('server/v1/current-db')(knex);
 const seedBigDb = require('server/seeds/integration-test-big').seed;
-const expectSuccess = require('./integration-validators').expectSuccess;
-const expectFailure = require('./integration-validators').expectFailure;
-const expectValidate = require('./integration-validators').expectValidate;
+// const expectSuccess = require('server/integration-verifiers').expectSuccess;
+// const expectFailure = require('server/integration-verifiers').expectFailure;
+// const expectValidate = require('server/integration-verifiers').expectValidate;
 
 /* eslint-disable no-unused-expressions */
 describe('API v1 entity endpoints', () => {
-  const service = request(server);
+  // const service = request(server);
   before(done => {
     db.destroy()
     .then(db.setup)

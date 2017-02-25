@@ -7,12 +7,19 @@
 const express = require('express');
 const config = require('server/config');
 const knex = require('knex')(config.db);
-const validators = require('server/validators');
-const injectors = require('server/injectors');
+const verifyingCommunityExists = require('server/v1/verifiers').verifyingCommunityExists;
+const verifyingProfileExists = require('server/v1/verifiers').verifyingProfileExists;
+const validatingInput = require('server/v1/verifiers').validatingInput;
+const gettingCurrentTimeAsEpoch = require('server/v1/modifiers').gettingCurrentTimeAsEpoch;
+const setCommunityId = require('server/v1/modifiers').setCommunityId;
+const updateModificationLog = require('server/v1/modifiers').updateModificationLog;
+const setDeletedBy = require('server/v1/modifiers').setDeletedBy;
+const setModifiedBy = require('server/v1/modifiers').setModifiedBy;
+
 const _ = require('lodash');
 const profileTable = 'profiles';
 
-const logger = require('__/logging')(config.logger);
+// const logger = require('__/logging')(config.logger);
 
 // Make sure the {community} parameter is passed through the preceeding router.
 const router = express.Router({mergeParams: true});
@@ -20,7 +27,7 @@ const router = express.Router({mergeParams: true});
 router.route('/')
   .get((req, res, next) => {
     const community = req.params.community;
-    validators.verifyingCommunityExists(community, req.baseUrl)
+    verifyingCommunityExists(community, req.baseUrl)
     .then(() => {
       return knex(profileTable).where('community_id', community).select();
     })
@@ -38,12 +45,12 @@ router.route('/')
   })
   .post((req, res, next) => {
     const community = req.params.community;
-    validators.validatingInput(req, 'schemas/profile-post.json')
+    validatingInput(req, 'schemas/profile-post.json')
     .then(() => {
-      return validators.verifyingCommunityExists(community, req.baseUrl);
+      return verifyingCommunityExists(community, req.baseUrl);
     })
     .then(() => {
-      return injectors.setCommunityId(req.body, community);
+      return setCommunityId(req.body, community);
     })
     .then(profile => {
       return knex(profileTable).insert(profile, '*');
@@ -66,7 +73,7 @@ router.route('/:id')
   .get((req, res, next) => {
     const community = req.params.community;
     const id = req.params.id;
-    validators.verifyingCommunityExists(community, `${req.baseUrl}/${id}`)
+    verifyingCommunityExists(community, `${req.baseUrl}/${id}`)
     .then(() => {
       return knex(profileTable).where('id', id).select();
     })
@@ -95,12 +102,12 @@ router.route('/:id')
   .put((req, res, next) => {
     const community = req.params.community;
     const id = req.params.id;
-    validators.validatingInput(req, 'schemas/profile-put.json')
+    validatingInput(req, 'schemas/profile-put.json')
     .then(() => {
-      return validators.verifyingCommunityExists(community, `${req.baseUrl}/${id}`);
+      return verifyingCommunityExists(community, `${req.baseUrl}/${id}`);
     })
     .then(() => {
-      return validators.verifyingProfileExists(req.body.modified_by, req.baseUrl);
+      return verifyingProfileExists(req.body.modified_by, req.baseUrl);
     })
     .then(() => {
       return knex(profileTable).where('id', id).select();
@@ -117,7 +124,7 @@ router.route('/:id')
       // Sequence several results together.
       return Promise.all([
         matches[0],
-        injectors.gettingCurrentTimeAsEpoch()
+        gettingCurrentTimeAsEpoch()
       ]);
     })
     .then(results => {
@@ -145,9 +152,9 @@ router.route('/:id/attribute')
     const community = req.params.community;
     const id = req.params.id;
     const location = `${req.baseUrl}${req.url}`;
-    validators.validatingInput(req, 'schemas/attributes-post.json')
+    validatingInput(req, 'schemas/attributes-post.json')
     .then(() => {
-      return validators.verifyingCommunityExists(community, location);
+      return verifyingCommunityExists(community, location);
     })
     .then(() => {
       return knex(profileTable).where('id', id).select();
@@ -189,7 +196,7 @@ router.route('/:id/attribute')
     const community = req.params.community;
     const id = req.params.id;
     const location = `${req.baseUrl}${req.url}`;
-    validators.verifyingCommunityExists(community, location)
+    verifyingCommunityExists(community, location)
     .then(() => {
       return knex(profileTable).where('id', id).select();
     })
@@ -222,7 +229,7 @@ router.route('/:id/attribute/:key')
     const id = req.params.id;
     const key = req.params.key;
     const location = `${req.baseUrl}${req.url}`;
-    validators.verifyingCommunityExists(community, location)
+    verifyingCommunityExists(community, location)
     .then(() => {
       return knex(profileTable).where('id', id).select();
     })
@@ -281,9 +288,9 @@ function updateOrDelete(after, before, epochNow) {
   const afters = _.toPairs(after);
   if (afters.length === 1) {
     // Delete intead of update modify.
-    return injectors.setDeletedBy(before, after.modified_by, epochNow);
+    return setDeletedBy(before, after.modified_by, epochNow);
   }
-  let logEntry = injectors.setModifiedBy({}, after.modified_by, epochNow);
+  let logEntry = setModifiedBy({}, after.modified_by, epochNow);
   const potentialKeys = ['name', 'attributes'];
   const keys = _.intersection(_.keys(after), potentialKeys);
   const oldKeyValues = _.pick(before, keys);
@@ -293,8 +300,8 @@ function updateOrDelete(after, before, epochNow) {
       logEntry[key] = diffValue;
     }
   });
-  let update = injectors.setModifiedBy(after, after.modified_by, epochNow);
-  update = injectors.updateModificationLog(update, before, logEntry);
+  let update = setModifiedBy(after, after.modified_by, epochNow);
+  update = updateModificationLog(update, before, logEntry);
   return update;
 }
 

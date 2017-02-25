@@ -1,6 +1,6 @@
 'use strict';
 
-const constants = require('server/constants-v1')();
+const constants = require('server/constants')();
 const communityTable = constants.communityTable;
 const profileTable = constants.profileTable;
 const entityTable = constants.entityTable;

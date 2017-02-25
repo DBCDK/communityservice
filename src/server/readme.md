@@ -26,4 +26,4 @@ The [`index.js`](index.js) handles all unknown endpoints, malformed JSON input, 
 
 # Routes
 
-The API version is part of the URL.  So all version 1 routes start with `/v1`, and all files pertaining to version 1 routes have `-v1` in their name.
+The API version is part of the URL.  So all version 1 routes start with `/v1`, and all files pertaining to version 1 routes are located in directory `v1`.

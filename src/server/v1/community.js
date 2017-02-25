@@ -9,9 +9,10 @@ const router = express.Router();
 const config = require('server/config');
 const logger = require('__/logging')(config.logger);
 const knex = require('knex')(config.db);
-const validatingInput = require('server/validators').validatingInput;
-const injectors = require('server/injectors');
-const constants = require('server/constants-v1')();
+const validatingInput = require('server/v1/verifiers').validatingInput;
+const gettingCurrentTimeAsEpoch = require('server/v1/modifiers').gettingCurrentTimeAsEpoch;
+const setModifiedEpoch = require('server/v1/modifiers').setModifiedEpoch;
+const constants = require('server/constants')();
 const communityTable = constants.communityTable;
 
 router.route('/')
@@ -47,10 +48,10 @@ router.route('/:id')
     const id = req.params.id;
     validatingInput(req, 'schemas/community-put.json')
     .then(() => {
-      return injectors.gettingCurrentTimeAsEpoch();
+      return gettingCurrentTimeAsEpoch();
     })
     .then(epoch => {
-      const update = injectors.setModifiedEpoch(req.body, epoch);
+      const update = setModifiedEpoch(req.body, epoch);
       return knex(communityTable).where('id', id).update(update, '*');
     })
     .then(communities => {

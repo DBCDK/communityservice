@@ -1,6 +1,6 @@
 # Community Service database model
 
-The database is created from scratch by [`src/server/current-db-v1.js`](../src/server/current-db-v1.js).
+The database is created from scratch by [`src/server/v1/current-db.js`](../src/server/v1/current-db.js).
 Migrations will be located in [`src/migrations`](../src/migrations/).
 
 Here are the raw schemas as seen by PostgreSQL.

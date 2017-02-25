@@ -1,5 +1,5 @@
 /*
- * Common JSON validator functions for integration testing.
+ * Common verifiers and JSON validator functions for integration testing.
  */
 
 'use strict';

@@ -1,5 +1,5 @@
 /*
- * Common JSON validator functions for the API.
+ * Common verifiers and JSON validator functions for the API.
  */
 
 'use strict';
@@ -7,11 +7,11 @@
 const config = require('server/config');
 const knex = require('knex')(config.db);
 const validator = require('is-my-json-valid/require');
-const constants = require('server/constants-v1')();
+const constants = require('server/constants')();
 const communityTable = constants.communityTable;
 const profileTable = constants.profileTable;
-const entityTable = constants.entityTable;
-const actionTable = constants.actionTable;
+// const entityTable = constants.entityTable;
+// const actionTable = constants.actionTable;
 
 function validatingInput(req, schema) {
   return new Promise((resolve, reject) => {

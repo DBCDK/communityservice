@@ -1,5 +1,5 @@
 /*
- * Common injection functions for the API.
+ * Common object modifier functions for the API.
  */
 
 'use strict';
