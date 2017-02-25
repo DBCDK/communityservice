@@ -7,8 +7,11 @@
 const config = require('server/config');
 const knex = require('knex')(config.db);
 const validator = require('is-my-json-valid/require');
-const communityTable = 'communities';
-const profileTable = 'profiles';
+const constants = require('server/constants-v1')();
+const communityTable = constants.communityTable;
+const profileTable = constants.profileTable;
+const entityTable = constants.entityTable;
+const actionTable = constants.actionTable;
 
 function validatingInput(req, schema) {
   return new Promise((resolve, reject) => {

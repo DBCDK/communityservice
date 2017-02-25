@@ -1,11 +1,12 @@
 'use strict';
 
-module.exports = knex => {
+const constants = require('server/constants-v1')();
+const communityTable = constants.communityTable;
+const profileTable = constants.profileTable;
+const entityTable = constants.entityTable;
+const actionTable = constants.actionTable;
 
-  const communityTable = 'communities';
-  const profileTable = 'profiles';
-  const entityTable = 'entities';
-  const actionTable = 'actions';
+module.exports = knex => {
 
   function addCreatedModifiedDeletedTimestamp(table) {
     table.increments('id').primary();

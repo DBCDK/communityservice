@@ -11,7 +11,8 @@ const logger = require('__/logging')(config.logger);
 const knex = require('knex')(config.db);
 const validatingInput = require('server/validators').validatingInput;
 const injectors = require('server/injectors');
-const communityTable = 'communities';
+const constants = require('server/constants-v1')();
+const communityTable = constants.communityTable;
 
 router.route('/')
   .get((req, res) => {
