@@ -3,11 +3,13 @@
 const constants = require('server/constants')();
 const communityTable = constants.communityTable;
 const profileTable = constants.profileTable;
-// const entityTable = constants.entityTable;
+const entityTable = constants.entityTable;
 // const actionTable = constants.actionTable;
 
 exports.seed = knex => {
-  // Communities
+  /*
+   * Communities
+   */
   return knex.raw(`alter sequence ${communityTable}_id_seq restart with 1`)
     .then(() => {
       return knex(communityTable).insert({
@@ -20,7 +22,9 @@ exports.seed = knex => {
         attributes: {production: false}
       });
     })
-    // Profiles
+    /*
+     * Profiles
+     */
     .then(() => {
       return knex.raw(`alter sequence ${profileTable}_id_seq restart with 1`);
     })
@@ -65,6 +69,33 @@ Og laver lerpotter på en drejebænk.`,
         community_id: 1,
         name: 'Anonymous'
       });
+    })
+    .then(() => {
+      return knex(profileTable).insert({
+        community_id: 2,
+        name: 'Tante Grøn'
+      });
+    })
+    /*
+     * Entities
+     */
+    .then(() => {
+      return knex(entityTable).insert({
+        community_id: 1,
+        owner_id: 3,
+        title: 'Byg et eventyr',
+        type: 'campaign',
+        contents: 'Kan du bygge dit favoriteventyr i Minecraft?',
+        attributes: {
+          small: 'http://biblo-admin.demo.dbc.dk/sites/default/files/styles/small/public/campaigns/logos/img/ikon%20gruppe.png?itok=yQKq1CFc',
+          medium: 'http://biblo-admin.demo.dbc.dk/sites/default/files/styles/medium/public/campaigns/logos/img/ikon%20gruppe.png?itok=87DbwOLX',
+          large: 'http://biblo-admin.demo.dbc.dk/sites/default/files/styles/large/public/campaigns/logos/img/ikon%20gruppe.png?itok=qAsQmDae',
+          svg: 'http://biblo-admin.demo.dbc.dk/sites/default/files/campaigns/logos/svg/ikon%20gruppe.png'
+        }
+      });
+    })
+    .catch(error => {
+      throw error;
     })
     ;
 };

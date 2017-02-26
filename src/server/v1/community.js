@@ -16,6 +16,7 @@ const constants = require('server/constants')();
 const communityTable = constants.communityTable;
 
 router.route('/')
+
   .get((req, res) => {
     knex(communityTable).select()
     .then(communities => {
@@ -25,6 +26,7 @@ router.route('/')
       });
     });
   })
+
   .post((req, res, next) => {
     validatingInput(req, 'schemas/community-post.json')
     .then(() => {
@@ -44,6 +46,7 @@ router.route('/')
   });
 
 router.route('/:id')
+
   .put((req, res, next) => {
     const id = req.params.id;
     validatingInput(req, 'schemas/community-put.json')
@@ -74,6 +77,7 @@ router.route('/:id')
       next(error);
     });
   })
+
   .get((req, res, next) => {
     const name = req.params.id;
     locateCommunityId(name)

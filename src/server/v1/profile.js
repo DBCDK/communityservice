@@ -15,9 +15,9 @@ const setCommunityId = require('server/v1/modifiers').setCommunityId;
 const updateModificationLog = require('server/v1/modifiers').updateModificationLog;
 const setDeletedBy = require('server/v1/modifiers').setDeletedBy;
 const setModifiedBy = require('server/v1/modifiers').setModifiedBy;
-
 const _ = require('lodash');
-const profileTable = 'profiles';
+const constants = require('server/constants')();
+const profileTable = constants.profileTable;
 
 // const logger = require('__/logging')(config.logger);
 
@@ -25,6 +25,7 @@ const profileTable = 'profiles';
 const router = express.Router({mergeParams: true});
 
 router.route('/')
+
   .get((req, res, next) => {
     const community = req.params.community;
     verifyingCommunityExists(community, req.baseUrl)
@@ -43,6 +44,7 @@ router.route('/')
       next(error);
     });
   })
+
   .post((req, res, next) => {
     const community = req.params.community;
     validatingInput(req, 'schemas/profile-post.json')
@@ -70,6 +72,7 @@ router.route('/')
   ;
 
 router.route('/:id')
+
   .get((req, res, next) => {
     const community = req.params.community;
     const id = req.params.id;
@@ -99,6 +102,7 @@ router.route('/:id')
       next(error);
     });
   })
+
   .put((req, res, next) => {
     const community = req.params.community;
     const id = req.params.id;
@@ -107,7 +111,7 @@ router.route('/:id')
       return verifyingCommunityExists(community, `${req.baseUrl}/${id}`);
     })
     .then(() => {
-      return verifyingProfileExists(req.body.modified_by, req.baseUrl);
+      return verifyingProfileExists(req.body.modified_by, community, req.baseUrl, req.body);
     })
     .then(() => {
       return knex(profileTable).where('id', id).select();
@@ -148,6 +152,7 @@ router.route('/:id')
   ;
 
 router.route('/:id/attribute')
+
   .post((req, res, next) => {
     const community = req.params.community;
     const id = req.params.id;
@@ -192,6 +197,7 @@ router.route('/:id/attribute')
       next(error);
     });
   })
+
   .get((req, res, next) => {
     const community = req.params.community;
     const id = req.params.id;
@@ -224,6 +230,7 @@ router.route('/:id/attribute')
   ;
 
 router.route('/:id/attribute/:key')
+
   .get((req, res, next) => {
     const community = req.params.community;
     const id = req.params.id;

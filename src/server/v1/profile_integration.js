@@ -31,7 +31,9 @@ describe('API v1 profile endpoints', () => {
       done();
     });
   });
+
   describe('GET /community/:id/profile', () => {
+
     it('should return seeded profiles', done => {
       const url = '/v1/community/1/profile';
       service.get(url)
@@ -73,6 +75,7 @@ describe('API v1 profile endpoints', () => {
       })
       .end(done);
     });
+
     it('should return Not Found for non-existent community', done => {
       service.get('/v1/community/99/profile')
       .expect(404)
@@ -89,7 +92,9 @@ describe('API v1 profile endpoints', () => {
       .end(done);
     });
   });
+
   describe('POST /community/:id/profile', () => {
+
     it('should return Not Found for non-existent community', done => {
       service.post('/v1/community/99/profile')
       .send({name: 'Låtte Østergærde'})
@@ -106,6 +111,7 @@ describe('API v1 profile endpoints', () => {
       })
       .end(done);
     });
+
     it('should reject missing data', done => {
       service.post('/v1/community/1/profile')
       .send('')
@@ -119,6 +125,7 @@ describe('API v1 profile endpoints', () => {
       })
       .end(done);
     });
+
     it('should reject malformed data', done => {
       service.post('/v1/community/1/profile')
       .send('My profile')
@@ -132,6 +139,7 @@ describe('API v1 profile endpoints', () => {
       })
       .end(done);
     });
+
     it('should reject non-conformant JSON', done => {
       service.post('/v1/community/1/profile')
       .send({name: 'My profile', piggyback: 'I just wanna be in'})
@@ -145,9 +153,10 @@ describe('API v1 profile endpoints', () => {
       })
       .end(done);
     });
+
     it('should add a new profile with just a name', done => {
       const name = 'Miss Mia';
-      const id = 5;
+      const id = 6;
       const location = `/v1/community/1/profile/${id}`;
       service.post('/v1/community/1/profile')
       .send({name})
@@ -177,7 +186,9 @@ describe('API v1 profile endpoints', () => {
       .end(done);
     });
   });
+
   describe('GET /community/:id/profile/:id', () => {
+
     it('should return Not Found on unknown profile', done => {
       service.get('/v1/community/1/profile/100')
       .expect(404)
@@ -199,7 +210,9 @@ describe('API v1 profile endpoints', () => {
       .end(done);
     });
   });
+
   describe('PUT /community/:id/profile/:id', () => {
+
     it('should return Not Found when profile does not belong to community', done => {
       service.put('/v1/community/99/profile/1')
       .send({name: 'Name', modified_by: 1})
@@ -216,6 +229,7 @@ describe('API v1 profile endpoints', () => {
       })
       .end(done);
     });
+
     it('should return Not Found on any non-existing profile', done => {
       service.put('/v1/community/1/profile/100')
       .send({name: 'Name', modified_by: 1})
@@ -229,6 +243,7 @@ describe('API v1 profile endpoints', () => {
       })
       .end(done);
     });
+
     it('should return Bad Request on any non-existing profile for modifier', done => {
       service.put('/v1/community/1/profile/1')
       .send({name: 'Name', modified_by: 98})
@@ -242,10 +257,33 @@ describe('API v1 profile endpoints', () => {
       })
       .end(done);
     });
+
+    it('should return Bad Request on modifier profile belonging to another community', done => {
+      service.put('/v1/community/1/profile/1')
+      .send({name: 'Name', modified_by: 5})
+      .expect(400)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          const error = errors[0];
+          expect(error).to.have.property('title');
+          expect(error.title).to.match(/Profile does not belong to community/);
+          expect(error).to.have.property('details');
+          expect(error.details).to.have.property('problem');
+          expect(error.details.problem).to.match(/Profile 5 does not belong to community 1/);
+          expect(error.details).to.have.property('data');
+          expect(error).to.have.property('meta');
+          expect(error.meta).to.have.property('resource');
+        });
+      })
+      .end(done);
+    });
+
     const attributes = {libraryId: 526443, interests: ['carrots', 'rabbit holes']};
     const id = 3;
     const admin_id = 1;
     const url = `/v1/community/1/profile/${id}`;
+
     it('should mark as deleted when modified_by is only field', done => {
       service.put(url)
       .send({modified_by: id})
@@ -275,6 +313,7 @@ describe('API v1 profile endpoints', () => {
       })
       .end(done);
     });
+
     it('should update log with minimal attributes', done => {
       const url2 = '/v1/community/1/profile/2';
       service.get(url2)
@@ -298,6 +337,7 @@ describe('API v1 profile endpoints', () => {
         done(error);
       });
     });
+
     it('should update existing profile and retrieve the update', done => {
       service.put(url)
       .send({attributes, name: 'BiblioteKaren', modified_by: admin_id})
@@ -376,7 +416,9 @@ describe('API v1 profile endpoints', () => {
       });
     });
   });
+
   describe('GET /community/:id/profile/:id/attribute/:key', () => {
+
     it('should return Not Found for non-existent community', done => {
       service.get('/v1/community/99/profile/1/attribute/email')
       .expect(404)
@@ -392,6 +434,7 @@ describe('API v1 profile endpoints', () => {
       })
       .end(done);
     });
+
     it('should return Not Found on any non-existing profile', done => {
       service.get('/v1/community/1/profile/95/attribute/email')
       .expect(404)
@@ -407,6 +450,7 @@ describe('API v1 profile endpoints', () => {
       })
       .end(done);
     });
+
     it('should return Not Found for non-existent key', done => {
       service.get('/v1/community/1/profile/1/attribute/dumbKey')
       .expect(404)
@@ -422,7 +466,9 @@ describe('API v1 profile endpoints', () => {
       })
       .end(done);
     });
+
     const url = '/v1/community/1/profile/1/attribute/email';
+
     it('should retrieve a value by key', done => {
       service.get(url)
       .expect(200)
@@ -436,7 +482,9 @@ describe('API v1 profile endpoints', () => {
       .end(done);
     });
   });
+
   describe('GET /community/:id/profile/:id/attribute', () => {
+
     it('should return Not Found for non-existent community', done => {
       service.get('/v1/community/99/profile/1/attribute')
       .expect(404)
@@ -452,6 +500,7 @@ describe('API v1 profile endpoints', () => {
       })
       .end(done);
     });
+
     it('should return Not Found on any non-existing profile', done => {
       service.get('/v1/community/1/profile/95/attribute')
       .expect(404)
@@ -467,6 +516,7 @@ describe('API v1 profile endpoints', () => {
       })
       .end(done);
     });
+
     it('should retrieve all attributes', done => {
       const url = '/v1/community/1/profile/1/attribute';
       service.get(url)
@@ -484,6 +534,7 @@ describe('API v1 profile endpoints', () => {
       })
       .end(done);
     });
+
     it('should retrieve empty set of attributes', done => {
       const url = '/v1/community/1/profile/4/attribute';
       service.get(url)
@@ -499,7 +550,9 @@ describe('API v1 profile endpoints', () => {
       .end(done);
     });
   });
+
   describe('POST /community/:id/profile/:id/attribute', () => {
+
     it('should return Not Found for non-existent community', done => {
       service.post('/v1/community/99/profile/1/attribute')
       .expect(404)
@@ -516,6 +569,7 @@ describe('API v1 profile endpoints', () => {
       })
       .end(done);
     });
+
     it('should return Not Found on any non-existing profile', done => {
       service.post('/v1/community/1/profile/95/attribute')
       .expect(404)
@@ -532,7 +586,9 @@ describe('API v1 profile endpoints', () => {
       })
       .end(done);
     });
+
     const url = '/v1/community/1/profile/1/attribute';
+
     it('should return Conflict on an existing key', done => {
       service.post(url)
       .expect(409)
@@ -549,9 +605,11 @@ describe('API v1 profile endpoints', () => {
       })
       .end(done);
     });
+
     const key = 'phone';
     const attribute = {[key]: '+4509876521'};
     const location = `${url}`;
+
     it('should add a new key-value pair', done => {
       service.post(url)
       .send(attribute)

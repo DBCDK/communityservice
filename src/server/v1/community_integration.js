@@ -31,7 +31,9 @@ describe('API v1 community endpoints', () => {
       done();
     });
   });
+
   describe('GET /community', () => {
+
     it('should return seeded communities', done => {
       const url = '/v1/community';
       service.get(url)
@@ -62,12 +64,15 @@ describe('API v1 community endpoints', () => {
       .end(done);
     });
   });
+
   describe('GET /community/:name', () => {
+
     it('should return Not Found on unknown name', done => {
       service.get('/v1/community/Osten Feldt')
       .expect(404)
       .end(done);
     });
+
     it('should locate community by name', done => {
       service.get('/v1/community/Biblo')
       .expect(200)
@@ -92,14 +97,18 @@ describe('API v1 community endpoints', () => {
       .end(done);
     });
   });
+
   describe('GET /community/:id', () => {
+
     it('should return Not Found on unknown community', done => {
       service.get('/v1/community/10')
       .expect(404)
       .end(done);
     });
   });
+
   describe('PUT /community/:id', () => {
+
     it('should return Not Found on any non-existing community', done => {
       service.put('/v1/community/10')
       .send({name: 'Name'})
@@ -107,7 +116,9 @@ describe('API v1 community endpoints', () => {
       .end(done);
     });
   });
+
   describe('POST /community', () => {
+
     it('should reject missing data', done => {
       service.post('/v1/community')
       .send('')
@@ -121,6 +132,7 @@ describe('API v1 community endpoints', () => {
       })
       .end(done);
     });
+
     it('should reject malformed data', done => {
       service.post('/v1/community')
       .send('My community')
@@ -134,6 +146,7 @@ describe('API v1 community endpoints', () => {
       })
       .end(done);
     });
+
     it('should reject JSON with excess fields', done => {
       service.post('/v1/community')
       .send({name: 'My community', ost: 'Extra field'})
@@ -147,6 +160,7 @@ describe('API v1 community endpoints', () => {
       })
       .end(done);
     });
+
     it('should add a new community with just a name', done => {
       const name = 'Sære Litterater';
       const id = 3;
@@ -177,11 +191,14 @@ describe('API v1 community endpoints', () => {
       .end(done);
     });
   });
+
   describe('PUT /community/:id', () => {
+
     const name = 'Søde Litterater';
     const attributes = {test: true};
     const id = 2;
     const url = `/v1/community/${id}`;
+
     it('should update existing community and retrieve the update', done => {
       service.put(url)
       .send({name, attributes})
