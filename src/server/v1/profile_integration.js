@@ -53,8 +53,14 @@ describe('API v1 profile endpoints', () => {
             expect(data.created_epoch).to.match(/^[0-9]+$/);
             expect(data).to.have.property('modified_epoch');
             expect(data.modified_epoch).to.be.null;
+            expect(data).to.have.property('modified_by');
+            expect(data.modified_by).to.be.null;
             expect(data).to.have.property('deleted_epoch');
             expect(data.deleted_epoch).to.be.null;
+            expect(data).to.have.property('deleted_by');
+            expect(data.deleted_by).to.be.null;
+            expect(data).to.have.property('community_id');
+            expect(data.community_id).to.match(/^[0-9]+$/);
             expect(data).to.have.property('log');
             expect(data.log).to.be.null;
           });

@@ -8,9 +8,9 @@ const dbconfig = config.db;
 const knex = require('knex')(dbconfig);
 const db = require('server/v1/current-db')(knex);
 const seedBigDb = require('server/seeds/integration-test-big').seed;
-// const expectSuccess = require('server/integration-verifiers').expectSuccess;
+const expectSuccess = require('server/integration-verifiers').expectSuccess;
 const expectFailure = require('server/integration-verifiers').expectFailure;
-// const expectValidate = require('server/integration-verifiers').expectValidate;
+const expectValidate = require('server/integration-verifiers').expectValidate;
 
 /* eslint-disable no-unused-expressions */
 describe('API v1 entity endpoints', () => {
@@ -34,7 +34,45 @@ describe('API v1 entity endpoints', () => {
 
   describe('GET /community/:id/entity', () => {
 
-    it('should return seeded entities');
+    it('should return seeded entities', done => {
+      const url = '/v1/community/1/entity';
+      service.get(url)
+      .expect(200)
+      .expect('Content-Type', /json/)
+      .expect(res => {
+        expectSuccess(res.body, (links, list) => {
+          expect(links).to.have.property('self');
+          expect(links.self).to.equal(url);
+          expect(list.length).to.equal(1);
+          list.forEach(data => {
+            expectValidate(data, 'v1/schemas/entity-out.json');
+            expect(data).to.have.property('id');
+            expect(data).to.have.property('title');
+            expect(data).to.have.property('type');
+            expect(data).to.have.property('contents');
+            expect(data).to.have.property('contents');
+            expect(data).to.have.property('attributes');
+            expect(data).to.have.property('created_epoch');
+            expect(data.created_epoch).to.match(/^[0-9]+$/);
+            expect(data).to.have.property('modified_epoch');
+            expect(data.modified_epoch).to.be.null;
+            expect(data).to.have.property('modified_by');
+            expect(data.modified_by).to.be.null;
+            expect(data).to.have.property('deleted_epoch');
+            expect(data.deleted_epoch).to.be.null;
+            expect(data).to.have.property('deleted_by');
+            expect(data.deleted_by).to.be.null;
+            expect(data).to.have.property('community_id');
+            expect(data.community_id).to.match(/^[0-9]+$/);
+            expect(data).to.have.property('owner_id');
+            expect(data.owner_id).to.match(/^[0-9]+$/);
+            expect(data).to.have.property('log');
+            expect(data.log).to.be.null;
+          });
+        });
+      })
+      .end(done);
+    });
 
     it('should return Not Found for non-existent community', done => {
       service.get('/v1/community/99/entity')
