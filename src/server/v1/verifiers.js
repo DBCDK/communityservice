@@ -10,7 +10,7 @@ const validator = require('is-my-json-valid/require');
 const constants = require('server/constants')();
 const communityTable = constants.communityTable;
 const profileTable = constants.profileTable;
-// const entityTable = constants.entityTable;
+const entityTable = constants.entityTable;
 // const actionTable = constants.actionTable;
 
 function validatingInput(req, schema) {
@@ -102,3 +102,56 @@ function verifyingProfileExists(id, community, url, object) {
   });
 }
 exports.verifyingProfileExists = verifyingProfileExists;
+
+function verifyingEntityExistsIfSet(id, community, url, object) {
+  return new Promise((resolve, reject) => {
+    if (!id) {
+      resolve();
+    }
+    knex(entityTable).where('id', id).select()
+    .then(entities => {
+      if (!entities || entities.length !== 1) {
+        let meta = {};
+        if (url) {
+          meta.resource = url;
+        }
+        let details = {
+          problem: `Entity ${id} does not exist`
+        };
+        if (object) {
+          details.data = object;
+        }
+        reject({
+          status: 404,
+          title: 'Entity does not exist',
+          details,
+          meta
+        });
+      }
+      const entity = entities[0];
+      if (entity.community_id !== Number(community)) {
+        let meta = {};
+        if (url) {
+          meta.resource = url;
+        }
+        let details = {
+          problem: `Entity ${id} does not belong to community ${community}`
+        };
+        if (object) {
+          details.data = object;
+        }
+        reject({
+          status: 400,
+          title: 'Entity does not belong to community',
+          details,
+          meta
+        });
+      }
+      resolve();
+    })
+    .catch(error => {
+      reject(error);
+    });
+  });
+}
+exports.verifyingEntityExistsIfSet = verifyingEntityExistsIfSet;

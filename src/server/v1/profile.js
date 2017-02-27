@@ -15,6 +15,7 @@ const setCommunityId = require('server/v1/modifiers').setCommunityId;
 const updateModificationLog = require('server/v1/modifiers').updateModificationLog;
 const setDeletedBy = require('server/v1/modifiers').setDeletedBy;
 const setModifiedBy = require('server/v1/modifiers').setModifiedBy;
+const getMinimalDifference = require('server/v1/modifiers').getMinimalDifference;
 const _ = require('lodash');
 const constants = require('server/constants')();
 const profileTable = constants.profileTable;
@@ -273,28 +274,10 @@ router.route('/:id/attribute/:key')
     });
   });
 
-function getMinimalDifference(after, before) {
-  if (typeof after === typeof before) {
-    if (typeof after === 'object') {
-      const diff = _.omitBy(before, (v, k) => {
-        return after[k] === v;
-      });
-      if (_.isEmpty(diff)) {
-        return null;
-      }
-      return diff;
-    }
-    else if (after === before) {
-      return null;
-    }
-  }
-  return before;
-}
-
 function updateOrDelete(after, before, epochNow) {
   const afters = _.toPairs(after);
   if (afters.length === 1) {
-    // Delete intead of update modify.
+    // Delete instead of update modify.
     return setDeletedBy(before, after.modified_by, epochNow);
   }
   let logEntry = setModifiedBy({}, after.modified_by, epochNow);

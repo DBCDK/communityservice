@@ -6,6 +6,7 @@
 
 const config = require('server/config');
 const knex = require('knex')(config.db);
+const _ = require('lodash');
 
 function gettingCurrentTimeAsEpoch() {
   return new Promise((resolve, reject) => {
@@ -67,3 +68,22 @@ function updateModificationLog(update, before, logEntry) {
   return update;
 }
 exports.updateModificationLog = updateModificationLog;
+
+function getMinimalDifference(after, before) {
+  if (typeof after === typeof before) {
+    if (typeof after === 'object') {
+      const diff = _.omitBy(before, (v, k) => {
+        return after[k] === v;
+      });
+      if (_.isEmpty(diff)) {
+        return null;
+      }
+      return diff;
+    }
+    else if (after === before) {
+      return null;
+    }
+  }
+  return before;
+}
+exports.getMinimalDifference = getMinimalDifference;

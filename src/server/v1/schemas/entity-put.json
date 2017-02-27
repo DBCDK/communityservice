@@ -2,29 +2,25 @@
   "required": true,
   "type": "object",
   "properties": {
-    "type": {
+    "modified_by": {
       "required": true,
+      "type": "integer"
+    },
+    "type": {
+      "required": false,
       "type": "string"
     },
     "title": {
-      "required": true,
+      "required": false,
       "type": "string"
     },
     "contents": {
-      "required": true,
+      "required": false,
       "type": "string"
     },
     "attributes": {
       "required": false,
       "type": "object"
-    },
-    "owner_id": {
-      "required": true,
-      "type": "integer"
-    },
-    "entity_ref": {
-      "required": false,
-      "type": "integer"
     }
   },
   "additionalProperties": false

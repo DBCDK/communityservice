@@ -200,6 +200,7 @@ describe('API v1 profile endpoints', () => {
       .expect(404)
       .end(done);
     });
+
     it('should return Not Found when profile does not belong to community', done => {
       service.get('/v1/community/99/profile/1')
       .expect(404)
@@ -218,6 +219,21 @@ describe('API v1 profile endpoints', () => {
   });
 
   describe('PUT /community/:id/profile/:id', () => {
+
+    it('should reject non-conformant JSON', done => {
+      service.put('/v1/community/1/profile/1')
+      .send({})
+      .expect(400)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          const error = errors[0];
+          expect(error).to.have.property('title');
+          expect(error.title).to.match(/Input data does not adhere to schema/);
+        });
+      })
+      .end(done);
+    });
 
     it('should return Not Found when profile does not belong to community', done => {
       service.put('/v1/community/99/profile/1')
@@ -250,7 +266,7 @@ describe('API v1 profile endpoints', () => {
       .end(done);
     });
 
-    it('should return Bad Request on any non-existing profile for modifier', done => {
+    it('should return Not Found on any non-existing profile for modifier', done => {
       service.put('/v1/community/1/profile/1')
       .send({name: 'Name', modified_by: 98})
       .expect(404)
@@ -285,9 +301,7 @@ describe('API v1 profile endpoints', () => {
       .end(done);
     });
 
-    const attributes = {libraryId: 526443, interests: ['carrots', 'rabbit holes']};
     const id = 3;
-    const admin_id = 1;
     const url = `/v1/community/1/profile/${id}`;
 
     it('should mark as deleted when modified_by is only field', done => {
@@ -313,12 +327,16 @@ describe('API v1 profile endpoints', () => {
           expect(data).to.have.property('deleted_epoch');
           expect(data.deleted_epoch).to.match(/^[0-9]+$/);
           expect(data.deleted_epoch).to.not.be.below(data.created_epoch);
+          expect(data).to.have.property('deleted_by');
+          expect(data.deleted_by).to.equal(id);
           expect(data).to.have.property('log');
           expect(data.log).to.be.null;
         });
       })
       .end(done);
     });
+
+    const attributes = {libraryId: 526443, interests: ['carrots', 'rabbit holes']};
 
     it('should update log with minimal attributes', done => {
       const url2 = '/v1/community/1/profile/2';
@@ -343,6 +361,8 @@ describe('API v1 profile endpoints', () => {
         done(error);
       });
     });
+
+    const admin_id = 1;
 
     it('should update existing profile and retrieve the update', done => {
       service.put(url)

@@ -80,6 +80,10 @@ Og laver lerpotter på en drejebænk.`,
      * Entities
      */
     .then(() => {
+      return knex.raw(`alter sequence ${entityTable}_id_seq restart with 1`);
+    })
+    .then(() => {
+      // 1
       return knex(entityTable).insert({
         community_id: 1,
         owner_id: 3,
@@ -92,6 +96,16 @@ Og laver lerpotter på en drejebænk.`,
           large: 'http://biblo-admin.demo.dbc.dk/sites/default/files/styles/large/public/campaigns/logos/img/ikon%20gruppe.png?itok=qAsQmDae',
           svg: 'http://biblo-admin.demo.dbc.dk/sites/default/files/campaigns/logos/svg/ikon%20gruppe.png'
         }
+      });
+    })
+    .then(() => {
+      // 2
+      return knex(entityTable).insert({
+        community_id: 2,
+        owner_id: 5,
+        title: 'Nøgen Frokost',
+        type: 'review',
+        contents: 'En rigtig god bog, men jeg forstår den ikke helt...'
       });
     })
     .catch(error => {
