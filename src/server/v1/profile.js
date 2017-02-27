@@ -7,10 +7,15 @@
 const express = require('express');
 const config = require('server/config');
 const knex = require('knex')(config.db);
+
+const gettingProfileFromCommunity = require('server/v1/verifiers').gettingProfileFromCommunity;
+
 const verifyingCommunityExists = require('server/v1/verifiers').verifyingCommunityExists;
 const verifyingProfileExists = require('server/v1/verifiers').verifyingProfileExists;
 const validatingInput = require('server/v1/verifiers').validatingInput;
 const gettingCurrentTimeAsEpoch = require('server/v1/modifiers').gettingCurrentTimeAsEpoch;
+
+
 const setCommunityId = require('server/v1/modifiers').setCommunityId;
 const updateModificationLog = require('server/v1/modifiers').updateModificationLog;
 const setDeletedBy = require('server/v1/modifiers').setDeletedBy;
@@ -77,21 +82,9 @@ router.route('/:id')
   .get((req, res, next) => {
     const community = req.params.community;
     const id = req.params.id;
-    verifyingCommunityExists(community, `${req.baseUrl}/${id}`)
-    .then(() => {
-      return knex(profileTable).where('id', id).select();
-    })
-    .then(profiles => {
-      if (!profiles || profiles.length !== 1) {
-        throw {
-          status: 404,
-          title: 'Profile does not exist',
-          detail: `Profile ${id} unknown`,
-          meta: {resource: `${req.baseUrl}/${id}`}
-        };
-      }
-      const profile = profiles[0];
-      const location = `${req.baseUrl}/${profile.id}`;
+    const location = `${req.baseUrl}/${id}`;
+    gettingProfileFromCommunity(id, community, location)
+    .then(profile => {
       res
       .status(200)
       .json({

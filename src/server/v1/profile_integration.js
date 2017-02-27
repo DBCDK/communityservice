@@ -201,7 +201,7 @@ describe('API v1 profile endpoints', () => {
       .end(done);
     });
 
-    it('should return Not Found when profile does not belong to community', done => {
+    it('should return Not Found for non-existent community', done => {
       service.get('/v1/community/99/profile/1')
       .expect(404)
       .expect(res => {
@@ -210,6 +210,25 @@ describe('API v1 profile endpoints', () => {
           const error = errors[0];
           expect(error).to.have.property('title');
           expect(error.title).to.match(/Community does not exist/);
+          expect(error).to.have.property('meta');
+          expect(error.meta).to.have.property('resource');
+        });
+      })
+      .end(done);
+    });
+
+    it('should return Not Found when profile does not belong to community', done => {
+      service.get('/v1/community/2/profile/1')
+      .expect(400)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          const error = errors[0];
+          expect(error).to.have.property('title');
+          expect(error.title).to.match(/Profile does not belong to community/);
+          expect(error).to.have.property('details');
+          expect(error.details).to.have.property('problem');
+          expect(error.details.problem).to.match(/Profile 1 does not belong to community 2/);
           expect(error).to.have.property('meta');
           expect(error.meta).to.have.property('resource');
         });
@@ -336,19 +355,20 @@ describe('API v1 profile endpoints', () => {
       .end(done);
     });
 
-    const attributes = {libraryId: 526443, interests: ['carrots', 'rabbit holes']};
-
     it('should update log with minimal attributes', done => {
       const url2 = '/v1/community/1/profile/2';
+      // Get original profile.
       service.get(url2)
       .expect(200)
       .expect(res => {
         expectSuccess(res.body, (links, data) => {
+          // Update profile.
           service.put(url2)
           .send({name: 'Onkel Reje', attributes: data.attributes, modified_by: 2})
           .expect(200)
           .expect(res2 => {
             expectSuccess(res2.body, (links2, data2) => {
+              expect(data2.log).to.have.length(1);
               const log = data2.log[0];
               expect(log).to.have.property('name');
               expect(log).to.not.have.property('attributes');
@@ -363,6 +383,7 @@ describe('API v1 profile endpoints', () => {
     });
 
     const admin_id = 1;
+    const attributes = {libraryId: 526443, interests: ['carrots', 'rabbit holes']};
 
     it('should update existing profile and retrieve the update', done => {
       service.put(url)

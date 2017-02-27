@@ -18,6 +18,14 @@
       "required": false,
       "type": "string"
     },
+    "start_epoch": {
+      "required": false,
+      "type": "integer"
+    },
+    "end_epoch": {
+      "required": false,
+      "type": "integer"
+    },
     "attributes": {
       "required": false,
       "type": "object"

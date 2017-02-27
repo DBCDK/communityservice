@@ -155,6 +155,51 @@ router.route('/:id')
   })
   ;
 
+router.route('/:id/attribute/:key')
+
+  .get((req, res, next) => {
+    const community = req.params.community;
+    const id = req.params.id;
+    const key = req.params.key;
+    const location = `${req.baseUrl}${req.url}`;
+    verifyingCommunityExists(community, location)
+    .then(() => {
+      return knex(entityTable).where('id', id).select();
+    })
+    .then(entities => {
+      if (!entities || entities.length !== 1) {
+        throw {
+          status: 404,
+          title: 'Entity does not exist',
+          detail: `Entity ${id} unknown`,
+          meta: {resource: location}
+        };
+      }
+      return entities[0];
+    })
+    .then(entity => {
+      const value = entity.attributes[key];
+      if (typeof value === 'undefined') {
+        throw {
+          status: 404,
+          title: 'Attribute does not exist',
+          detail: `Attribute ${key} unknown`,
+          meta: {resource: location}
+        };
+      }
+      res
+      .status(200)
+      .json({
+        links: {self: location},
+        data: value
+      });
+    })
+    .catch(error => {
+      next(error);
+    });
+  })
+  ;
+
 function updateOrDelete(after, before, epochNow) {
   const afters = _.toPairs(after);
   if (afters.length === 1) {

@@ -564,35 +564,201 @@ describe('API v1 entity endpoints', () => {
       .end(done);
     });
 
-    it('should update log with minimal attributes');
+    it('should update log with minimal attributes', done => {
+      const url2 = '/v1/community/1/entity/1';
+      // Get original entity.
+      service.get(url2)
+      .expect(200)
+      .expect(res => {
+        expectSuccess(res.body, (links, data) => {
+          // Update entity
+          service.put(url2)
+          .send({title: 'Eventyr i Minecraft', attributes: data.attributes, modified_by: 2})
+          .expect(200)
+          .expect(res2 => {
+            expectSuccess(res2.body, (links2, data2) => {
+              expect(data2.log).to.have.length(1);
+              const log = data2.log[0];
+              expect(log).to.have.property('title');
+              expect(log).to.not.have.property('type');
+              expect(log).to.not.have.property('contents');
+              expect(log).to.not.have.property('attributes');
+            });
+          })
+          .end(done);
+        });
+      })
+      .catch(error => {
+        done(error);
+      });
+    });
 
-    it('should update existing entity with type');
+    it('should update existing entity with type', done => {
+      service.put(url)
+      .send({modified_by: user_id, type: 'blog'})
+      .expect(200)
+      .expect(res => {
+        expectSuccess(res.body, (links, data) => {
+          expect(data.type).to.equal('blog');
+        });
+      })
+      .end(done);
+    });
 
-    it('should update existing entity with title');
+    it('should update existing entity with title', done => {
+      service.put(url)
+      .send({modified_by: user_id, title: 'Ost'})
+      .expect(200)
+      .expect(res => {
+        expectSuccess(res.body, (links, data) => {
+          expect(data.title).to.equal('Ost');
+        });
+      })
+      .end(done);
+    });
 
-    it('should update existing entity with contents');
+    it('should update existing entity with contents', done => {
+      service.put(url)
+      .send({modified_by: user_id, contents: 'Ost'})
+      .expect(200)
+      .expect(res => {
+        expectSuccess(res.body, (links, data) => {
+          expect(data.contents).to.equal('Ost');
+        });
+      })
+      .end(done);
+    });
 
-    it('should update existing entity with start_epoch');
+    it('should update existing entity with start_epoch', done => {
+      service.put(url)
+      .send({modified_by: user_id, start_epoch: 1488206262})
+      .expect(200)
+      .expect(res => {
+        expectSuccess(res.body, (links, data) => {
+          expect(data.start_epoch).to.equal(1488206262);
+        });
+      })
+      .end(done);
+    });
 
-    it('should update existing entity with end_epoch');
+    it('should update existing entity with end_epoch', done => {
+      service.put(url)
+      .send({modified_by: user_id, end_epoch: 1488206262})
+      .expect(200)
+      .expect(res => {
+        expectSuccess(res.body, (links, data) => {
+          expect(data.end_epoch).to.equal(1488206262);
+        });
+      })
+      .end(done);
+    });
 
-    it('should update existing entity with type, title, contents');
+    // const attributes = {svg: 'http://biblo-admin.demo.dbc.dk/sites/default/files/campaigns/logos/svg/ikon%20gruppe.png'};
+
+    it('should update existing entity with type, title, contents', done => {
+      service.put(url)
+      .send({
+        modified_by: user_id,
+        type: 'blog',
+        title: 'Title',
+        contents: 'En masse ting'
+      })
+      .expect(200)
+      .expect(res => {
+        expectSuccess(res.body, (links, data) => {
+          expect(data.type).to.equal('blog');
+          expect(data.title).to.equal('Title');
+          expect(data.contents).to.equal('En masse ting');
+        });
+      })
+      .end(done);
+    });
   });
 
   describe('GET /community/:id/entity/:id/attribute/:key', () => {
 
-    it('should return Not Found for non-existent community');
+    it('should return Not Found for non-existent community', done => {
+      service.get('/v1/community/99/entity/1/attribute/svg')
+      .expect(404)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          const error = errors[0];
+          expect(error).to.have.property('title');
+          expect(error.title).to.match(/Community does not exist/);
+          expect(error).to.have.property('meta');
+          expect(error.meta).to.have.property('resource');
+        });
+      })
+      .end(done);
+    });
 
-    it('should return Not Found on any non-existing entity');
+    it('should return Not Found on any non-existing entity', done => {
+      service.get('/v1/community/1/entity/86/attribute/svg')
+      .expect(404)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          const error = errors[0];
+          expect(error).to.have.property('title');
+          expect(error.title).to.match(/Entity does not exist/);
+          expect(error).to.have.property('meta');
+          expect(error.meta).to.have.property('resource');
+        });
+      })
+      .end(done);
+    });
 
-    it('should return Not Found for non-existent key');
+    it('should return Not Found for non-existent key', done => {
+      service.get('/v1/community/1/entity/1/attribute/notexist')
+      .expect(404)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          const error = errors[0];
+          expect(error).to.have.property('title');
+          expect(error.title).to.match(/Attribute does not exist/);
+          expect(error).to.have.property('meta');
+          expect(error.meta).to.have.property('resource');
+        });
+      })
+      .end(done);
+    });
 
-    it('should retrieve a value by key');
-  });
+    const url = '/v1/community/1/entity/1/attribute/svg';
 
-  describe('GET /community/:id/entity/:id/attribute', () => {
+    it('should retrieve a value by key', done => {
+      service.get(url)
+      .expect(200)
+      .expect(res => {
+        expectSuccess(res.body, (links, data) => {
+          expect(links).to.have.property('self');
+          expect(links.self).to.equal(url);
+          expect(data).to.equal('http://biblo-admin.demo.dbc.dk/sites/default/files/campaigns/logos/svg/ikon%20gruppe.png');
+        });
+      })
+      .end(done);
+    });
 
-    it('should return Not Found when entity does not belong to community');
+    it('should return Not Found when entity does not belong to community' /* , done => {
+      service.get('/v1/community/2/entity/1/attribute/svg')
+      .expect(404)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          const error = errors[0];
+          expect(error).to.have.property('title');
+          expect(error.title).to.match(/Entity does not belong to community/);
+          expect(error).to.have.property('details');
+          expect(error.details).to.have.property('problem');
+          expect(error.details.problem).to.match(/Entity 1 does not belong to community 2/);
+          expect(error.details).to.have.property('data');
+          expect(error).to.have.property('meta');
+          expect(error.meta).to.have.property('resource');
+        });
+      })
+      .end(done);
+    }*/);
 
     it('should return Not Found on any non-existing entity');
 

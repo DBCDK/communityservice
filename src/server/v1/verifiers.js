@@ -33,12 +33,68 @@ function validatingInput(req, schema) {
 }
 exports.validatingInput = validatingInput;
 
+function gettingProfileFromCommunity(id, community, url, object) {
+  return new Promise((resolve, reject) => {
+    knex(profileTable).where('id', id).select()
+    .then(profiles => {
+      if (!profiles || profiles.length !== 1) {
+        let meta = {};
+        if (url) {
+          meta.resource = url;
+        }
+        let details = {
+          problem: `Profile ${id} does not exist`
+        };
+        if (object) {
+          details.data = object;
+        }
+        return reject({
+          status: 404,
+          title: 'Profile does not exist',
+          details,
+          meta
+        });
+      }
+      const profile = profiles[0];
+      if (profile.community_id !== Number(community)) {
+        return verifyingCommunityExists(community, url)
+        .then(() => {
+          let meta = {};
+          if (url) {
+            meta.resource = url;
+          }
+          let details = {
+            problem: `Profile ${id} does not belong to community ${community}`
+          };
+          if (object) {
+            details.data = object;
+          }
+          return reject({
+            status: 400,
+            title: 'Profile does not belong to community',
+            details,
+            meta
+          });
+        })
+        .catch(error => {
+          reject(error);
+        });
+      }
+      resolve(profile);
+    })
+    .catch(error => {
+      reject(error);
+    });
+  });
+}
+exports.gettingProfileFromCommunity = gettingProfileFromCommunity;
+
 function verifyingCommunityExists(id, url) {
   return new Promise((resolve, reject) => {
     knex(communityTable).where('id', id).select()
     .then(communities => {
       if (!communities || communities.length !== 1) {
-        reject({
+        return reject({
           status: 404,
           title: 'Community does not exist',
           meta: {resource: url}
@@ -68,7 +124,7 @@ function verifyingProfileExists(id, community, url, object) {
         if (object) {
           details.data = object;
         }
-        reject({
+        return reject({
           status: 404,
           title: 'Profile does not exist',
           details,
@@ -87,7 +143,7 @@ function verifyingProfileExists(id, community, url, object) {
         if (object) {
           details.data = object;
         }
-        reject({
+        return reject({
           status: 400,
           title: 'Profile does not belong to community',
           details,
