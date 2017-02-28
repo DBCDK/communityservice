@@ -1,21 +1,22 @@
 'use strict';
 
+const constants = require('server/constants')();
+const communityTable = constants.communityTable;
+const profileTable = constants.profileTable;
+const entityTable = constants.entityTable;
+const actionTable = constants.actionTable;
+
 module.exports = knex => {
 
-  const communityTable = 'communities';
-  const profileTable = 'profiles';
-  const entityTable = 'entities';
-  const actionTable = 'actions';
-
-  function addCreatedModifiedDeletedTimestamp(table) {
+  function addCreatedDeletedTimestamp(table) {
     table.increments('id').primary();
     table.integer('created_epoch').notNullable().defaultTo(knex.raw('extract(\'epoch\' from now())'));
-    table.integer('modified_epoch').nullable();
     table.integer('deleted_epoch').nullable();
   }
 
   function addModifyByDeletedByCommunityRef(table) {
-    addCreatedModifiedDeletedTimestamp(table);
+    addCreatedDeletedTimestamp(table);
+    table.integer('modified_epoch').nullable();
     table.integer('modified_by');
     table.foreign('modified_by').references(`${profileTable}.id`);
     table.integer('deleted_by');
@@ -36,9 +37,10 @@ module.exports = knex => {
 
   function createcommunityTable() {
     return knex.schema.createTable(communityTable, table => {
-      addCreatedModifiedDeletedTimestamp(table);
+      addCreatedDeletedTimestamp(table);
       table.string('name').unique();
       table.json('attributes').notNullable().defaultTo('{}');
+      table.json('log').nullable();
     });
   }
 
@@ -56,11 +58,11 @@ module.exports = knex => {
       addModifyByDeletedByCommunityRef(table);
       addOwner(table);
       addActivePeriod(table);
-      table.integer('entity_ref').notNullable();
+      table.integer('entity_ref').nullable();
       table.foreign('entity_ref').references(`${entityTable}.id`);
       table.string('type').notNullable();
       table.string('title').notNullable();
-      table.text('contents').nullable();
+      table.text('contents').notNullable();
       table.json('attributes').notNullable().defaultTo('{}');
       table.json('log').nullable();
     });
@@ -73,7 +75,7 @@ module.exports = knex => {
       addActivePeriod(table);
       table.integer('entity_ref').nullable();
       table.foreign('entity_ref').references(`${entityTable}.id`);
-      table.integer('profile_ref');
+      table.integer('profile_ref').nullable();
       table.foreign('profile_ref').references(`${profileTable}.id`);
       table.string('type').notNullable();
       table.json('attributes').notNullable().defaultTo('{}');

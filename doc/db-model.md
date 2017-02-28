@@ -1,6 +1,6 @@
 # Community Service database model
 
-The database is created from scratch by [`src/server/current-db-v1.js`](../src/server/current-db-v1.js).
+The database is created from scratch by [`src/server/v1/current-db.js`](../src/server/v1/current-db.js).
 Migrations will be located in [`src/migrations`](../src/migrations/).
 
 Here are the raw schemas as seen by PostgreSQL.
@@ -76,10 +76,10 @@ Referenced by:
  owner_id       | integer                | not null                                              | plain    |              |
  start_epoch    | integer                |                                                       | plain    |              |
  end_epoch      | integer                |                                                       | plain    |              |
- entity_ref     | integer                | not null                                              | plain    |              |
+ entity_ref     | integer                |                                                       | plain    |              |
  type           | character varying(255) | not null                                              | extended |              |
  title          | character varying(255) | not null                                              | extended |              |
- contents       | text                   |                                                       | extended |              |
+ contents       | text                   | not null                                              | extended |              |
  attributes     | json                   | not null default '{}'::json                           | extended |              |
  log            | json                   |                                                       | extended |              |
 Indexes:

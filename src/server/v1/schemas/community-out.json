@@ -10,10 +10,6 @@
       "required": true,
       "type": "integer"
     },
-    "modified_epoch": {
-      "required": false,
-      "type": ["null", "integer"]
-    },
     "deleted_epoch": {
       "required": false,
       "type": ["null", "integer"]
@@ -24,7 +20,11 @@
     },
     "attributes": {
       "required": false,
-      "type": ["null", "object"]
+      "type": "object"
+    },
+    "log": {
+      "required": false,
+      "type": ["null", "array"]
     }
   },
   "additionalProperties": false

@@ -9,11 +9,13 @@ const router = express.Router();
 const config = require('server/config');
 const logger = require('__/logging')(config.logger);
 const knex = require('knex')(config.db);
-const validatingInput = require('server/validators').validatingInput;
-const injectors = require('server/injectors');
-const communityTable = 'communities';
+const validatingInput = require('server/v1/verifiers').validatingInput;
+const updateCommunity = require('server/v1/modifiers').updateCommunity;
+const constants = require('server/constants')();
+const communityTable = constants.communityTable;
 
 router.route('/')
+
   .get((req, res) => {
     knex(communityTable).select()
     .then(communities => {
@@ -23,6 +25,7 @@ router.route('/')
       });
     });
   })
+
   .post((req, res, next) => {
     validatingInput(req, 'schemas/community-post.json')
     .then(() => {
@@ -42,27 +45,26 @@ router.route('/')
   });
 
 router.route('/:id')
+
   .put((req, res, next) => {
     const id = req.params.id;
+    const location = `${req.baseUrl}/${id}`;
     validatingInput(req, 'schemas/community-put.json')
     .then(() => {
-      return injectors.gettingCurrentTimeAsEpoch();
+      // Sequence several results together.
+      return Promise.all([
+        gettingCommunity(id, location)
+        // gettingCurrentTimeAsEpoch()
+      ]);
     })
-    .then(epoch => {
-      const update = injectors.setModifiedEpoch(req.body, epoch);
+    .then(results => {
+      const community = results[0];
+      // const epoch = results[1];
+      var update = updateCommunity(req.body, community);
       return knex(communityTable).where('id', id).update(update, '*');
     })
     .then(communities => {
-      if (communities.length === 0) {
-        return next({
-          status: 404,
-          title: 'Community does not exist',
-          detail: `Community ${id} unknown`,
-          meta: {resource: req.path}
-        });
-      }
       const community = communities[0];
-      const location = `${req.baseUrl}/${community.id}`;
       res.status(200).json({
         links: {self: location},
         data: community
@@ -72,6 +74,7 @@ router.route('/:id')
       next(error);
     });
   })
+
   .get((req, res, next) => {
     const name = req.params.id;
     locateCommunityId(name)
@@ -111,6 +114,38 @@ router.route('/:id')
   })
   ;
 
+module.exports = router;
+
+function gettingCommunity(id, url, object) {
+  return new Promise((resolve, reject) => {
+    knex(communityTable).where('id', id).select()
+    .then(communities => {
+      if (!communities || communities.length !== 1) {
+        let meta = {};
+        if (url) {
+          meta.resource = url;
+        }
+        let details = {
+          problem: `Community ${id} does not exist`
+        };
+        if (object) {
+          details.data = object;
+        }
+        return reject({
+          status: 404,
+          title: 'Community does not exist',
+          details,
+          meta
+        });
+      }
+      resolve(communities[0]);
+    })
+    .catch(error => {
+      reject(error);
+    });
+  });
+}
+
 function locateCommunityId(name) {
   return new Promise((resolve, reject) => {
     const number = parseInt(name, 10);
@@ -134,5 +169,3 @@ function locateCommunityId(name) {
     });
   });
 }
-
-module.exports = router;

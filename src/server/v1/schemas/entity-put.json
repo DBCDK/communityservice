@@ -1,0 +1,35 @@
+{
+  "required": true,
+  "type": "object",
+  "properties": {
+    "modified_by": {
+      "required": true,
+      "type": "integer"
+    },
+    "type": {
+      "required": false,
+      "type": "string"
+    },
+    "title": {
+      "required": false,
+      "type": "string"
+    },
+    "contents": {
+      "required": false,
+      "type": "string"
+    },
+    "start_epoch": {
+      "required": false,
+      "type": "integer"
+    },
+    "end_epoch": {
+      "required": false,
+      "type": "integer"
+    },
+    "attributes": {
+      "required": false,
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

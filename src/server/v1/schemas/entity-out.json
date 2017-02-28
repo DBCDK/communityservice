@@ -1,0 +1,71 @@
+{
+  "required": true,
+  "type": "object",
+  "properties": {
+    "id": {
+      "required": true,
+      "type": "integer"
+    },
+    "created_epoch": {
+      "required": true,
+      "type": "integer"
+    },
+    "modified_epoch": {
+      "required": false,
+      "type": ["null", "integer"]
+    },
+    "modified_by": {
+      "required": false,
+      "type": ["null", "integer"]
+    },
+    "deleted_epoch": {
+      "required": false,
+      "type": ["null", "integer"]
+    },
+    "deleted_by": {
+      "required": false,
+      "type": ["null", "integer"]
+    },
+    "community_id": {
+      "required": true,
+      "type": "integer"
+    },
+    "owner_id": {
+      "required": true,
+      "type": "integer"
+    },
+    "title": {
+      "required": true,
+      "type": "string"
+    },
+    "type": {
+      "required": true,
+      "type": "string"
+    },
+    "contents": {
+      "required": true,
+      "type": "string"
+    },
+    "entity_ref": {
+      "required": true,
+      "type": ["null", "integer"]
+    },
+    "start_epoch": {
+      "required": false,
+      "type": ["null", "integer"]
+    },
+    "end_epoch": {
+      "required": false,
+      "type": ["null", "integer"]
+    },
+    "attributes": {
+      "required": false,
+      "type": "object"
+    },
+    "log": {
+      "required": false,
+      "type": ["null", "array"]
+    }
+  },
+  "additionalProperties": false
+}

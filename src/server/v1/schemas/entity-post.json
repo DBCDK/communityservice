@@ -1,0 +1,31 @@
+{
+  "required": true,
+  "type": "object",
+  "properties": {
+    "type": {
+      "required": true,
+      "type": "string"
+    },
+    "title": {
+      "required": true,
+      "type": "string"
+    },
+    "contents": {
+      "required": true,
+      "type": "string"
+    },
+    "attributes": {
+      "required": false,
+      "type": "object"
+    },
+    "owner_id": {
+      "required": true,
+      "type": "integer"
+    },
+    "entity_ref": {
+      "required": false,
+      "type": "integer"
+    }
+  },
+  "additionalProperties": false
+}

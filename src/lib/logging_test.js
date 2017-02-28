@@ -67,6 +67,16 @@ describe('logging', () => {
     assert.equal(args.level, level);
   });
 
+  it('should log without a message', () => {
+    const stub = sinon.stub(console, 'log');
+    const level = 'INFO';
+    sut1.log.log('info');
+
+    stub.restore();
+    const args = JSON.parse(stub.args);
+    assert.equal(args.level, level);
+  });
+
   it('should log a message on each of the levels specified', () => {
     const levels = ['ERROR', 'WARN', 'INFO', 'DEBUG', 'TRACE'];
     levels.forEach((level) => {

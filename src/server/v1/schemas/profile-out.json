@@ -36,7 +36,7 @@
     },
     "attributes": {
       "required": false,
-      "type": ["null", "object"]
+      "type": "object"
     },
     "log": {
       "required": false,
