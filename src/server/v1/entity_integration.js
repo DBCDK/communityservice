@@ -583,7 +583,7 @@ describe('API v1 entity endpoints', () => {
       .end(done);
     });
 
-    it('should update log with minimal attributes', done => {
+    it('should update log with no attributes when attributes not changed', done => {
       const url2 = '/v1/community/1/entity/1';
       // Get original entity.
       service.get(url2)
@@ -690,169 +690,32 @@ describe('API v1 entity endpoints', () => {
       })
       .end(done);
     });
-  });
 
-  describe('GET /community/:id/entity/:id/attribute/:key', () => {
-
-    it('should return Not Found for non-existent community', done => {
-      service.get('/v1/community/99/entity/1/attribute/svg')
-      .expect(404)
-      .expect(res => {
-        expectFailure(res.body, errors => {
-          expect(errors).to.have.length(1);
-          const error = errors[0];
-          expect(error).to.have.property('title');
-          expect(error.title).to.match(/Community does not exist/);
-          expect(error).to.have.property('meta');
-          expect(error.meta).to.have.property('resource');
-        });
+    it('should add attributes to existing entity', done => {
+      service.put('/v1/community/1/entity/1')
+      .send({
+        modified_by: 1,
+        attributes: {
+          small: 'https://placehold.it/350x150',
+          large: null,
+          what: {ping: 'pong'},
+          numbers: [1, 2]
+        }
       })
-      .end(done);
-    });
-
-    it('should return Not Found on any non-existing entity', done => {
-      service.get('/v1/community/1/entity/86/attribute/svg')
-      .expect(404)
-      .expect(res => {
-        expectFailure(res.body, errors => {
-          expect(errors).to.have.length(1);
-          const error = errors[0];
-          expect(error).to.have.property('title');
-          expect(error.title).to.match(/Entity does not exist/);
-          expect(error).to.have.property('meta');
-          expect(error.meta).to.have.property('resource');
-        });
-      })
-      .end(done);
-    });
-
-    it('should return Not Found for non-existent key', done => {
-      service.get('/v1/community/1/entity/1/attribute/notexist')
-      .expect(404)
-      .expect(res => {
-        expectFailure(res.body, errors => {
-          expect(errors).to.have.length(1);
-          const error = errors[0];
-          expect(error).to.have.property('title');
-          expect(error.title).to.match(/Attribute does not exist/);
-          expect(error).to.have.property('meta');
-          expect(error.meta).to.have.property('resource');
-        });
-      })
-      .end(done);
-    });
-
-    it('should return Not Found when entity does not belong to community', done => {
-      service.get('/v1/community/2/entity/1/attribute/svg')
-      .expect(400)
-      .expect(res => {
-        expectFailure(res.body, errors => {
-          expect(errors).to.have.length(1);
-          const error = errors[0];
-          expect(error).to.have.property('title');
-          expect(error.title).to.match(/Entity does not belong to community/);
-          expect(error).to.have.property('details');
-          expect(error.details).to.have.property('problem');
-          expect(error.details.problem).to.match(/Entity 1 does not belong to community 2/);
-          expect(error).to.have.property('meta');
-          expect(error.meta).to.have.property('resource');
-        });
-      })
-      .end(done);
-    });
-
-    const url = '/v1/community/1/entity/1/attribute/svg';
-
-    it('should retrieve a value by key', done => {
-      service.get(url)
       .expect(200)
       .expect(res => {
         expectSuccess(res.body, (links, data) => {
-          expect(links).to.have.property('self');
-          expect(links.self).to.equal(url);
-          expect(data).to.equal('http://biblo-admin.demo.dbc.dk/sites/default/files/campaigns/logos/svg/ikon%20gruppe.png');
+          expect(data.attributes).to.deep.equal({
+            small: 'https://placehold.it/350x150',
+            medium: 'http://biblo-admin.demo.dbc.dk/sites/default/files/styles/medium/public/campaigns/logos/img/ikon%20gruppe.png?itok=87DbwOLX',
+            svg: 'http://biblo-admin.demo.dbc.dk/sites/default/files/campaigns/logos/svg/ikon%20gruppe.png',
+            what: {ping: 'pong'},
+            numbers: [1, 2]
+          });
         });
       })
       .end(done);
     });
-
   });
 
-  describe('POST /community/:id/entity/:id/attribute', () => {
-
-    it('should return Not Found for non-existent community', done => {
-      service.post('/v1/community/85/entity/1/attribute')
-      .send({})
-      .expect(404)
-      .expect(res => {
-        expectFailure(res.body, errors => {
-          expect(errors).to.have.length(1);
-          const error = errors[0];
-          expect(error).to.have.property('title');
-          expect(error.title).to.match(/Community does not exist/);
-          expect(error).to.have.property('meta');
-          expect(error.meta).to.have.property('resource');
-        });
-      })
-      .end(done);
-    });
-
-    it('should return Not Found on any non-existing entity', done => {
-      service.post('/v1/community/1/entity/86/attribute')
-      .send({})
-      .expect(404)
-      .expect(res => {
-        expectFailure(res.body, errors => {
-          expect(errors).to.have.length(1);
-          const error = errors[0];
-          expect(error).to.have.property('title');
-          expect(error.title).to.match(/Entity does not exist/);
-          expect(error).to.have.property('meta');
-          expect(error.meta).to.have.property('resource');
-        });
-      })
-      .end(done);
-    });
-
-    it('should return Not Found when entity does not belong to community', done => {
-      service.post('/v1/community/2/entity/1/attribute')
-      .send({})
-      .expect(400)
-      .expect(res => {
-        expectFailure(res.body, errors => {
-          expect(errors).to.have.length(1);
-          const error = errors[0];
-          expect(error).to.have.property('title');
-          expect(error.title).to.match(/Entity does not belong to community/);
-          expect(error).to.have.property('details');
-          expect(error.details).to.have.property('problem');
-          expect(error.details.problem).to.match(/Entity 1 does not belong to community 2/);
-          expect(error).to.have.property('meta');
-          expect(error.meta).to.have.property('resource');
-        });
-      })
-      .end(done);
-    });
-
-    const url = '/v1/community/1/entity/1/attribute';
-
-    it('should return Conflict on an existing key', done => {
-      service.post(url)
-      .expect(409)
-      .send({small: 'https://placehold.it/350x150'})
-      .expect(res => {
-        expectFailure(res.body, errors => {
-          expect(errors).to.have.length(1);
-          const error = errors[0];
-          expect(error).to.have.property('title');
-          expect(error.title).to.match(/Attribute already exists/);
-          expect(error).to.have.property('meta');
-          expect(error.meta).to.have.property('resource');
-        });
-      })
-      .end(done);
-    });
-
-    it('should add a new key-value pair');
-  });
 });

@@ -383,11 +383,12 @@ describe('API v1 profile endpoints', () => {
     });
 
     const admin_id = 1;
-    const attributes = {libraryId: 526443, interests: ['carrots', 'rabbit holes']};
+    const newAttributes = {libraryId: 526443, interests: ['carrots', 'rabbit holes'], description: null};
+    const totalAttributes = {libraryId: 526443, interests: ['carrots', 'rabbit holes'], email: 'Karen.Nielsen@rkb.dk'};
 
     it('should update existing profile and retrieve the update', done => {
       service.put(url)
-      .send({attributes, name: 'BiblioteKaren', modified_by: admin_id})
+      .send({attributes: newAttributes, name: 'BiblioteKaren', modified_by: admin_id})
       .expect(200)
       .expect(res => {
         expectSuccess(res.body, (links, data) => {
@@ -399,7 +400,7 @@ describe('API v1 profile endpoints', () => {
           expect(data).to.have.property('name');
           expect(data.name).to.equal('BiblioteKaren');
           expect(data).to.have.property('attributes');
-          expect(data.attributes).to.deep.equal(attributes);
+          expect(data.attributes).to.deep.equal(totalAttributes);
           expect(data).to.have.property('created_epoch');
           expect(data.created_epoch).to.match(/^[0-9]+$/);
           expect(data).to.have.property('modified_epoch');
@@ -434,7 +435,7 @@ describe('API v1 profile endpoints', () => {
             expect(data).to.have.property('name');
             expect(data.name).to.equal('BiblioteKaren');
             expect(data).to.have.property('attributes');
-            expect(data.attributes).to.deep.equal(attributes);
+            expect(data.attributes).to.deep.equal(totalAttributes);
             expect(data).to.have.property('created_epoch');
             expect(data.created_epoch).to.match(/^[0-9]+$/);
             expect(data).to.have.property('modified_epoch');
@@ -464,264 +465,4 @@ describe('API v1 profile endpoints', () => {
     });
   });
 
-  describe('GET /community/:id/profile/:id/attribute/:key', () => {
-
-    it('should return Not Found for non-existent community', done => {
-      service.get('/v1/community/99/profile/1/attribute/email')
-      .expect(404)
-      .expect(res => {
-        expectFailure(res.body, errors => {
-          expect(errors).to.have.length(1);
-          const error = errors[0];
-          expect(error).to.have.property('title');
-          expect(error.title).to.match(/Community does not exist/);
-          expect(error).to.have.property('meta');
-          expect(error.meta).to.have.property('resource');
-        });
-      })
-      .end(done);
-    });
-
-    it('should return Not Found on any non-existing profile', done => {
-      service.get('/v1/community/1/profile/95/attribute/email')
-      .expect(404)
-      .expect(res => {
-        expectFailure(res.body, errors => {
-          expect(errors).to.have.length(1);
-          const error = errors[0];
-          expect(error).to.have.property('title');
-          expect(error.title).to.match(/Profile does not exist/);
-          expect(error).to.have.property('meta');
-          expect(error.meta).to.have.property('resource');
-        });
-      })
-      .end(done);
-    });
-
-    it('should return Not Found for non-existent key', done => {
-      service.get('/v1/community/1/profile/1/attribute/dumbKey')
-      .expect(404)
-      .expect(res => {
-        expectFailure(res.body, errors => {
-          expect(errors).to.have.length(1);
-          const error = errors[0];
-          expect(error).to.have.property('title');
-          expect(error.title).to.match(/Attribute does not exist/);
-          expect(error).to.have.property('meta');
-          expect(error.meta).to.have.property('resource');
-        });
-      })
-      .end(done);
-    });
-
-    it('should return Not Found when profile does not belong to community', done => {
-      service.get('/v1/community/2/profile/1/attribute/email')
-      .expect(400)
-      .expect(res => {
-        expectFailure(res.body, errors => {
-          expect(errors).to.have.length(1);
-          const error = errors[0];
-          expect(error).to.have.property('title');
-          expect(error.title).to.match(/Profile does not belong to community/);
-          expect(error).to.have.property('details');
-          expect(error.details).to.have.property('problem');
-          expect(error.details.problem).to.match(/Profile 1 does not belong to community 2/);
-          expect(error).to.have.property('meta');
-          expect(error.meta).to.have.property('resource');
-        });
-      })
-      .end(done);
-    });
-
-    const url = '/v1/community/1/profile/1/attribute/email';
-
-    it('should retrieve a value by key', done => {
-      service.get(url)
-      .expect(200)
-      .expect(res => {
-        expectSuccess(res.body, (links, data) => {
-          expect(links).to.have.property('self');
-          expect(links.self).to.equal(url);
-          expect(data).to.equal('pink@gmail.com');
-        });
-      })
-      .end(done);
-    });
-  });
-
-  describe('GET /community/:id/profile/:id/attribute', () => {
-
-    it('should return Not Found for non-existent community', done => {
-      service.get('/v1/community/99/profile/1/attribute')
-      .expect(404)
-      .expect(res => {
-        expectFailure(res.body, errors => {
-          expect(errors).to.have.length(1);
-          const error = errors[0];
-          expect(error).to.have.property('title');
-          expect(error.title).to.match(/Community does not exist/);
-          expect(error).to.have.property('meta');
-          expect(error.meta).to.have.property('resource');
-        });
-      })
-      .end(done);
-    });
-
-    it('should return Not Found on any non-existing profile', done => {
-      service.get('/v1/community/1/profile/95/attribute')
-      .expect(404)
-      .expect(res => {
-        expectFailure(res.body, errors => {
-          expect(errors).to.have.length(1);
-          const error = errors[0];
-          expect(error).to.have.property('title');
-          expect(error.title).to.match(/Profile does not exist/);
-          expect(error).to.have.property('meta');
-          expect(error.meta).to.have.property('resource');
-        });
-      })
-      .end(done);
-    });
-
-    it('should retrieve all attributes', done => {
-      const url = '/v1/community/1/profile/1/attribute';
-      service.get(url)
-      .expect(200)
-      .expect(res => {
-        expectSuccess(res.body, (links, data) => {
-          expect(links).to.have.property('self');
-          expect(links.self).to.equal(url);
-          expectValidate(data, 'v1/schemas/attributes-out.json');
-          expect(data).to.have.property('email');
-          expect(data.email).to.equal('pink@gmail.com');
-          expect(data).to.have.property('libraryId');
-          expect(data).to.have.property('description');
-        });
-      })
-      .end(done);
-    });
-
-    it('should retrieve empty set of attributes', done => {
-      const url = '/v1/community/1/profile/4/attribute';
-      service.get(url)
-      .expect(200)
-      .expect(res => {
-        expectSuccess(res.body, (links, data) => {
-          expect(links).to.have.property('self');
-          expect(links.self).to.equal(url);
-          expectValidate(data, 'v1/schemas/attributes-out.json');
-          expect(data).to.be.empty;
-        });
-      })
-      .end(done);
-    });
-  });
-
-  describe('POST /community/:id/profile/:id/attribute', () => {
-
-    it('should reject missing modifier profile', done => {
-      service.post('/v1/community/1/profile/1/attribute')
-      .send({name: 'My profile', piggyback: 'I just wanna be in'})
-      .expect(400)
-      .expect(res => {
-        expectFailure(res.body, errors => {
-          expect(errors).to.have.length(1);
-          const error = JSON.stringify(errors[0]);
-          expect(error).to.match(/field.*modified_by.*is required/);
-        });
-      })
-      .end(done);
-    });
-
-    it('should return Not Found for non-existent community', done => {
-      service.post('/v1/community/99/profile/1/attribute')
-      .send({modified_by: 1})
-      .expect(404)
-      .expect(res => {
-        expectFailure(res.body, errors => {
-          expect(errors).to.have.length(1);
-          const error = errors[0];
-          expect(error).to.have.property('title');
-          expect(error.title).to.match(/Community does not exist/);
-          expect(error).to.have.property('meta');
-          expect(error.meta).to.have.property('resource');
-        });
-      })
-      .end(done);
-    });
-
-    it('should return Not Found on any non-existing profile', done => {
-      service.post('/v1/community/1/profile/95/attribute')
-      .send({modified_by: 95})
-      .expect(404)
-      .expect(res => {
-        expectFailure(res.body, errors => {
-          expect(errors).to.have.length(1);
-          const error = errors[0];
-          expect(error).to.have.property('title');
-          expect(error.title).to.match(/Profile does not exist/);
-          expect(error).to.have.property('meta');
-          expect(error.meta).to.have.property('resource');
-        });
-      })
-      .end(done);
-    });
-
-    it('should return Not Found on any non-existing profile for modifier');
-
-    it('should return Bad Request on modifier profile belonging to another community');
-
-    const url = '/v1/community/1/profile/1/attribute';
-
-    it('should return Conflict on an existing key', done => {
-      service.post(url)
-      .send({modified_by: 1, email: 'dinky@pac.man'})
-      .expect(409)
-      .expect(res => {
-        expectFailure(res.body, errors => {
-          expect(errors).to.have.length(1);
-          const error = errors[0];
-          expect(error).to.have.property('title');
-          expect(error.title).to.match(/Attribute already exists/);
-          expect(error).to.have.property('meta');
-          expect(error.meta).to.have.property('resource');
-        });
-      })
-      .end(done);
-    });
-
-    const key = 'phone';
-    const attributes = {modified_by: 1, [key]: '+4509876521'};
-    const location = `${url}`;
-
-    it('should add a new key-value pair', done => {
-      service.post(url)
-      .send(attributes)
-      .expect(201)
-      .expect('location', location)
-      .expect(res => {
-        expectSuccess(res.body, (links, data) => {
-          expect(links).to.have.property('self');
-          expect(links.self).to.equal(location);
-          // expect(data).to.have.property(key);
-          // expect(data[key]).to.equal(attributes[key]);
-        });
-      })
-      .end(error => {
-        if (error) {
-          throw error;
-        }
-        service.get(`${url}/${key}`)
-        .expect(200)
-        .expect(res2 => {
-          expectSuccess(res2.body, (links2, data2) => {
-            expect(links2).to.have.property('self');
-            // expect(data2).to.have.property(key);
-            // expect(data2[key]).to.equal(attributes[key]);
-          });
-        })
-        .end(done);
-      });
-    });
-  });
 });

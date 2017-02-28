@@ -73,6 +73,7 @@ describe('API v1 community endpoints', () => {
       .end(done);
     });
 
+    // TODO: test with spaces and non-ascii characters.
     it('should locate community by name', done => {
       service.get('/v1/community/Biblo')
       .expect(200)
@@ -179,7 +180,7 @@ describe('API v1 community endpoints', () => {
           expect(data).to.have.property('name');
           expect(data.name).to.equal(name);
           expect(data).to.have.property('attributes');
-          expect(data.attributes).to.not.be.null;
+          expect(data.attributes).to.be.empty;
           expect(data).to.have.property('created_epoch');
           expect(data.created_epoch).to.match(/^[0-9]+$/);
           expect(data).to.have.property('modified_epoch');
@@ -195,13 +196,15 @@ describe('API v1 community endpoints', () => {
   describe('PUT /community/:id', () => {
 
     const name = 'Søde Litterater';
-    const attributes = {test: true};
+    const newAttributes = {test: true};
+    const oldAttributes = {production: false};
+    const totalAttributes = Object.assign({}, oldAttributes, newAttributes);
     const id = 2;
     const url = `/v1/community/${id}`;
 
     it('should update existing community and retrieve the update', done => {
       service.put(url)
-      .send({name, attributes})
+      .send({name, attributes: newAttributes})
       .expect(200)
       .expect(res => {
         expectSuccess(res.body, (links, data) => {
@@ -213,7 +216,7 @@ describe('API v1 community endpoints', () => {
           expect(data).to.have.property('name');
           expect(data.name).to.equal(name);
           expect(data).to.have.property('attributes');
-          expect(data.attributes).to.deep.equal(attributes);
+          expect(data.attributes).to.deep.equal(totalAttributes);
           expect(data).to.have.property('created_epoch');
           expect(data.created_epoch).to.match(/^[0-9]+$/);
           expect(data).to.have.property('modified_epoch');
@@ -236,7 +239,7 @@ describe('API v1 community endpoints', () => {
             expect(data).to.have.property('name');
             expect(data.name).to.equal(name);
             expect(data).to.have.property('attributes');
-            expect(data.attributes).to.deep.equal(attributes);
+            expect(data.attributes).to.deep.equal(totalAttributes);
             expect(data).to.have.property('created_epoch');
             expect(data.created_epoch).to.match(/^[0-9]+$/);
             expect(data).to.have.property('modified_epoch');

@@ -125,65 +125,6 @@ router.route('/:id')
   })
   ;
 
-router.route('/:id/attribute')
-
-  .post((req, res, next) => {
-    const community = req.params.community;
-    const id = req.params.id;
-    const location = `${req.baseUrl}${req.url}`;
-    gettingEntityFromCommunity(id, community, location)
-    .then(entity => {
-      const attributes = entity.attributes;
-      _.forEach(req.body, (value, key) => {
-        if (_.has(attributes, key)) {
-          throw {
-            status: 409,
-            title: 'Attribute already exists',
-            detail: `Attribute ${key} has value ${attributes.key}`,
-            meta: {resource: location}
-          };
-        }
-        attributes[key] = value;
-      });
-      res.status(201).location(location).json({
-        links: {self: location},
-        data: attributes
-      });
-    })
-    .catch(error => {
-      next(error);
-    });
-  })
-  ;
-
-router.route('/:id/attribute/:key')
-
-  .get((req, res, next) => {
-    const community = req.params.community;
-    const id = req.params.id;
-    const key = req.params.key;
-    const location = `${req.baseUrl}${req.url}`;
-    gettingEntityFromCommunity(id, community, location)
-    .then(entity => {
-      const value = entity.attributes[key];
-      if (typeof value === 'undefined') {
-        throw {
-          status: 404,
-          title: 'Attribute does not exist',
-          detail: `Attribute ${key} unknown`,
-          meta: {resource: location}
-        };
-      }
-      res.status(200).json({
-        links: {self: location},
-        data: value
-      });
-    })
-    .catch(error => {
-      next(error);
-    });
-  });
-
 module.exports = router;
 
 function gettingEntityFromCommunity(id, community, url, object) {

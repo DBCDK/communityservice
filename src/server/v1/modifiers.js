@@ -8,6 +8,10 @@ const config = require('server/config');
 const knex = require('knex')(config.db);
 const _ = require('lodash');
 
+/**
+ * [gettingCurrentTimeAsEpoch description]
+ * @return {[type]} [description]
+ */
 function gettingCurrentTimeAsEpoch() {
   return new Promise((resolve, reject) => {
     knex.select(knex.raw('extract(\'epoch\' from CURRENT_TIMESTAMP)'))
@@ -27,6 +31,50 @@ function gettingCurrentTimeAsEpoch() {
   });
 }
 exports.gettingCurrentTimeAsEpoch = gettingCurrentTimeAsEpoch;
+
+/**
+ * Prepare an object so that it can be used in a SQL row `update`.
+ * The key `attributes` gets special treatment in that each attribute in this object
+ * is also treated as an update to the existing attributes.  To delete an attribute,
+ * set it to null.
+ * @param  {[type]} change        Values to change or add.
+ * @param  {[type]} before        Object as it were before the change.
+ * @param  {[type]} epochNow      Timestamp for change.
+ * @param  {[type]} potentialKeys Keys in `change` that are relevant for the new object.
+ * @return {[type]}               Object to use in SQL update query.
+ */
+function updateOrDelete(change, before, epochNow, potentialKeys) {
+  const changes = _.toPairs(change);
+  if (changes.length === 1) {
+    // Delete instead of update modify.
+    return setDeletedBy(before, change.modified_by, epochNow);
+  }
+  let logEntry = setModifiedBy({}, change.modified_by, epochNow);
+  const keys = _.intersection(_.keys(change), potentialKeys);
+  const oldKeyValues = _.pick(before, keys);
+  _.forEach(oldKeyValues, (value, key) => {
+    const diffValue = getMinimalDifference(change[key], value);
+    if (diffValue) {
+      logEntry[key] = diffValue;
+    }
+  });
+  let update = setModifiedBy(change, change.modified_by, epochNow);
+  // Fill in old attribute values if not mentioned in update.
+  fillInOldAttributes(update.attributes, before.attributes);
+  update = updateModificationLog(update, before, logEntry);
+  return update;
+}
+exports.updateOrDelete = updateOrDelete;
+
+function fillInOldAttributes(update, before) {
+  _.defaults(update, before);
+  _.forEach(update, (value, key) => {
+    if (value === null) {
+      _.unset(update, key);
+    }
+  });
+  return update;
+}
 
 function setCommunityId(object, communityId) {
   return Object.assign(object, {
@@ -48,7 +96,6 @@ function setDeletedBy(object, who, epoch) {
     deleted_by: who
   });
 }
-// exports.setDeletedBy = setDeletedBy;
 
 function setModifiedBy(object, who, epoch) {
   return Object.assign(setModifiedEpoch(object, epoch), {
@@ -56,7 +103,6 @@ function setModifiedBy(object, who, epoch) {
     modified_by: who
   });
 }
-// exports.setModifiedBy = setModifiedBy;
 
 function updateModificationLog(update, before, logEntry) {
   let modifiactionLog = before.log;
@@ -67,7 +113,6 @@ function updateModificationLog(update, before, logEntry) {
   update.log = JSON.stringify(modifiactionLog);
   return update;
 }
-// exports.updateModificationLog = updateModificationLog;
 
 function getMinimalDifference(after, before) {
   if (typeof after === typeof before) {
@@ -86,26 +131,3 @@ function getMinimalDifference(after, before) {
   }
   return before;
 }
-// exports.getMinimalDifference = getMinimalDifference;
-
-function updateOrDelete(after, before, epochNow, potentialKeys) {
-  const afters = _.toPairs(after);
-  if (afters.length === 1) {
-    // Delete instead of update modify.
-    return setDeletedBy(before, after.modified_by, epochNow);
-  }
-  let logEntry = setModifiedBy({}, after.modified_by, epochNow);
-  // const potentialKeys = ['name', 'attributes'];
-  const keys = _.intersection(_.keys(after), potentialKeys);
-  const oldKeyValues = _.pick(before, keys);
-  _.forEach(oldKeyValues, (value, key) => {
-    const diffValue = getMinimalDifference(after[key], value);
-    if (diffValue) {
-      logEntry[key] = diffValue;
-    }
-  });
-  let update = setModifiedBy(after, after.modified_by, epochNow);
-  update = updateModificationLog(update, before, logEntry);
-  return update;
-}
-exports.updateOrDelete = updateOrDelete;

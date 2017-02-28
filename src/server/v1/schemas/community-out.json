@@ -24,7 +24,11 @@
     },
     "attributes": {
       "required": false,
-      "type": ["null", "object"]
+      "type": "object"
+    },
+    "log": {
+      "required": false,
+      "type": ["null", "array"]
     }
   },
   "additionalProperties": false

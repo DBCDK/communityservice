@@ -10,8 +10,8 @@ const config = require('server/config');
 const logger = require('__/logging')(config.logger);
 const knex = require('knex')(config.db);
 const validatingInput = require('server/v1/verifiers').validatingInput;
+const updateOrDelete = require('server/v1/modifiers').updateOrDelete;
 const gettingCurrentTimeAsEpoch = require('server/v1/modifiers').gettingCurrentTimeAsEpoch;
-const setModifiedEpoch = require('server/v1/modifiers').setModifiedEpoch;
 const constants = require('server/constants')();
 const communityTable = constants.communityTable;
 
@@ -49,25 +49,23 @@ router.route('/:id')
 
   .put((req, res, next) => {
     const id = req.params.id;
+    const location = `${req.baseUrl}/${id}`;
     validatingInput(req, 'schemas/community-put.json')
     .then(() => {
-      return gettingCurrentTimeAsEpoch();
+      // Sequence several results together.
+      return Promise.all([
+        gettingCommunity(id, location),
+        gettingCurrentTimeAsEpoch()
+      ]);
     })
-    .then(epoch => {
-      const update = setModifiedEpoch(req.body, epoch);
+    .then(results => {
+      const community = results[0];
+      const epoch = results[1];
+      var update = updateOrDelete(req.body, community, epoch, ['name']);
       return knex(communityTable).where('id', id).update(update, '*');
     })
     .then(communities => {
-      if (communities.length === 0) {
-        return next({
-          status: 404,
-          title: 'Community does not exist',
-          detail: `Community ${id} unknown`,
-          meta: {resource: req.path}
-        });
-      }
       const community = communities[0];
-      const location = `${req.baseUrl}/${community.id}`;
       res.status(200).json({
         links: {self: location},
         data: community
@@ -116,6 +114,36 @@ router.route('/:id')
     });
   })
   ;
+
+function gettingCommunity(id, url, object) {
+  return new Promise((resolve, reject) => {
+    knex(communityTable).where('id', id).select()
+    .then(communities => {
+      if (!communities || communities.length !== 1) {
+        let meta = {};
+        if (url) {
+          meta.resource = url;
+        }
+        let details = {
+          problem: `Community ${id} does not exist`
+        };
+        if (object) {
+          details.data = object;
+        }
+        return reject({
+          status: 404,
+          title: 'Community does not exist',
+          details,
+          meta
+        });
+      }
+      resolve(communities[0]);
+    })
+    .catch(error => {
+      reject(error);
+    });
+  });
+}
 
 function locateCommunityId(name) {
   return new Promise((resolve, reject) => {

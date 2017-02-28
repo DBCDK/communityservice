@@ -40,6 +40,7 @@ module.exports = knex => {
       addCreatedModifiedDeletedTimestamp(table);
       table.string('name').unique();
       table.json('attributes').notNullable().defaultTo('{}');
+      table.json('log').nullable();
     });
   }
 

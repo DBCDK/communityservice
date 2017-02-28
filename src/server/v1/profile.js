@@ -13,7 +13,6 @@ const validatingInput = require('server/v1/verifiers').validatingInput;
 const gettingCurrentTimeAsEpoch = require('server/v1/modifiers').gettingCurrentTimeAsEpoch;
 const setCommunityId = require('server/v1/modifiers').setCommunityId;
 const updateOrDelete = require('server/v1/modifiers').updateOrDelete;
-const _ = require('lodash');
 const constants = require('server/constants')();
 const profileTable = constants.profileTable;
 
@@ -123,90 +122,6 @@ router.route('/:id')
     });
   })
   ;
-
-router.route('/:id/attribute')
-
-  .post((req, res, next) => {
-    const community = req.params.community;
-    const id = req.params.id;
-    const location = `${req.baseUrl}${req.url}`;
-    validatingInput(req, 'schemas/attributes-post.json')
-    .then(() => {
-      return gettingProfileFromCommunity(id, community, location, req.body);
-    })
-    .then(profile => {
-      const attributes = profile.attributes;
-      _.forEach(req.body, (value, key) => {
-        if (_.has(attributes, key)) {
-          throw {
-            status: 409,
-            title: 'Attribute already exists',
-            detail: `Attribute ${key} has value ${attributes.key}`,
-            meta: {resource: location}
-          };
-        }
-        attributes[key] = value;
-      });
-      return knex(profileTable).where('id', id).update({attributes}, '*');
-    })
-    .then(attributes => {
-      // TODO
-      res.status(201).location(location).json({
-        links: {self: location},
-        data: attributes
-      });
-    })
-    .catch(error => {
-      next(error);
-    });
-  })
-
-  .get((req, res, next) => {
-    const community = req.params.community;
-    const id = req.params.id;
-    const location = `${req.baseUrl}${req.url}`;
-    gettingProfileFromCommunity(id, community, location, req.body)
-    .then(profile => {
-      res.status(200).json({
-        links: {self: location},
-        data: profile.attributes
-      });
-    })
-    .catch(error => {
-      next(error);
-    });
-  })
-  ;
-
-router.route('/:id/attribute/:key')
-
-  .get((req, res, next) => {
-    const community = req.params.community;
-    const id = req.params.id;
-    const key = req.params.key;
-    const location = `${req.baseUrl}${req.url}`;
-    gettingProfileFromCommunity(id, community, location, req.body)
-    .then(profile => {
-      const value = profile.attributes[key];
-      if (typeof value === 'undefined') {
-        throw {
-          status: 404,
-          title: 'Attribute does not exist',
-          detail: `Attribute ${key} unknown`,
-          meta: {resource: location}
-        };
-      }
-      res
-      .status(200)
-      .json({
-        links: {self: location},
-        data: value
-      });
-    })
-    .catch(error => {
-      next(error);
-    });
-  });
 
 module.exports = router;
 
