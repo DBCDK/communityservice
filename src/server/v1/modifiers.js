@@ -48,7 +48,7 @@ function setDeletedBy(object, who, epoch) {
     deleted_by: who
   });
 }
-exports.setDeletedBy = setDeletedBy;
+// exports.setDeletedBy = setDeletedBy;
 
 function setModifiedBy(object, who, epoch) {
   return Object.assign(setModifiedEpoch(object, epoch), {
@@ -56,7 +56,7 @@ function setModifiedBy(object, who, epoch) {
     modified_by: who
   });
 }
-exports.setModifiedBy = setModifiedBy;
+// exports.setModifiedBy = setModifiedBy;
 
 function updateModificationLog(update, before, logEntry) {
   let modifiactionLog = before.log;
@@ -67,7 +67,7 @@ function updateModificationLog(update, before, logEntry) {
   update.log = JSON.stringify(modifiactionLog);
   return update;
 }
-exports.updateModificationLog = updateModificationLog;
+// exports.updateModificationLog = updateModificationLog;
 
 function getMinimalDifference(after, before) {
   if (typeof after === typeof before) {
@@ -86,4 +86,26 @@ function getMinimalDifference(after, before) {
   }
   return before;
 }
-exports.getMinimalDifference = getMinimalDifference;
+// exports.getMinimalDifference = getMinimalDifference;
+
+function updateOrDelete(after, before, epochNow, potentialKeys) {
+  const afters = _.toPairs(after);
+  if (afters.length === 1) {
+    // Delete instead of update modify.
+    return setDeletedBy(before, after.modified_by, epochNow);
+  }
+  let logEntry = setModifiedBy({}, after.modified_by, epochNow);
+  // const potentialKeys = ['name', 'attributes'];
+  const keys = _.intersection(_.keys(after), potentialKeys);
+  const oldKeyValues = _.pick(before, keys);
+  _.forEach(oldKeyValues, (value, key) => {
+    const diffValue = getMinimalDifference(after[key], value);
+    if (diffValue) {
+      logEntry[key] = diffValue;
+    }
+  });
+  let update = setModifiedBy(after, after.modified_by, epochNow);
+  update = updateModificationLog(update, before, logEntry);
+  return update;
+}
+exports.updateOrDelete = updateOrDelete;

@@ -514,6 +514,25 @@ describe('API v1 profile endpoints', () => {
       .end(done);
     });
 
+    it('should return Not Found when profile does not belong to community', done => {
+      service.get('/v1/community/2/profile/1/attribute/email')
+      .expect(400)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          const error = errors[0];
+          expect(error).to.have.property('title');
+          expect(error.title).to.match(/Profile does not belong to community/);
+          expect(error).to.have.property('details');
+          expect(error.details).to.have.property('problem');
+          expect(error.details.problem).to.match(/Profile 1 does not belong to community 2/);
+          expect(error).to.have.property('meta');
+          expect(error.meta).to.have.property('resource');
+        });
+      })
+      .end(done);
+    });
+
     const url = '/v1/community/1/profile/1/attribute/email';
 
     it('should retrieve a value by key', done => {
@@ -600,10 +619,24 @@ describe('API v1 profile endpoints', () => {
 
   describe('POST /community/:id/profile/:id/attribute', () => {
 
+    it('should reject missing modifier profile', done => {
+      service.post('/v1/community/1/profile/1/attribute')
+      .send({name: 'My profile', piggyback: 'I just wanna be in'})
+      .expect(400)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          const error = JSON.stringify(errors[0]);
+          expect(error).to.match(/field.*modified_by.*is required/);
+        });
+      })
+      .end(done);
+    });
+
     it('should return Not Found for non-existent community', done => {
       service.post('/v1/community/99/profile/1/attribute')
+      .send({modified_by: 1})
       .expect(404)
-      .send()
       .expect(res => {
         expectFailure(res.body, errors => {
           expect(errors).to.have.length(1);
@@ -619,8 +652,8 @@ describe('API v1 profile endpoints', () => {
 
     it('should return Not Found on any non-existing profile', done => {
       service.post('/v1/community/1/profile/95/attribute')
+      .send({modified_by: 95})
       .expect(404)
-      .send()
       .expect(res => {
         expectFailure(res.body, errors => {
           expect(errors).to.have.length(1);
@@ -634,12 +667,16 @@ describe('API v1 profile endpoints', () => {
       .end(done);
     });
 
+    it('should return Not Found on any non-existing profile for modifier');
+
+    it('should return Bad Request on modifier profile belonging to another community');
+
     const url = '/v1/community/1/profile/1/attribute';
 
     it('should return Conflict on an existing key', done => {
       service.post(url)
+      .send({modified_by: 1, email: 'dinky@pac.man'})
       .expect(409)
-      .send({email: 'dinky@pac.man'})
       .expect(res => {
         expectFailure(res.body, errors => {
           expect(errors).to.have.length(1);
@@ -654,23 +691,37 @@ describe('API v1 profile endpoints', () => {
     });
 
     const key = 'phone';
-    const attribute = {[key]: '+4509876521'};
+    const attributes = {modified_by: 1, [key]: '+4509876521'};
     const location = `${url}`;
 
     it('should add a new key-value pair', done => {
       service.post(url)
-      .send(attribute)
+      .send(attributes)
       .expect(201)
       .expect('location', location)
       .expect(res => {
         expectSuccess(res.body, (links, data) => {
           expect(links).to.have.property('self');
           expect(links.self).to.equal(location);
-          expect(data).to.have.property(key);
-          expect(data[key]).to.equal(attribute[key]);
+          // expect(data).to.have.property(key);
+          // expect(data[key]).to.equal(attributes[key]);
         });
       })
-      .end(done);
+      .end(error => {
+        if (error) {
+          throw error;
+        }
+        service.get(`${url}/${key}`)
+        .expect(200)
+        .expect(res2 => {
+          expectSuccess(res2.body, (links2, data2) => {
+            expect(links2).to.have.property('self');
+            // expect(data2).to.have.property(key);
+            // expect(data2[key]).to.equal(attributes[key]);
+          });
+        })
+        .end(done);
+      });
     });
   });
 });

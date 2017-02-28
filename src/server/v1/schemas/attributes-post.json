@@ -1,4 +1,10 @@
 {
   "required": true,
-  "type": "object"
+  "type": "object",
+  "properties": {
+    "modified_by": {
+      "required": true,
+      "type": "integer"
+    }
+  }
 }

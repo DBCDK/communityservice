@@ -15,10 +15,7 @@ const verifyingCommunityExists = require('server/v1/verifiers').verifyingCommuni
 const verifyingProfileExists = require('server/v1/verifiers').verifyingProfileExists;
 const verifyingEntityExistsIfSet = require('server/v1/verifiers').verifyingEntityExistsIfSet;
 const setCommunityId = require('server/v1/modifiers').setCommunityId;
-const updateModificationLog = require('server/v1/modifiers').updateModificationLog;
-const setDeletedBy = require('server/v1/modifiers').setDeletedBy;
-const setModifiedBy = require('server/v1/modifiers').setModifiedBy;
-const getMinimalDifference = require('server/v1/modifiers').getMinimalDifference;
+const updateOrDelete = require('server/v1/modifiers').updateOrDelete;
 const _ = require('lodash');
 
 const router = express.Router({mergeParams: true});
@@ -31,9 +28,7 @@ router.route('/')
       return knex(entityTable).where('community_id', community).select();
     })
     .then(entities => {
-      res
-      .status(200)
-      .json({
+      res.status(200).json({
         links: {self: req.baseUrl},
         data: entities
       });
@@ -82,23 +77,10 @@ router.route('/:id')
   .get((req, res, next) => {
     const community = req.params.community;
     const id = req.params.id;
-    verifyingCommunityExists(community, `${req.baseUrl}/${id}`)
-    .then(() => {
-      return knex(entityTable).where('id', id).select();
-    })
-    .then(entities => {
-      if (!entities || entities.length !== 1) {
-        throw {
-          status: 404,
-          title: 'Entity does not exist',
-          meta: {resource: `${req.baseUrl}/${id}`}
-        };
-      }
-      const entity = entities[0];
-      const location = `${req.baseUrl}/${entity.id}`;
-      res
-      .status(200)
-      .json({
+    const location = `${req.baseUrl}/${id}`;
+    gettingEntityFromCommunity(id, community, location)
+    .then(entity => {
+      res.status(200).json({
         links: {self: location},
         data: entity
       });
@@ -111,42 +93,61 @@ router.route('/:id')
   .put((req, res, next) => {
     const community = req.params.community;
     const id = req.params.id;
+    const location = `${req.baseUrl}/${id}`;
     validatingInput(req, 'schemas/entity-put.json')
     .then(() => {
-      return verifyingCommunityExists(community, `${req.baseUrl}/${id}`);
+      return gettingEntityFromCommunity(id, community, location, req.body);
     })
-    .then(() => {
-      return verifyingProfileExists(req.body.modified_by, community, req.baseUrl, req.body);
-    })
-    .then(() => {
-      return knex(entityTable).where('id', id).select();
-    })
-    .then(entities => {
-      if (!entities || entities.length !== 1) {
-        throw {
-          status: 404,
-          title: 'Entity does not exist',
-          meta: {resource: `${req.baseUrl}/${id}`}
-        };
-      }
+    .then(entity => {
       // Sequence several results together.
       return Promise.all([
-        entities[0],
-        gettingCurrentTimeAsEpoch()
+        entity,
+        gettingCurrentTimeAsEpoch(),
+        verifyingProfileExists(req.body.modified_by, community, req.baseUrl, req.body)
       ]);
     })
     .then(results => {
       const entity = results[0];
       const epochNow = results[1];
-      const update = updateOrDelete(req.body, entity, epochNow);
+      const update = updateOrDelete(req.body, entity, epochNow, ['title', 'type', 'contents', 'attributes']);
       return knex(entityTable).where('id', id).update(update, '*');
     })
     .then(entities => {
       const entity = entities[0];
-      const location = `${req.baseUrl}/${entity.id}`;
       res.status(200).location(location).json({
         links: {self: location},
         data: entity
+      });
+    })
+    .catch(error => {
+      next(error);
+    });
+  })
+  ;
+
+router.route('/:id/attribute')
+
+  .post((req, res, next) => {
+    const community = req.params.community;
+    const id = req.params.id;
+    const location = `${req.baseUrl}${req.url}`;
+    gettingEntityFromCommunity(id, community, location)
+    .then(entity => {
+      const attributes = entity.attributes;
+      _.forEach(req.body, (value, key) => {
+        if (_.has(attributes, key)) {
+          throw {
+            status: 409,
+            title: 'Attribute already exists',
+            detail: `Attribute ${key} has value ${attributes.key}`,
+            meta: {resource: location}
+          };
+        }
+        attributes[key] = value;
+      });
+      res.status(201).location(location).json({
+        links: {self: location},
+        data: attributes
       });
     })
     .catch(error => {
@@ -162,21 +163,7 @@ router.route('/:id/attribute/:key')
     const id = req.params.id;
     const key = req.params.key;
     const location = `${req.baseUrl}${req.url}`;
-    verifyingCommunityExists(community, location)
-    .then(() => {
-      return knex(entityTable).where('id', id).select();
-    })
-    .then(entities => {
-      if (!entities || entities.length !== 1) {
-        throw {
-          status: 404,
-          title: 'Entity does not exist',
-          detail: `Entity ${id} unknown`,
-          meta: {resource: location}
-        };
-      }
-      return entities[0];
-    })
+    gettingEntityFromCommunity(id, community, location)
     .then(entity => {
       const value = entity.attributes[key];
       if (typeof value === 'undefined') {
@@ -187,9 +174,7 @@ router.route('/:id/attribute/:key')
           meta: {resource: location}
         };
       }
-      res
-      .status(200)
-      .json({
+      res.status(200).json({
         links: {self: location},
         data: value
       });
@@ -197,28 +182,63 @@ router.route('/:id/attribute/:key')
     .catch(error => {
       next(error);
     });
-  })
-  ;
-
-function updateOrDelete(after, before, epochNow) {
-  const afters = _.toPairs(after);
-  if (afters.length === 1) {
-    // Delete instead of update modify.
-    return setDeletedBy(before, after.modified_by, epochNow);
-  }
-  let logEntry = setModifiedBy({}, after.modified_by, epochNow);
-  const potentialKeys = ['title', 'type', 'contents', 'attributes'];
-  const keys = _.intersection(_.keys(after), potentialKeys);
-  const oldKeyValues = _.pick(before, keys);
-  _.forEach(oldKeyValues, (value, key) => {
-    const diffValue = getMinimalDifference(after[key], value);
-    if (diffValue) {
-      logEntry[key] = diffValue;
-    }
   });
-  let update = setModifiedBy(after, after.modified_by, epochNow);
-  update = updateModificationLog(update, before, logEntry);
-  return update;
-}
 
 module.exports = router;
+
+function gettingEntityFromCommunity(id, community, url, object) {
+  return new Promise((resolve, reject) => {
+    knex(entityTable).where('id', id).select()
+    .then(entities => {
+      if (!entities || entities.length !== 1) {
+        let meta = {};
+        if (url) {
+          meta.resource = url;
+        }
+        let details = {
+          problem: `Entity ${id} does not exist`
+        };
+        if (object) {
+          details.data = object;
+        }
+        return reject({
+          status: 404,
+          title: 'Entity does not exist',
+          details,
+          meta
+        });
+      }
+      return entities[0];
+    })
+    .then(entity => {
+      if (entity.community_id !== Number(community)) {
+        return verifyingCommunityExists(community, url)
+        .then(() => {
+          let meta = {};
+          if (url) {
+            meta.resource = url;
+          }
+          let details = {
+            problem: `Entity ${id} does not belong to community ${community}`
+          };
+          if (object) {
+            details.data = object;
+          }
+          return reject({
+            status: 400,
+            title: 'Entity does not belong to community',
+            details,
+            meta
+          });
+        })
+        .catch(error => {
+          reject(error);
+        });
+      }
+      resolve(entity);
+    })
+    .catch(error => {
+      reject(error);
+    });
+  });
+}

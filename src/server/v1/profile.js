@@ -7,20 +7,12 @@
 const express = require('express');
 const config = require('server/config');
 const knex = require('knex')(config.db);
-
-const gettingProfileFromCommunity = require('server/v1/verifiers').gettingProfileFromCommunity;
-
 const verifyingCommunityExists = require('server/v1/verifiers').verifyingCommunityExists;
 const verifyingProfileExists = require('server/v1/verifiers').verifyingProfileExists;
 const validatingInput = require('server/v1/verifiers').validatingInput;
 const gettingCurrentTimeAsEpoch = require('server/v1/modifiers').gettingCurrentTimeAsEpoch;
-
-
 const setCommunityId = require('server/v1/modifiers').setCommunityId;
-const updateModificationLog = require('server/v1/modifiers').updateModificationLog;
-const setDeletedBy = require('server/v1/modifiers').setDeletedBy;
-const setModifiedBy = require('server/v1/modifiers').setModifiedBy;
-const getMinimalDifference = require('server/v1/modifiers').getMinimalDifference;
+const updateOrDelete = require('server/v1/modifiers').updateOrDelete;
 const _ = require('lodash');
 const constants = require('server/constants')();
 const profileTable = constants.profileTable;
@@ -100,40 +92,27 @@ router.route('/:id')
   .put((req, res, next) => {
     const community = req.params.community;
     const id = req.params.id;
+    const location = `${req.baseUrl}/${id}`;
     validatingInput(req, 'schemas/profile-put.json')
     .then(() => {
-      return verifyingCommunityExists(community, `${req.baseUrl}/${id}`);
+      return gettingProfileFromCommunity(id, community, location, req.body);
     })
-    .then(() => {
-      return verifyingProfileExists(req.body.modified_by, community, req.baseUrl, req.body);
-    })
-    .then(() => {
-      return knex(profileTable).where('id', id).select();
-    })
-    .then(matches => {
-      if (!matches || matches.length !== 1) {
-        throw {
-          status: 404,
-          title: 'Profile does not exist',
-          detail: `Profile ${id} unknown`,
-          meta: {resource: `${req.baseUrl}/${id}`}
-        };
-      }
+    .then(profile => {
       // Sequence several results together.
       return Promise.all([
-        matches[0],
-        gettingCurrentTimeAsEpoch()
+        profile,
+        gettingCurrentTimeAsEpoch(),
+        verifyingProfileExists(req.body.modified_by, community, req.baseUrl, req.body)
       ]);
     })
     .then(results => {
       const profile = results[0];
       const epochNow = results[1];
-      const update = updateOrDelete(req.body, profile, epochNow);
+      const update = updateOrDelete(req.body, profile, epochNow, ['name', 'attributes']);
       return knex(profileTable).where('id', id).update(update, '*');
     })
     .then(profiles => {
       const profile = profiles[0];
-      const location = `${req.baseUrl}/${profile.id}`;
       res.status(200).location(location).json({
         links: {self: location},
         data: profile
@@ -153,21 +132,7 @@ router.route('/:id/attribute')
     const location = `${req.baseUrl}${req.url}`;
     validatingInput(req, 'schemas/attributes-post.json')
     .then(() => {
-      return verifyingCommunityExists(community, location);
-    })
-    .then(() => {
-      return knex(profileTable).where('id', id).select();
-    })
-    .then(profiles => {
-      if (!profiles || profiles.length !== 1) {
-        throw {
-          status: 404,
-          title: 'Profile does not exist',
-          detail: `Profile ${id} unknown`,
-          meta: {resource: location}
-        };
-      }
-      return profiles[0];
+      return gettingProfileFromCommunity(id, community, location, req.body);
     })
     .then(profile => {
       const attributes = profile.attributes;
@@ -182,6 +147,10 @@ router.route('/:id/attribute')
         }
         attributes[key] = value;
       });
+      return knex(profileTable).where('id', id).update({attributes}, '*');
+    })
+    .then(attributes => {
+      // TODO
       res.status(201).location(location).json({
         links: {self: location},
         data: attributes
@@ -196,21 +165,7 @@ router.route('/:id/attribute')
     const community = req.params.community;
     const id = req.params.id;
     const location = `${req.baseUrl}${req.url}`;
-    verifyingCommunityExists(community, location)
-    .then(() => {
-      return knex(profileTable).where('id', id).select();
-    })
-    .then(profiles => {
-      if (!profiles || profiles.length !== 1) {
-        throw {
-          status: 404,
-          title: 'Profile does not exist',
-          detail: `Profile ${id} unknown`,
-          meta: {resource: location}
-        };
-      }
-      return profiles[0];
-    })
+    gettingProfileFromCommunity(id, community, location, req.body)
     .then(profile => {
       res.status(200).json({
         links: {self: location},
@@ -230,21 +185,7 @@ router.route('/:id/attribute/:key')
     const id = req.params.id;
     const key = req.params.key;
     const location = `${req.baseUrl}${req.url}`;
-    verifyingCommunityExists(community, location)
-    .then(() => {
-      return knex(profileTable).where('id', id).select();
-    })
-    .then(profiles => {
-      if (!profiles || profiles.length !== 1) {
-        throw {
-          status: 404,
-          title: 'Profile does not exist',
-          detail: `Profile ${id} unknown`,
-          meta: {resource: location}
-        };
-      }
-      return profiles[0];
-    })
+    gettingProfileFromCommunity(id, community, location, req.body)
     .then(profile => {
       const value = profile.attributes[key];
       if (typeof value === 'undefined') {
@@ -267,25 +208,61 @@ router.route('/:id/attribute/:key')
     });
   });
 
-function updateOrDelete(after, before, epochNow) {
-  const afters = _.toPairs(after);
-  if (afters.length === 1) {
-    // Delete instead of update modify.
-    return setDeletedBy(before, after.modified_by, epochNow);
-  }
-  let logEntry = setModifiedBy({}, after.modified_by, epochNow);
-  const potentialKeys = ['name', 'attributes'];
-  const keys = _.intersection(_.keys(after), potentialKeys);
-  const oldKeyValues = _.pick(before, keys);
-  _.forEach(oldKeyValues, (value, key) => {
-    const diffValue = getMinimalDifference(after[key], value);
-    if (diffValue) {
-      logEntry[key] = diffValue;
-    }
-  });
-  let update = setModifiedBy(after, after.modified_by, epochNow);
-  update = updateModificationLog(update, before, logEntry);
-  return update;
-}
-
 module.exports = router;
+
+function gettingProfileFromCommunity(id, community, url, object) {
+  return new Promise((resolve, reject) => {
+    knex(profileTable).where('id', id).select()
+    .then(profiles => {
+      if (!profiles || profiles.length !== 1) {
+        let meta = {};
+        if (url) {
+          meta.resource = url;
+        }
+        let details = {
+          problem: `Profile ${id} does not exist`
+        };
+        if (object) {
+          details.data = object;
+        }
+        return reject({
+          status: 404,
+          title: 'Profile does not exist',
+          details,
+          meta
+        });
+      }
+      return profiles[0];
+    })
+    .then(profile => {
+      if (profile.community_id !== Number(community)) {
+        return verifyingCommunityExists(community, url)
+        .then(() => {
+          let meta = {};
+          if (url) {
+            meta.resource = url;
+          }
+          let details = {
+            problem: `Profile ${id} does not belong to community ${community}`
+          };
+          if (object) {
+            details.data = object;
+          }
+          return reject({
+            status: 400,
+            title: 'Profile does not belong to community',
+            details,
+            meta
+          });
+        })
+        .catch(error => {
+          reject(error);
+        });
+      }
+      resolve(profile);
+    })
+    .catch(error => {
+      reject(error);
+    });
+  });
+}
