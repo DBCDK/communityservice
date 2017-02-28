@@ -11,7 +11,7 @@
       "type": "integer"
     },
     "deleted_epoch": {
-      "required": false,
+      "required": true,
       "type": ["null", "integer"]
     },
     "name": {
@@ -19,11 +19,11 @@
       "type": "string"
     },
     "attributes": {
-      "required": false,
+      "required": true,
       "type": "object"
     },
     "log": {
-      "required": false,
+      "required": true,
       "type": ["null", "array"]
     }
   },

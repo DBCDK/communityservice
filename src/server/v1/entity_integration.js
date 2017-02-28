@@ -51,6 +51,10 @@ describe('API v1 entity endpoints', () => {
             expect(data).to.have.property('type');
             expect(data).to.have.property('contents');
             expect(data).to.have.property('contents');
+            expect(data).to.have.property('start_epoch');
+            expect(data.start_epoch).to.be.null;
+            expect(data).to.have.property('end_epoch');
+            expect(data.end_epoch).to.be.null;
             expect(data).to.have.property('attributes');
             expect(data).to.have.property('created_epoch');
             expect(data.created_epoch).to.match(/^[0-9]+$/);
@@ -406,6 +410,39 @@ describe('API v1 entity endpoints', () => {
       })
       .end(done);
     });
+
+    it('should add a new entity with start_epoch', done => {
+      service.post(url)
+      .send({type, title, contents, owner_id, start_epoch: 1488318318})
+      .expect(201)
+      .expect(res => {
+        expectSuccess(res.body, (links, data) => {
+          expect(links).to.have.property('self');
+          expect(links.self).to.equal(location);
+          expectValidate(data, 'v1/schemas/entity-out.json');
+          expect(data).to.have.property('start_epoch');
+          expect(data.start_epoch).to.equal(1488318318);
+        });
+      })
+      .end(done);
+    });
+
+    it('should add a new entity with end_epoch', done => {
+      service.post(url)
+      .send({type, title, contents, owner_id, end_epoch: 1488318319})
+      .expect(201)
+      .expect(res => {
+        expectSuccess(res.body, (links, data) => {
+          expect(links).to.have.property('self');
+          expect(links.self).to.equal(location);
+          expectValidate(data, 'v1/schemas/entity-out.json');
+          expect(data).to.have.property('end_epoch');
+          expect(data.end_epoch).to.equal(1488318319);
+        });
+      })
+      .end(done);
+    });
+
   });
 
   describe('GET /community/:id/entity/:id', () => {

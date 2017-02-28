@@ -30,9 +30,7 @@ router.route('/')
       return knex(profileTable).where('community_id', community).select();
     })
     .then(profiles => {
-      res
-      .status(200)
-      .json({
+      res.status(200).json({
         links: {self: req.baseUrl},
         data: profiles
       });

@@ -120,7 +120,7 @@ describe('API v1 profile endpoints', () => {
 
     it('should reject missing data', done => {
       service.post('/v1/community/1/profile')
-      .send('')
+      .send({})
       .expect(400)
       .expect(res => {
         expectFailure(res.body, errors => {

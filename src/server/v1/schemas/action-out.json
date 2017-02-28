@@ -34,19 +34,15 @@
       "required": true,
       "type": "integer"
     },
-    "title": {
-      "required": true,
-      "type": "string"
-    },
     "type": {
       "required": true,
       "type": "string"
     },
-    "contents": {
-      "required": true,
-      "type": "string"
-    },
     "entity_ref": {
+      "required": true,
+      "type": ["null", "integer"]
+    },
+    "profile_ref": {
       "required": true,
       "type": ["null", "integer"]
     },
@@ -61,10 +57,6 @@
     "attributes": {
       "required": true,
       "type": "object"
-    },
-    "log": {
-      "required": true,
-      "type": ["null", "array"]
     }
   },
   "additionalProperties": false

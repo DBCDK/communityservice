@@ -11,19 +11,19 @@
       "type": "integer"
     },
     "modified_epoch": {
-      "required": false,
+      "required": true,
       "type": ["null", "integer"]
     },
     "modified_by": {
-      "required": false,
+      "required": true,
       "type": ["null", "integer"]
     },
     "deleted_epoch": {
-      "required": false,
+      "required": true,
       "type": ["null", "integer"]
     },
     "deleted_by": {
-      "required": false,
+      "required": true,
       "type": ["null", "integer"]
     },
     "community_id": {
@@ -35,11 +35,11 @@
       "type": "string"
     },
     "attributes": {
-      "required": false,
+      "required": true,
       "type": "object"
     },
     "log": {
-      "required": false,
+      "required": true,
       "type": ["null", "array"]
     }
   },
