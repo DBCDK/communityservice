@@ -10,10 +10,6 @@
       "required": true,
       "type": "integer"
     },
-    "modified_epoch": {
-      "required": false,
-      "type": ["null", "integer"]
-    },
     "deleted_epoch": {
       "required": false,
       "type": ["null", "integer"]

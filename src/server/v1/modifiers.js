@@ -44,8 +44,8 @@ exports.gettingCurrentTimeAsEpoch = gettingCurrentTimeAsEpoch;
  * @return {[type]}               Object to use in SQL update query.
  */
 function updateOrDelete(change, before, epochNow, potentialKeys) {
-  const changes = _.toPairs(change);
-  if (changes.length === 1) {
+  const changeKeys = _.keys(change);
+  if (changeKeys.length === 1 && changeKeys[0] === 'modified_by') {
     // Delete instead of update modify.
     return setDeletedBy(before, change.modified_by, epochNow);
   }
@@ -65,6 +65,13 @@ function updateOrDelete(change, before, epochNow, potentialKeys) {
   return update;
 }
 exports.updateOrDelete = updateOrDelete;
+
+function updateCommunity(change, before) {
+  // Fill in old attribute values if not mentioned in update.
+  fillInOldAttributes(change.attributes, before.attributes);
+  return change;
+}
+exports.updateCommunity = updateCommunity;
 
 function fillInOldAttributes(update, before) {
   _.defaults(update, before);

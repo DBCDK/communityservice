@@ -10,8 +10,7 @@ const config = require('server/config');
 const logger = require('__/logging')(config.logger);
 const knex = require('knex')(config.db);
 const validatingInput = require('server/v1/verifiers').validatingInput;
-const updateOrDelete = require('server/v1/modifiers').updateOrDelete;
-const gettingCurrentTimeAsEpoch = require('server/v1/modifiers').gettingCurrentTimeAsEpoch;
+const updateCommunity = require('server/v1/modifiers').updateCommunity;
 const constants = require('server/constants')();
 const communityTable = constants.communityTable;
 
@@ -54,14 +53,14 @@ router.route('/:id')
     .then(() => {
       // Sequence several results together.
       return Promise.all([
-        gettingCommunity(id, location),
-        gettingCurrentTimeAsEpoch()
+        gettingCommunity(id, location)
+        // gettingCurrentTimeAsEpoch()
       ]);
     })
     .then(results => {
       const community = results[0];
-      const epoch = results[1];
-      var update = updateOrDelete(req.body, community, epoch, ['name']);
+      // const epoch = results[1];
+      var update = updateCommunity(req.body, community);
       return knex(communityTable).where('id', id).update(update, '*');
     })
     .then(communities => {
@@ -114,6 +113,8 @@ router.route('/:id')
     });
   })
   ;
+
+module.exports = router;
 
 function gettingCommunity(id, url, object) {
   return new Promise((resolve, reject) => {
@@ -168,5 +169,3 @@ function locateCommunityId(name) {
     });
   });
 }
-
-module.exports = router;

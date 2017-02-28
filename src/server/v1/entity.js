@@ -16,7 +16,6 @@ const verifyingProfileExists = require('server/v1/verifiers').verifyingProfileEx
 const verifyingEntityExistsIfSet = require('server/v1/verifiers').verifyingEntityExistsIfSet;
 const setCommunityId = require('server/v1/modifiers').setCommunityId;
 const updateOrDelete = require('server/v1/modifiers').updateOrDelete;
-const _ = require('lodash');
 
 const router = express.Router({mergeParams: true});
 

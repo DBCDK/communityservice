@@ -8,15 +8,15 @@ const actionTable = constants.actionTable;
 
 module.exports = knex => {
 
-  function addCreatedModifiedDeletedTimestamp(table) {
+  function addCreatedDeletedTimestamp(table) {
     table.increments('id').primary();
     table.integer('created_epoch').notNullable().defaultTo(knex.raw('extract(\'epoch\' from now())'));
-    table.integer('modified_epoch').nullable();
     table.integer('deleted_epoch').nullable();
   }
 
   function addModifyByDeletedByCommunityRef(table) {
-    addCreatedModifiedDeletedTimestamp(table);
+    addCreatedDeletedTimestamp(table);
+    table.integer('modified_epoch').nullable();
     table.integer('modified_by');
     table.foreign('modified_by').references(`${profileTable}.id`);
     table.integer('deleted_by');
@@ -37,7 +37,7 @@ module.exports = knex => {
 
   function createcommunityTable() {
     return knex.schema.createTable(communityTable, table => {
-      addCreatedModifiedDeletedTimestamp(table);
+      addCreatedDeletedTimestamp(table);
       table.string('name').unique();
       table.json('attributes').notNullable().defaultTo('{}');
       table.json('log').nullable();

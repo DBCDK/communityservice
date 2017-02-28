@@ -51,8 +51,6 @@ describe('API v1 community endpoints', () => {
             expect(data).to.have.property('attributes');
             expect(data).to.have.property('created_epoch');
             expect(data.created_epoch).to.match(/^[0-9]+$/);
-            expect(data).to.have.property('modified_epoch');
-            expect(data.modified_epoch).to.be.null;
             expect(data).to.have.property('deleted_epoch');
             expect(data.deleted_epoch).to.be.null;
           });
@@ -89,8 +87,6 @@ describe('API v1 community endpoints', () => {
           expect(data.attributes).to.not.be.null;
           expect(data).to.have.property('created_epoch');
           expect(data.created_epoch).to.match(/^[0-9]+$/);
-          expect(data).to.have.property('modified_epoch');
-          expect(data.modified_epoch).to.be.null;
           expect(data).to.have.property('deleted_epoch');
           expect(data.deleted_epoch).to.be.null;
         });
@@ -183,8 +179,6 @@ describe('API v1 community endpoints', () => {
           expect(data.attributes).to.be.empty;
           expect(data).to.have.property('created_epoch');
           expect(data.created_epoch).to.match(/^[0-9]+$/);
-          expect(data).to.have.property('modified_epoch');
-          expect(data.modified_epoch).to.be.null;
           expect(data).to.have.property('deleted_epoch');
           expect(data.deleted_epoch).to.be.null;
         });
@@ -219,9 +213,6 @@ describe('API v1 community endpoints', () => {
           expect(data.attributes).to.deep.equal(totalAttributes);
           expect(data).to.have.property('created_epoch');
           expect(data.created_epoch).to.match(/^[0-9]+$/);
-          expect(data).to.have.property('modified_epoch');
-          expect(data.modified_epoch).to.match(/^[0-9]+$/);
-          expect(data.modified_epoch).to.not.be.below(data.created_epoch);
           expect(data).to.have.property('deleted_epoch');
           expect(data.deleted_epoch).to.be.null;
         });
@@ -242,9 +233,6 @@ describe('API v1 community endpoints', () => {
             expect(data.attributes).to.deep.equal(totalAttributes);
             expect(data).to.have.property('created_epoch');
             expect(data.created_epoch).to.match(/^[0-9]+$/);
-            expect(data).to.have.property('modified_epoch');
-            expect(data.modified_epoch).to.match(/^[0-9]+$/);
-            expect(data.modified_epoch).to.not.be.below(data.created_epoch);
             expect(data).to.have.property('deleted_epoch');
             expect(data.deleted_epoch).to.be.null;
           });

@@ -41,8 +41,8 @@ Parts in parentheses are not implemented yet.  Parts with O might not be impleme
 
 | Endpoint                                               | POST | PUT | GET |
 | ------------------------------------------------------ |:----:|:---:|:---:|
-| `/v1/community/`*id*`/entity`                          | (X)  |     | (X) |
-| `/v1/community/`*id*`/entity/`*id*                     |      | (X) | (X) |
+| `/v1/community/`*id*`/entity`                          | X    |     | X   |
+| `/v1/community/`*id*`/entity/`*id*                     |      | X   | X   |
 
 - POST on `/entity` sets `created_epoch`.
 - POST & PUT on other endpoints sets `modified_epoch` & `modified_by`.
