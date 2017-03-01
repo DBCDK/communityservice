@@ -129,9 +129,7 @@ function gettingProfileFromCommunity(id, community, url, object) {
     .then(profiles => {
       if (!profiles || profiles.length !== 1) {
         let meta = {};
-        if (url) {
-          meta.resource = url;
-        }
+        meta.resource = url;
         let details = {
           problem: `Profile ${id} does not exist`
         };
@@ -152,15 +150,10 @@ function gettingProfileFromCommunity(id, community, url, object) {
         return verifyingCommunityExists(community, url)
         .then(() => {
           let meta = {};
-          if (url) {
-            meta.resource = url;
-          }
+          meta.resource = url;
           let details = {
             problem: `Profile ${id} does not belong to community ${community}`
           };
-          if (object) {
-            details.data = object;
-          }
           return reject({
             status: 400,
             title: 'Profile does not belong to community',

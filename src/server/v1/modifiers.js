@@ -114,12 +114,12 @@ function setModifiedBy(object, who, epoch) {
 }
 
 function updateModificationLog(update, before, logEntry) {
-  let modifiactionLog = before.log;
-  if (!modifiactionLog) {
-    modifiactionLog = [];
+  let modificationLog = before.log;
+  if (!modificationLog) {
+    modificationLog = [];
   }
-  modifiactionLog.push(logEntry);
-  update.log = JSON.stringify(modifiactionLog);
+  modificationLog.push(logEntry);
+  update.log = JSON.stringify(modificationLog);
   return update;
 }
 

@@ -116,21 +116,16 @@ router.route('/:id')
 
 module.exports = router;
 
-function gettingCommunity(id, url, object) {
+function gettingCommunity(id, url) {
   return new Promise((resolve, reject) => {
     knex(communityTable).where('id', id).select()
     .then(communities => {
       if (!communities || communities.length !== 1) {
         let meta = {};
-        if (url) {
-          meta.resource = url;
-        }
+        meta.resource = url;
         let details = {
           problem: `Community ${id} does not exist`
         };
-        if (object) {
-          details.data = object;
-        }
         return reject({
           status: 404,
           title: 'Community does not exist',

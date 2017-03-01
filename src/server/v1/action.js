@@ -9,6 +9,8 @@ const config = require('server/config');
 const knex = require('knex')(config.db);
 const verifyingCommunityExists = require('server/v1/verifiers').verifyingCommunityExists;
 const verifyingProfileExists = require('server/v1/verifiers').verifyingProfileExists;
+const verifyingProfileExistsIfSet = require('server/v1/verifiers').verifyingProfileExistsIfSet;
+const verifyingEntityExistsIfSet = require('server/v1/verifiers').verifyingEntityExistsIfSet;
 const validatingInput = require('server/v1/verifiers').validatingInput;
 const gettingCurrentTimeAsEpoch = require('server/v1/modifiers').gettingCurrentTimeAsEpoch;
 const setCommunityId = require('server/v1/modifiers').setCommunityId;
@@ -43,6 +45,12 @@ router.route('/')
     validatingInput(req, 'schemas/action-post.json')
     .then(() => {
       return verifyingCommunityExists(community, req.baseUrl);
+    })
+    .then(() => {
+      return verifyingProfileExistsIfSet(req.body.profile_ref, community, req.baseUrl, req.body);
+    })
+    .then(() => {
+      return verifyingEntityExistsIfSet(req.body.entity_ref, community, req.baseUrl, req.body);
     })
     .then(() => {
       return setCommunityId(req.body, community);
@@ -93,11 +101,13 @@ router.route('/:id')
       return gettingActionFromCommunity(id, community, location, req.body);
     })
     .then(action => {
-      // Sequence several results together.
+      // Group several results and checks together.
       return Promise.all([
         action,
         gettingCurrentTimeAsEpoch(),
-        verifyingProfileExists(req.body.modified_by, community, req.baseUrl, req.body)
+        verifyingProfileExists(req.body.modified_by, community, req.baseUrl, req.body),
+        verifyingProfileExistsIfSet(req.body.profile_ref, community, req.baseUrl, req.body),
+        verifyingEntityExistsIfSet(req.body.entity_ref, community, req.baseUrl, req.body)
       ]);
     })
     .then(results => {
@@ -158,9 +168,6 @@ function gettingActionFromCommunity(id, community, url, object) {
           let details = {
             problem: `Action ${id} does not belong to community ${community}`
           };
-          if (object) {
-            details.data = object;
-          }
           return reject({
             status: 400,
             title: 'Action does not belong to community',

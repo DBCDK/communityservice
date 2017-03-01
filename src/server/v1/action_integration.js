@@ -175,6 +175,90 @@ describe('API v1 action endpoints', () => {
       .end(done);
     });
 
+    it('should return Bad Request on non-existing entity_ref', done => {
+      service.post('/v1/community/1/action')
+      .send({owner_id: 1, type: 'like', entity_ref: 77})
+      .expect(404)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          const error = errors[0];
+          expect(error).to.have.property('title');
+          expect(error.title).to.match(/Entity does not exist/);
+          expect(error).to.have.property('details');
+          expect(error.details).to.have.property('problem');
+          expect(error.details.problem).to.match(/Entity 77 does not exist/);
+          expect(error.details).to.have.property('data');
+          expect(error).to.have.property('meta');
+          expect(error.meta).to.have.property('resource');
+        });
+      })
+      .end(done);
+    });
+
+    it('should return Bad Request on entity_ref belonging to another community', done => {
+      service.post('/v1/community/1/action')
+      .send({owner_id: 1, type: 'like', entity_ref: 2})
+      .expect(400)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          const error = errors[0];
+          expect(error).to.have.property('title');
+          expect(error.title).to.match(/Entity does not belong to community/);
+          expect(error).to.have.property('details');
+          expect(error.details).to.have.property('problem');
+          expect(error.details.problem).to.match(/Entity 2 does not belong to community 1/);
+          expect(error.details).to.have.property('data');
+          expect(error).to.have.property('meta');
+          expect(error.meta).to.have.property('resource');
+        });
+      })
+      .end(done);
+    });
+
+    it('should return Not Found on non-existing profile_ref', done => {
+      service.post('/v1/community/1/action')
+      .send({owner_id: 1, type: 'like', profile_ref: 78})
+      .expect(404)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          const error = errors[0];
+          expect(error).to.have.property('title');
+          expect(error.title).to.match(/Profile does not exist/);
+          expect(error).to.have.property('details');
+          expect(error.details).to.have.property('problem');
+          expect(error.details.problem).to.match(/Profile 78 does not exist/);
+          expect(error.details).to.have.property('data');
+          expect(error).to.have.property('meta');
+          expect(error.meta).to.have.property('resource');
+        });
+      })
+      .end(done);
+    });
+
+    it('should return Bad Request on profile_ref belonging to another community', done => {
+      service.post('/v1/community/1/action')
+      .send({owner_id: 1, type: 'like', profile_ref: 5})
+      .expect(400)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          const error = errors[0];
+          expect(error).to.have.property('title');
+          expect(error.title).to.match(/Profile does not belong to community/);
+          expect(error).to.have.property('details');
+          expect(error.details).to.have.property('problem');
+          expect(error.details.problem).to.match(/Profile 5 does not belong to community 1/);
+          expect(error.details).to.have.property('data');
+          expect(error).to.have.property('meta');
+          expect(error.meta).to.have.property('resource');
+        });
+      })
+      .end(done);
+    });
+
     it('should add a new action with a type and owner', done => {
       const type = 'need-help';
       const id = 5;
@@ -386,6 +470,90 @@ describe('API v1 action endpoints', () => {
       .end(done);
     });
 
+    it('should return Bad Request on non-existing entity_ref', done => {
+      service.put('/v1/community/1/action/1')
+      .send({modified_by: 1, entity_ref: 77})
+      .expect(404)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          const error = errors[0];
+          expect(error).to.have.property('title');
+          expect(error.title).to.match(/Entity does not exist/);
+          expect(error).to.have.property('details');
+          expect(error.details).to.have.property('problem');
+          expect(error.details.problem).to.match(/Entity 77 does not exist/);
+          expect(error.details).to.have.property('data');
+          expect(error).to.have.property('meta');
+          expect(error.meta).to.have.property('resource');
+        });
+      })
+      .end(done);
+    });
+
+    it('should return Bad Request on entity_ref belonging to another community', done => {
+      service.put('/v1/community/1/action/1')
+      .send({modified_by: 1, entity_ref: 2})
+      .expect(400)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          const error = errors[0];
+          expect(error).to.have.property('title');
+          expect(error.title).to.match(/Entity does not belong to community/);
+          expect(error).to.have.property('details');
+          expect(error.details).to.have.property('problem');
+          expect(error.details.problem).to.match(/Entity 2 does not belong to community 1/);
+          expect(error.details).to.have.property('data');
+          expect(error).to.have.property('meta');
+          expect(error.meta).to.have.property('resource');
+        });
+      })
+      .end(done);
+    });
+
+    it('should return Not Found on non-existing profile_ref', done => {
+      service.put('/v1/community/1/action/1')
+      .send({modified_by: 1, profile_ref: 78})
+      .expect(404)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          const error = errors[0];
+          expect(error).to.have.property('title');
+          expect(error.title).to.match(/Profile does not exist/);
+          expect(error).to.have.property('details');
+          expect(error.details).to.have.property('problem');
+          expect(error.details.problem).to.match(/Profile 78 does not exist/);
+          expect(error.details).to.have.property('data');
+          expect(error).to.have.property('meta');
+          expect(error.meta).to.have.property('resource');
+        });
+      })
+      .end(done);
+    });
+
+    it('should return Bad Request on profile_ref belonging to another community', done => {
+      service.put('/v1/community/1/action/1')
+      .send({modified_by: 1, profile_ref: 5})
+      .expect(400)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          const error = errors[0];
+          expect(error).to.have.property('title');
+          expect(error.title).to.match(/Profile does not belong to community/);
+          expect(error).to.have.property('details');
+          expect(error.details).to.have.property('problem');
+          expect(error.details.problem).to.match(/Profile 5 does not belong to community 1/);
+          expect(error.details).to.have.property('data');
+          expect(error).to.have.property('meta');
+          expect(error.meta).to.have.property('resource');
+        });
+      })
+      .end(done);
+    });
+
     const user_id = 3;
     const id = 2;
     const url = `/v1/community/1/action/${id}`;
@@ -487,7 +655,7 @@ describe('API v1 action endpoints', () => {
         type: 'link',
         start_epoch: 148837000,
         end_epoch: 1488370996,
-        entity_ref: 2,
+        entity_ref: 1,
         profile_ref: 1,
         modified_by: user_id,
         attributes: {

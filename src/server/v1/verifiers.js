@@ -59,15 +59,11 @@ function verifyingProfileExists(id, community, url, object) {
     .then(profiles => {
       if (!profiles || profiles.length !== 1) {
         let meta = {};
-        if (url) {
-          meta.resource = url;
-        }
+        meta.resource = url;
         let details = {
           problem: `Profile ${id} does not exist`
         };
-        if (object) {
-          details.data = object;
-        }
+        details.data = object;
         return reject({
           status: 404,
           title: 'Profile does not exist',
@@ -78,15 +74,11 @@ function verifyingProfileExists(id, community, url, object) {
       const profile = profiles[0];
       if (profile.community_id !== Number(community)) {
         let meta = {};
-        if (url) {
-          meta.resource = url;
-        }
+        meta.resource = url;
         let details = {
           problem: `Profile ${id} does not belong to community ${community}`
         };
-        if (object) {
-          details.data = object;
-        }
+        details.data = object;
         return reject({
           status: 400,
           title: 'Profile does not belong to community',
@@ -102,6 +94,17 @@ function verifyingProfileExists(id, community, url, object) {
   });
 }
 exports.verifyingProfileExists = verifyingProfileExists;
+
+function verifyingProfileExistsIfSet(id, community, url, object) {
+  return new Promise((resolve, reject) => {
+    if (!id) {
+      resolve();
+    }
+    verifyingProfileExists(id, community, url, object)
+    .then(resolve, reject);
+  });
+}
+exports.verifyingProfileExistsIfSet = verifyingProfileExistsIfSet;
 
 function verifyingEntityExistsIfSet(id, community, url, object) {
   return new Promise((resolve, reject) => {

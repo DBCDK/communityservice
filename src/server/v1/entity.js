@@ -132,9 +132,7 @@ function gettingEntityFromCommunity(id, community, url, object) {
     .then(entities => {
       if (!entities || entities.length !== 1) {
         let meta = {};
-        if (url) {
-          meta.resource = url;
-        }
+        meta.resource = url;
         let details = {
           problem: `Entity ${id} does not exist`
         };
@@ -155,15 +153,10 @@ function gettingEntityFromCommunity(id, community, url, object) {
         return verifyingCommunityExists(community, url)
         .then(() => {
           let meta = {};
-          if (url) {
-            meta.resource = url;
-          }
+          meta.resource = url;
           let details = {
             problem: `Entity ${id} does not belong to community ${community}`
           };
-          if (object) {
-            details.data = object;
-          }
           return reject({
             status: 400,
             title: 'Entity does not belong to community',
