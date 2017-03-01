@@ -37,20 +37,22 @@ exports.gettingCurrentTimeAsEpoch = gettingCurrentTimeAsEpoch;
  * The key `attributes` gets special treatment in that each attribute in this object
  * is also treated as an update to the existing attributes.  To delete an attribute,
  * set it to null.
- * @param  {[type]} change        Values to change or add.
- * @param  {[type]} before        Object as it were before the change.
- * @param  {[type]} epochNow      Timestamp for change.
- * @param  {[type]} potentialKeys Keys in `change` that are relevant for the new object.
- * @return {[type]}               Object to use in SQL update query.
+ *
+ * The effective changes are logged into the `log` array.
+ * @param  {[type]} change      Values to change or add.
+ * @param  {[type]} before      Object as it were before the change.
+ * @param  {[type]} epochNow    Timestamp for change.
+ * @param  {[type]} loggedKeys  Changes to theese keys are recorded in log.
+ * @return {[type]}             Object to use in SQL update query.
  */
-function updateOrDelete(change, before, epochNow, potentialKeys) {
+function updateOrDelete(change, before, epochNow, loggedKeys) {
   const changeKeys = _.keys(change);
   if (changeKeys.length === 1 && changeKeys[0] === 'modified_by') {
     // Delete instead of update modify.
     return setDeletedBy(before, change.modified_by, epochNow);
   }
   let logEntry = setModifiedBy({}, change.modified_by, epochNow);
-  const keys = _.intersection(_.keys(change), potentialKeys);
+  const keys = _.intersection(_.keys(change), loggedKeys);
   const oldKeyValues = _.pick(before, keys);
   _.forEach(oldKeyValues, (value, key) => {
     const diffValue = getMinimalDifference(change[key], value);

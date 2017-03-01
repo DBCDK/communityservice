@@ -79,6 +79,7 @@ module.exports = knex => {
       table.foreign('profile_ref').references(`${profileTable}.id`);
       table.string('type').notNullable();
       table.json('attributes').notNullable().defaultTo('{}');
+      table.json('log').nullable();
     });
   }
 

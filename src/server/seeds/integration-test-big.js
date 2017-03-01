@@ -4,7 +4,7 @@ const constants = require('server/constants')();
 const communityTable = constants.communityTable;
 const profileTable = constants.profileTable;
 const entityTable = constants.entityTable;
-// const actionTable = constants.actionTable;
+const actionTable = constants.actionTable;
 
 exports.seed = knex => {
   /*
@@ -12,11 +12,13 @@ exports.seed = knex => {
    */
   return knex.raw(`alter sequence ${communityTable}_id_seq restart with 1`)
     .then(() => {
+      // 1
       return knex(communityTable).insert({
         name: 'Biblo'
       });
     })
     .then(() => {
+      // 2
       return knex(communityTable).insert({
         name: 'LitteraturSiden',
         attributes: {production: false}
@@ -29,6 +31,7 @@ exports.seed = knex => {
       return knex.raw(`alter sequence ${profileTable}_id_seq restart with 1`);
     })
     .then(() => {
+      // 1
       return knex(profileTable).insert({
         community_id: 1,
         name: 'Pink ',
@@ -40,6 +43,7 @@ exports.seed = knex => {
       });
     })
     .then(() => {
+      // 2
       return knex(profileTable).insert({
         community_id: 1,
         name: 'Kaptajn underhyler',
@@ -52,6 +56,7 @@ uden bukser på.`,
       });
     })
     .then(() => {
+      // 3
       return knex(profileTable).insert({
         community_id: 1,
         name: 'BiblioteKaren',
@@ -65,12 +70,14 @@ Og laver lerpotter på en drejebænk.`,
       });
     })
     .then(() => {
+      // 4
       return knex(profileTable).insert({
         community_id: 1,
         name: 'Anonymous'
       });
     })
     .then(() => {
+      // 5
       return knex(profileTable).insert({
         community_id: 2,
         name: 'Tante Grøn'
@@ -106,6 +113,52 @@ Og laver lerpotter på en drejebænk.`,
         title: 'Nøgen Frokost',
         type: 'review',
         contents: 'En rigtig god bog, men jeg forstår den ikke helt...'
+      });
+    })
+    /*
+     * Actions
+     */
+    .then(() => {
+      return knex.raw(`alter sequence ${actionTable}_id_seq restart with 1`);
+    })
+    .then(() => {
+      // 1
+      return knex(actionTable).insert({
+        community_id: 1,
+        owner_id: 1,
+        type: 'follow',
+        profile_ref: 2
+      });
+    })
+    .then(() => {
+      // 2
+      return knex(actionTable).insert({
+        community_id: 1,
+        owner_id: 2,
+        type: 'like',
+        entity_ref: 2
+      });
+    })
+    .then(() => {
+      // 3
+      return knex(actionTable).insert({
+        community_id: 1,
+        owner_id: 4,
+        type: 'participate',
+        entity_ref: 1
+      });
+    })
+    .then(() => {
+      // 4
+      return knex(actionTable).insert({
+        community_id: 1,
+        owner_id: 2,
+        type: 'flag',
+        entity_ref: 2,
+        profile_ref: 3,
+        attributes: {
+          concern: 'Må man skrive "nøgen"?'
+        }
       });
     })
     .catch(error => {

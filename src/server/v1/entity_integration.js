@@ -497,6 +497,8 @@ describe('API v1 entity endpoints', () => {
       })
       .end(done);
     });
+
+    it('should return specific entity');
   });
 
   describe('PUT /community/:id/entity/:id', () => {
@@ -692,10 +694,15 @@ describe('API v1 entity endpoints', () => {
       .expect(res => {
         expectSuccess(res.body, (links, data) => {
           expect(data.start_epoch).to.equal(1488206262);
+          // A change chould be logged, but not the value.
+          expect(data.log).to.have.length(1);
+          expect(data.log[0]).to.not.have.property('start_epoch');
         });
       })
       .end(done);
     });
+
+    it('should update existing start_epoch');
 
     it('should update existing entity with end_epoch', done => {
       service.put(url)
@@ -704,10 +711,15 @@ describe('API v1 entity endpoints', () => {
       .expect(res => {
         expectSuccess(res.body, (links, data) => {
           expect(data.end_epoch).to.equal(1488206262);
+          // A change chould be logged, but not the value.
+          expect(data.log).to.have.length(1);
+          expect(data.log[0]).to.not.have.property('end_epoch');
         });
       })
       .end(done);
     });
+
+    it('should update existing end_epoch');
 
     it('should update existing entity with type, title, contents', done => {
       service.put(url)

@@ -1,0 +1,35 @@
+{
+  "required": true,
+  "type": "object",
+  "properties": {
+    "modified_by": {
+      "required": true,
+      "type": "integer"
+    },
+    "type": {
+      "required": false,
+      "type": "string"
+    },
+    "entity_ref": {
+      "required": false,
+      "type": "integer"
+    },
+    "profile_ref": {
+      "required": false,
+      "type": "integer"
+    },
+    "start_epoch": {
+      "required": false,
+      "type": "integer"
+    },
+    "end_epoch": {
+      "required": false,
+      "type": "integer"
+    },
+    "attributes": {
+      "required": false,
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

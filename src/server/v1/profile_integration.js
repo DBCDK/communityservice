@@ -198,6 +198,16 @@ describe('API v1 profile endpoints', () => {
     it('should return Not Found on unknown profile', done => {
       service.get('/v1/community/1/profile/100')
       .expect(404)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          const error = errors[0];
+          expect(error).to.have.property('title');
+          expect(error.title).to.match(/Profile does not exist/);
+          expect(error).to.have.property('meta');
+          expect(error.meta).to.have.property('resource');
+        });
+      })
       .end(done);
     });
 
@@ -235,6 +245,8 @@ describe('API v1 profile endpoints', () => {
       })
       .end(done);
     });
+
+    it('should return specific profile');
   });
 
   describe('PUT /community/:id/profile/:id', () => {
@@ -382,11 +394,10 @@ describe('API v1 profile endpoints', () => {
       });
     });
 
-    const admin_id = 1;
-    const newAttributes = {libraryId: 526443, interests: ['carrots', 'rabbit holes'], description: null};
-    const totalAttributes = {libraryId: 526443, interests: ['carrots', 'rabbit holes'], email: 'Karen.Nielsen@rkb.dk'};
-
     it('should update existing profile and retrieve the update', done => {
+      const admin_id = 1;
+      const newAttributes = {libraryId: 526443, interests: ['carrots', 'rabbit holes'], description: null};
+      const totalAttributes = {libraryId: 526443, interests: ['carrots', 'rabbit holes'], email: 'Karen.Nielsen@rkb.dk'};
       service.put(url)
       .send({attributes: newAttributes, name: 'BiblioteKaren', modified_by: admin_id})
       .expect(200)
