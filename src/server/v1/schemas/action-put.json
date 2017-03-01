@@ -2,17 +2,21 @@
   "required": true,
   "type": "object",
   "properties": {
+    "modified_by": {
+      "required": true,
+      "type": "integer"
+    },
     "type": {
-      "required": true,
+      "required": false,
       "type": "string"
     },
-    "title": {
-      "required": true,
-      "type": "string"
+    "entity_ref": {
+      "required": false,
+      "type": "integer"
     },
-    "contents": {
-      "required": true,
-      "type": "string"
+    "profile_ref": {
+      "required": false,
+      "type": "integer"
     },
     "start_epoch": {
       "required": false,
@@ -25,14 +29,6 @@
     "attributes": {
       "required": false,
       "type": "object"
-    },
-    "owner_id": {
-      "required": true,
-      "type": "integer"
-    },
-    "entity_ref": {
-      "required": false,
-      "type": "integer"
     }
   },
   "additionalProperties": false

@@ -8,15 +8,15 @@ Here are the raw schemas as seen by PostgreSQL.
 ## Communities
 
 ```
-                                                         Table "public.communities"
-     Column     |          Type          |                        Modifiers                         | Storage  | Stats target | Description
-----------------+------------------------+----------------------------------------------------------+----------+--------------+-------------
- id             | integer                | not null default nextval('communities_id_seq'::regclass) | plain    |              |
- created_epoch  | integer                | not null default date_part('epoch'::text, now())         | plain    |              |
- modified_epoch | integer                |                                                          | plain    |              |
- deleted_epoch  | integer                |                                                          | plain    |              |
- name           | character varying(255) |                                                          | extended |              |
- attributes     | json                   | not null default '{}'::json                              | extended |              |
+                                                        Table "public.communities"
+    Column     |          Type          |                        Modifiers                         | Storage  | Stats target | Description
+---------------+------------------------+----------------------------------------------------------+----------+--------------+-------------
+ id            | integer                | not null default nextval('communities_id_seq'::regclass) | plain    |              |
+ created_epoch | integer                | not null default date_part('epoch'::text, now())         | plain    |              |
+ deleted_epoch | integer                |                                                          | plain    |              |
+ name          | character varying(255) |                                                          | extended |              |
+ attributes    | json                   | not null default '{}'::json                              | extended |              |
+ log           | json                   |                                                          | extended |              |
 Indexes:
     "communities_pkey" PRIMARY KEY, btree (id)
     "communities_name_unique" UNIQUE CONSTRAINT, btree (name)
@@ -103,8 +103,8 @@ Referenced by:
 ----------------+------------------------+------------------------------------------------------+----------+--------------+-------------
  id             | integer                | not null default nextval('actions_id_seq'::regclass) | plain    |              |
  created_epoch  | integer                | not null default date_part('epoch'::text, now())     | plain    |              |
- modified_epoch | integer                |                                                      | plain    |              |
  deleted_epoch  | integer                |                                                      | plain    |              |
+ modified_epoch | integer                |                                                      | plain    |              |
  modified_by    | integer                |                                                      | plain    |              |
  deleted_by     | integer                |                                                      | plain    |              |
  community_id   | integer                | not null                                             | plain    |              |
@@ -115,6 +115,7 @@ Referenced by:
  profile_ref    | integer                |                                                      | plain    |              |
  type           | character varying(255) | not null                                             | extended |              |
  attributes     | json                   | not null default '{}'::json                          | extended |              |
+ log            | json                   |                                                      | extended |              |
 Indexes:
     "actions_pkey" PRIMARY KEY, btree (id)
 Foreign-key constraints:
