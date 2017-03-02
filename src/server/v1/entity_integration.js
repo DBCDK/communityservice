@@ -7,7 +7,7 @@ const config = require('server/config');
 const dbconfig = config.db;
 const knex = require('knex')(dbconfig);
 const db = require('server/v1/current-db')(knex);
-const seedBigDb = require('server/seeds/integration-test-big').seed;
+const seedSmallDb = require('server/seeds/integration-small').seed;
 const expectSuccess = require('server/integration-verifiers').expectSuccess;
 const expectFailure = require('server/integration-verifiers').expectFailure;
 const expectValidate = require('server/integration-verifiers').expectValidate;
@@ -25,7 +25,7 @@ describe('API v1 entity endpoints', () => {
   beforeEach(done => {
     db.clear()
     .then(() => {
-      return seedBigDb(knex);
+      return seedSmallDb(knex);
     })
     .then(() => {
       done();
