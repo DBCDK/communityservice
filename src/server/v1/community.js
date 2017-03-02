@@ -77,7 +77,8 @@ router.route('/:id')
 
   .get((req, res, next) => {
     const name = req.params.id;
-    locateCommunityId(name)
+    let location = `${req.baseUrl}/${name}`;
+    locateCommunityName(name)
     .then(id => {
       const selector = knex(communityTable).where('id', id).select();
       // Sequence several results together.
@@ -85,17 +86,17 @@ router.route('/:id')
     })
     .then(results => {
       const id = results[0];
+      location = `${req.baseUrl}/${id}`;
       const communities = results[1];
       if (communities.length === 0) {
         return next({
           status: 404,
           title: 'Community does not exist',
           detail: `Community ${id} unknown`,
-          meta: {resource: req.path}
+          meta: {resource: location}
         });
       }
       const community = communities[0];
-      const location = `${req.baseUrl}/${community.id}`;
       res
       .status(200)
       .json({
@@ -108,7 +109,7 @@ router.route('/:id')
         status: 404,
         title: 'Community does not exist',
         detail: `Community ${name} unknown`,
-        meta: {resource: req.path}
+        meta: {resource: location}
       });
     });
   })
@@ -141,7 +142,7 @@ function gettingCommunity(id, url) {
   });
 }
 
-function locateCommunityId(name) {
+function locateCommunityName(name) {
   return new Promise((resolve, reject) => {
     const number = parseInt(name, 10);
     if (!isNaN(number)) {

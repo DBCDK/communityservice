@@ -66,8 +66,19 @@ describe('API v1 community endpoints', () => {
   describe('GET /community/:name', () => {
 
     it('should return Not Found on unknown name', done => {
-      service.get('/v1/community/Osten Feldt')
+      const url = '/v1/community/Osten Feldt';
+      service.get(url)
       .expect(404)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          const error = errors[0];
+          expect(error.title).to.equal('Community does not exist');
+          expect(error).to.have.property('meta');
+          expect(error.meta).to.have.property('resource');
+          expect(error.meta.resource).to.equal(url);
+        });
+      })
       .end(done);
     });
 
@@ -98,8 +109,19 @@ describe('API v1 community endpoints', () => {
   describe('GET /community/:id', () => {
 
     it('should return Not Found on unknown community', done => {
-      service.get('/v1/community/10')
+      const url = '/v1/community/10';
+      service.get(url)
       .expect(404)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          const error = errors[0];
+          expect(error.title).to.equal('Community does not exist');
+          expect(error).to.have.property('meta');
+          expect(error.meta).to.have.property('resource');
+          expect(error.meta.resource).to.equal(url);
+        });
+      })
       .end(done);
     });
   });
@@ -107,9 +129,20 @@ describe('API v1 community endpoints', () => {
   describe('PUT /community/:id', () => {
 
     it('should return Not Found on any non-existing community', done => {
-      service.put('/v1/community/10')
+      const url = '/v1/community/10';
+      service.put(url)
       .send({name: 'Name'})
       .expect(404)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          const error = errors[0];
+          expect(error.title).to.equal('Community does not exist');
+          expect(error).to.have.property('meta');
+          expect(error.meta).to.have.property('resource');
+          expect(error.meta.resource).to.equal(url);
+        });
+      })
       .end(done);
     });
   });

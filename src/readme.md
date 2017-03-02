@@ -35,6 +35,10 @@ Use `npm test --silent` to run all tests that do not require a database..
 
 All files matching the pattern `*_integration.js` are considered integration tests that need a running database, and they will be included automatically when you `npm run integrationtest --silent`.
 
+To run only a part of the integration tests, use the `--grep` parameter of mocha, for example
+
+  $ npm run integrationtest --silent -- --grep 'community endpoints'
+
 To debug the service during test, make sure you set `LOG_SERVICE_ERRORS=1` in your `current.env`.
 
 ## Coverage
