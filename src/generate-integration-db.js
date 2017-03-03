@@ -15,6 +15,6 @@ db.destroy()
   process.exit(0);
 })
 .catch(error => {
-  logger.log.error(error);
+  logger.log.error({failure: error});
   process.exit(1);
 });
