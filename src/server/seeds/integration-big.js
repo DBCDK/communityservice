@@ -7,6 +7,8 @@ const request = require('supertest');
 const faker = require('faker');
 const _ = require('lodash');
 
+/* eslint-disable no-console */
+
 /*
 
 Eventually we need
@@ -27,7 +29,7 @@ Eventually we need
 1 percent of groups should be deleted.
 1 percent of posts should be deleted.
 
-NodeJS memory limit = 1GB.
+NodeJS memory limit = 1GB (?)
 
 group->profiles: < 500 * 100 = 50000
 profile->groups: < 50000
@@ -50,131 +52,82 @@ const reviewsPerProfileMax = 10;
 // const participantsInCampaingsMax = 100:
 
 exports.seed = () => {
-  faker.seed(2);
-  const communityTable = generateCommunities();
-  const adminTable = generateAdminIds();
-  const profileTable = generateProfiles();
-  const groupTable = generateGroups();
-  const campaignTable = generateCampaigns();
-  // const reviewTable = generateReviews();
-  // const postTable = generatePosts();
-  // const likesTable = generateLikes();
-  // const followsTable = generateFollows();
-
   // Indexes: the first index (0) in the array is not used.
   let groupToProfiles = [];
   let profileToGroups = [];
   let groupToReviews = [];
+
+  faker.seed(2);
+
+  const communityTable = generateCommunities();
+  const adminTable = generateAdminIds();
+  const profileTable = generateProfiles();
+  const groupTable = generateGroups();
+  const memberTable = generateMembersOfGroups();
+  const campaignTable = generateCampaigns();
+  const reviewTable = generateReviews();
+  // const postTable = generatePosts();
+  // const likesTable = generateLikes();
+  // const followsTable = generateFollows();
 
   const service = request(server);
 
   // Communities
   return Promise.all(communityTable.map(createCommunity))
   .then(results => {
-    logger.log.info(`Created ${results.length} communities`);
+    console.log(`Created ${results.length} communities`);
     // Profiles
-    return profileTable.reduce((seq, profile, index) => {
-      return seq.then(() => {
-        if (index % 10 === 0) {
-          logger.log.info(`Processed ${index} profiles`);
-        }
-        return new Promise(resolve => {
-          createProfile(profile)
-          .catch(error => {
-            logger.log.error({createProfile: error});
-          });
-          setTimeout(resolve, msDbQueryGracePeriod);
-        });
-      });
-    }, Promise.resolve());
+    return sequenceWithDelay(profileTable, msDbQueryGracePeriod, profile => {
+      return createProfile(profile);
+    }, index => {
+      if (index % 10 === 0) {
+        console.log(`Processed ${index} profiles`);
+      }
+    });
   })
   .then(() => {
     // Groups
-    return groupTable.reduce((seq, group, index) => {
-      return seq.then(() => {
-        if (index % 10 === 0) {
-          logger.log.info(`Processed ${index} groups`);
-        }
-        return new Promise(resolve => {
-          createEntity(group)
-          .catch(error => {
-            logger.log.error({createGroup: error});
-          });
-          setTimeout(resolve, msDbQueryGracePeriod);
-        });
-      });
-    }, Promise.resolve());
+    return sequenceWithDelay(groupTable, msDbQueryGracePeriod, group => {
+      return createEntity(group);
+    }, index => {
+      if (index % 10 === 0) {
+        console.log(`Processed ${index} groups`);
+      }
+    });
   })
   .then(() => {
     // Members of groups
-    let backlogOfPromises = [];
-    for (let group = 1; group <= groups; ++group) {
-      const members = uniqueRandomListFrom(profiles, logDistributedRandom(membersPerGroupMax));
-      groupToProfiles[group] = members;
-      members.forEach(profile => {
-        safePush(profileToGroups, profile, group);
-        backlogOfPromises.push(createMemberOfGroup(group, profile));
-      });
-    }
-    return backlogOfPromises.reduce((seq, promise, index) => {
-      return seq.then(() => {
-        if (index % 10 === 0) {
-          logger.log.info(`Processed ${index} members`);
-        }
-        return new Promise(resolve => {
-          promise
-          .catch(error => {
-            logger.log.error({createMember: error});
-          });
-          setTimeout(resolve, msDbQueryGracePeriod);
-        });
-      });
-    }, Promise.resolve());
+    return sequenceWithDelay(memberTable, msDbQueryGracePeriod, member => {
+      return createAction(member);
+    }, index => {
+      if (index % 10 === 0) {
+        console.log(`Processed ${index} members`);
+      }
+    });
   })
   .then(() => {
     // Campaigns
-    return campaignTable.reduce((seq, campaign, index) => {
-      return seq.then(() => {
-        if (index % 10 === 0) {
-          logger.log.info(`Processed ${index} campaigns`);
-        }
-        return new Promise(resolve => {
-          createEntity(campaign)
-          .catch(error => {
-            logger.log.error({createCampaign: error});
-          });
-          setTimeout(resolve, msDbQueryGracePeriod);
-        });
-      });
-    }, Promise.resolve());
+    return sequenceWithDelay(campaignTable, msDbQueryGracePeriod, campaign => {
+      return createEntity(campaign);
+    }, index => {
+      if (index % 10 === 0) {
+        console.log(`Processed ${index} campaigns`);
+      }
+    });
   })
   .then(() => {
     // Reviews
-    let backlogOfPromises = [];
-    for (let profile = 1; profile <= profiles; ++profile) {
-      const memberIn = profileToGroups[profile];
-      if (!memberIn || memberIn.length === 0) {
-        continue;
-      }
-      for (let i = 0; i < reviewsPerProfileMax; ++i) {
-        const group = selectRandomlyFrom(memberIn);
-        backlogOfPromises.push(createReview(group, profile));
-      }
-    }
-    return backlogOfPromises.reduce((seq, promise, index) => {
-      return seq.then(() => {
-        if (index % 10 === 0) {
-          logger.log.info(`Processed ${index} review`);
-        }
-        return new Promise(resolve => {
-          promise
-          .catch(error => {
-            logger.log.error({createMember: error});
-          });
-          setTimeout(resolve, msDbQueryGracePeriod);
-        });
+    return sequenceWithDelay(reviewTable, msDbQueryGracePeriod, review => {
+      return createEntity(review)
+      .then(id => {
+        // console.log(`Created review ${id} from profile ${review.owner_id} in group ${review.entity_ref}`);
+        safePush(groupToReviews, review.entity_ref, Number(id));
       });
-    }, Promise.resolve());
+    }, index => {
+      if (index % 10 === 0) {
+        console.log(`Processed ${index} reviews`);
+      }
+    });
   })
   .then(() => {
     generateFollows();
@@ -189,26 +142,41 @@ exports.seed = () => {
     console.log('groupToReviews');
     console.log(groupToReviews);
 
-    logger.log.info('success');
-    // logger.log.info(`Created ${results.length} profiles`);
+    console.log('success');
   })
   .catch(error => {
-    logger.log.error({ost: error});
+    logger.log.error({sequence: error});
     throw error;
   })
   ;
 
-  function createReview(group, profile) {
+  function createEntity(value, debug) {
     return new Promise((resolve, reject) => {
-      // logger.log.info(`Making a review from ${profile} in ${group}`);
-      service.post('/v1/community/1/entity')
-      .send({
-        type: 'review',
-        owner_id: profile,
-        entity_ref: group,
-        title: _.capitalize(faker.lorem.words()),
-        contents: faker.lorem.paragraphs(2, '\n')
-      })
+      if (debug) {
+        console.log(`Creating ${JSON.stringify(value)}`);
+      }
+      service.post('/v1/community/1/entity').send(value)
+      .end((error, result) => {
+        if (error) {
+          console.log('OST');
+          return reject(error);
+        }
+        if (result.status !== 201) {
+          console.log('BODY');
+          return reject(result.body);
+        }
+        const location = result.header.location;
+        const id = location.match(/entity\/(\d+)/)[1];
+        // console.log(`Created entity ${id}`);
+        resolve(id);
+      });
+    });
+  }
+
+  function createAction(value) {
+    return new Promise((resolve, reject) => {
+      // console.log(`Creating ${JSON.stringify(value)}`);
+      service.post('/v1/community/1/action').send(value)
       .end((error, result) => {
         if (error) {
           return reject(error);
@@ -217,56 +185,16 @@ exports.seed = () => {
           return reject(result.body);
         }
         const location = result.header.location;
-        const id = location.match(/entity\/(\d+)/)[1];
-        logger.log.info(`Created review ${id} from ${profile} in ${group}`);
-        safePush(groupToReviews, group, Number(id));
-        resolve();
-      });
-    });
-  }
-
-  function createMemberOfGroup(group, profile) {
-    return new Promise((resolve, reject) => {
-      // logger.log.info(`Making ${profile} a member of ${group}`);
-      service.post('/v1/community/1/action')
-      .send({
-        type: 'member',
-        owner_id: profile,
-        entity_ref: group
-      })
-      .end((error, result) => {
-        if (error) {
-          return reject(error);
-        }
-        if (result.status !== 201) {
-          return reject(result.body);
-        }
-        // logger.log.info(`Created ${JSON.stringify(result)}`);
-        resolve();
-      });
-    });
-  }
-
-  function createEntity(value) {
-    return new Promise((resolve, reject) => {
-      // logger.log.info(`Creating ${JSON.stringify(value)}`);
-      service.post('/v1/community/1/entity').send(value)
-      .end((error, result) => {
-        if (error) {
-          return reject(error);
-        }
-        if (result.status !== 201) {
-          return reject(result.body);
-        }
-        // logger.log.info(`Created ${JSON.stringify(result)}`);
-        resolve();
+        const id = location.match(/action\/(\d+)/)[1];
+        // console.log(`Created entity ${id}`);
+        resolve(id);
       });
     });
   }
 
   function createProfile(value) {
     return new Promise((resolve, reject) => {
-      // logger.log.info(`Creating ${JSON.stringify(value)}`);
+      // console.log(`Creating ${JSON.stringify(value)}`);
       service.post('/v1/community/1/profile').send(value)
       .end((error, result) => {
         if (error) {
@@ -275,7 +203,7 @@ exports.seed = () => {
         if (result.status !== 201) {
           return reject(result.body);
         }
-        // logger.log.info(`Created ${JSON.stringify(result)}`);
+        // console.log(`Created ${JSON.stringify(result)}`);
         resolve();
       });
     });
@@ -291,22 +219,20 @@ exports.seed = () => {
         if (result.status !== 201) {
           return reject(result.body);
         }
-        // logger.log.info(`Created ${JSON.stringify(result)}`);
+        // console.log(`Created ${JSON.stringify(result)}`);
         resolve();
       });
     });
   }
 
   function generateCommunities() {
-    return [
-      {
-        name: 'Integrator',
-        attributes: {
-          production: false,
-          admin: faker.internet.email()
-        }
+    return [{
+      name: 'Integrator',
+      attributes: {
+        production: false,
+        admin: faker.internet.email()
       }
-    ];
+    }];
   }
 
   function generateAdminIds() {
@@ -314,7 +240,7 @@ exports.seed = () => {
     for (let i = 0; i < admins; ++i) {
       result.push(faker.random.number() % profiles + 1);
     }
-    logger.log.info({admins: result});
+    console.log({admins: result});
     return result;
   }
 
@@ -369,25 +295,46 @@ exports.seed = () => {
     return result;
   }
 
-/*
-  function generateReviews() {
+  function generateMembersOfGroups() {
     let result = [];
-    for (let i = 0; i < reviewsPerProfileMax; ++i) {
-      const owner_id = faker.random.number() % profiles + 1;
-      const past = Date.parse(faker.date.past()) / 1000;
-      const future = Date.parse(faker.date.future()) / 1000;
-      result.push({
-        owner_id,
-        type: 'campaign',
-        title: _.capitalize(faker.lorem.words()),
-        contents: faker.lorem.paragraphs(2, '\n'),
-        start_epoch: past,
-        end_epoch: future
+    for (let group = 1; group <= groups; ++group) {
+      const random = logDistributedRandom(membersPerGroupMax);
+      const members = uniqueRandomListFrom(profiles, random);
+      groupToProfiles[group] = members;
+      members.forEach(profile => {
+        safePush(profileToGroups, profile, group);
+        result.push({
+          type: 'member',
+          owner_id: profile,
+          entity_ref: group
+        });
       });
     }
     return result;
   }
-*/
+
+  function generateReviews() {
+    let result = [];
+    for (let profile = 1; profile <= profiles; ++profile) {
+      const memberIn = profileToGroups[profile];
+      // A profile might not be member in any group.
+      if (!memberIn || memberIn.length === 0) {
+        continue;
+      }
+      for (let i = 0; i < reviewsPerProfileMax; ++i) {
+        const group = selectRandomlyFrom(memberIn);
+        result.push({
+          type: 'review',
+          owner_id: profile,
+          entity_ref: group,
+          title: _.capitalize(faker.lorem.words()),
+          contents: faker.lorem.paragraphs(2, '\n')
+        });
+      }
+    }
+    return result;
+  }
+
   function generateLikes() {
     return [];
   }
@@ -420,6 +367,23 @@ exports.seed = () => {
     else {
       arrayOfArrays[index].push(element);
     }
+  }
+
+  function sequenceWithDelay(list, msDelay, processing, progressReporter) {
+    return list.reduce((seq, item, index) => {
+      return seq.then(() => {
+        progressReporter(index);
+        return new Promise((resolve, reject) => {
+          processing(item)
+          .then(() => {
+            setTimeout(resolve, msDelay);
+          })
+          .catch(error => {
+            reject(error);
+          });
+        });
+      });
+    }, Promise.resolve());
   }
 
 };
