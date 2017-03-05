@@ -41,21 +41,24 @@ total: < 370000 entires
 */
 
 
-const msDbQueryGracePeriod = 50;
+const msDbQueryGracePeriod = 30;
 
 const profiles = 10;
 const admins = 1;
 const groups = 10;
 const membersPerGroupMax = 5;
 const campaigns = 5;
-const reviewsPerProfileMax = 10;
-// const participantsInCampaingsMax = 100:
+const reviewsPerProfileMax = 3;
+const participantsInCampaingsMax = 5;
+const submissionRateToCampaings = 0.5;
 
 exports.seed = () => {
   // Indexes: the first index (0) in the array is not used.
   let groupToProfiles = [];
   let profileToGroups = [];
   let groupToReviews = [];
+  let groupToCampaigns = [];
+  let profileToCampaigns = [];
 
   faker.seed(2);
 
@@ -108,10 +111,39 @@ exports.seed = () => {
   .then(() => {
     // Campaigns
     return sequenceWithDelay(campaignTable, msDbQueryGracePeriod, campaign => {
-      return createEntity(campaign);
+      return createEntity(campaign)
+      .then(id => {
+        safePush(groupToCampaigns, campaign.entity_ref, Number(id));
+      });
     }, index => {
       if (index % 10 === 0) {
         console.log(`Processed ${index} campaigns`);
+      }
+    });
+  })
+  .then(() => {
+    // Participants
+    return generateParticipantsOfCampaigns();
+  })
+  .then(participantTable => {
+    return sequenceWithDelay(participantTable, msDbQueryGracePeriod, participant => {
+      return createAction(participant);
+    }, index => {
+      if (index % 10 === 0) {
+        console.log(`Processed ${index} participants`);
+      }
+    });
+  })
+  .then(() => {
+    return generateCampaignSubmission();
+  })
+  .then(submissionTable => {
+    // Submissions to campaigns
+    return sequenceWithDelay(submissionTable, msDbQueryGracePeriod, submission => {
+      return createEntity(submission);
+    }, index => {
+      if (index % 10 === 0) {
+        console.log(`Processed ${index} submissions`);
       }
     });
   })
@@ -142,6 +174,12 @@ exports.seed = () => {
     console.log('groupToReviews');
     console.log(groupToReviews);
 
+    console.log('groupToCampaigns');
+    console.log(groupToCampaigns);
+
+    console.log('profileToCampaigns');
+    console.log(profileToCampaigns);
+
     console.log('success');
   })
   .catch(error => {
@@ -167,7 +205,6 @@ exports.seed = () => {
         }
         const location = result.header.location;
         const id = location.match(/entity\/(\d+)/)[1];
-        // console.log(`Created entity ${id}`);
         resolve(id);
       });
     });
@@ -186,7 +223,6 @@ exports.seed = () => {
         }
         const location = result.header.location;
         const id = location.match(/action\/(\d+)/)[1];
-        // console.log(`Created entity ${id}`);
         resolve(id);
       });
     });
@@ -194,7 +230,6 @@ exports.seed = () => {
 
   function createProfile(value) {
     return new Promise((resolve, reject) => {
-      // console.log(`Creating ${JSON.stringify(value)}`);
       service.post('/v1/community/1/profile').send(value)
       .end((error, result) => {
         if (error) {
@@ -203,7 +238,6 @@ exports.seed = () => {
         if (result.status !== 201) {
           return reject(result.body);
         }
-        // console.log(`Created ${JSON.stringify(result)}`);
         resolve();
       });
     });
@@ -219,7 +253,6 @@ exports.seed = () => {
         if (result.status !== 201) {
           return reject(result.body);
         }
-        // console.log(`Created ${JSON.stringify(result)}`);
         resolve();
       });
     });
@@ -240,7 +273,7 @@ exports.seed = () => {
     for (let i = 0; i < admins; ++i) {
       result.push(faker.random.number() % profiles + 1);
     }
-    console.log({admins: result});
+    console.log(`Admins: ${result}`);
     return result;
   }
 
@@ -276,8 +309,25 @@ exports.seed = () => {
     return result;
   }
 
+  function generateMembersOfGroups() {
+    let result = [];
+    for (let group = 1; group <= groups; ++group) {
+      const random = logDistributedRandom(membersPerGroupMax);
+      const members = uniqueRandomListOfNumbersFromOneTo(profiles, random);
+      groupToProfiles[group] = members;
+      members.forEach(profile => {
+        safePush(profileToGroups, profile, group);
+        result.push({
+          type: 'member',
+          owner_id: profile,
+          entity_ref: group
+        });
+      });
+    }
+    return result;
+  }
+
   function generateCampaigns() {
-    // TODO: should a campaign point to a group?
     let result = [];
     for (let i = 0; i < campaigns; ++i) {
       const owner_id = faker.random.number() % profiles + 1;
@@ -286,6 +336,7 @@ exports.seed = () => {
       result.push({
         owner_id,
         type: 'campaign',
+        entity_ref: selectRandomlyFrom(profileToGroups[owner_id]),
         title: _.capitalize(faker.lorem.words()),
         contents: faker.lorem.paragraphs(2, '\n'),
         start_epoch: past,
@@ -295,18 +346,48 @@ exports.seed = () => {
     return result;
   }
 
-  function generateMembersOfGroups() {
+  function generateParticipantsOfCampaigns() {
     let result = [];
     for (let group = 1; group <= groups; ++group) {
-      const random = logDistributedRandom(membersPerGroupMax);
-      const members = uniqueRandomListFrom(profiles, random);
-      groupToProfiles[group] = members;
-      members.forEach(profile => {
-        safePush(profileToGroups, profile, group);
+      const campaignList = groupToCampaigns[group];
+      // Some groups do not have campaigns.
+      if (!campaignList || campaignList.length === 0) {
+        continue;
+      }
+      const members = groupToProfiles[group];
+      campaignList.forEach(campaign => {
+        const random = logDistributedRandom(participantsInCampaingsMax);
+        const participants = uniqueRandomListTakenFrom(members, random);
+        participants.forEach(profile => {
+          safePush(profileToCampaigns, profile, campaign);
+          result.push({
+            type: 'participant',
+            owner_id: profile,
+            entity_ref: campaign
+          });
+        });
+      });
+    }
+    return result;
+  }
+
+  function generateCampaignSubmission() {
+    let result = [];
+    for (let profile = 1; profile <= profiles; ++profile) {
+      const campaignList = profileToCampaigns[profile];
+      // Some profiles do not participate in campaigns.
+      if (!campaignList || campaignList.length === 0) {
+        continue;
+      }
+      const submissions = campaignList.length * submissionRateToCampaings;
+      const camps = uniqueRandomListTakenFrom(campaignList, submissions);
+      camps.forEach(campaign => {
         result.push({
-          type: 'member',
           owner_id: profile,
-          entity_ref: group
+          entity_ref: campaign,
+          type: 'submission',
+          title: _.capitalize(faker.lorem.words()),
+          contents: faker.lorem.paragraphs(2, '\n')
         });
       });
     }
@@ -328,7 +409,10 @@ exports.seed = () => {
           owner_id: profile,
           entity_ref: group,
           title: _.capitalize(faker.lorem.words()),
-          contents: faker.lorem.paragraphs(2, '\n')
+          contents: faker.lorem.paragraphs(2, '\n'),
+          attributes: {
+            rating: faker.random.number() % 6
+          }
         });
       }
     }
@@ -347,10 +431,18 @@ exports.seed = () => {
     return array[faker.random.number() % array.length];
   }
 
-  function uniqueRandomListFrom(range, maxSize) {
+  function uniqueRandomListOfNumbersFromOneTo(maxRange, maxSize) {
     let list = [];
     for (let i = 0; i < maxSize; ++i) {
-      list.push(faker.random.number() % range + 1);
+      list.push(faker.random.number() % maxRange + 1);
+    }
+    return _.union(list);
+  }
+
+  function uniqueRandomListTakenFrom(sourceList, maxSize) {
+    let list = [];
+    for (let i = 0; i < maxSize; ++i) {
+      list.push(sourceList[faker.random.number() % sourceList.length]);
     }
     return _.union(list);
   }
