@@ -52,6 +52,8 @@ const reviewsPerProfileMax = 10;
 const participantsInCampaingsMax = profiles / 10;
 const submissionRateToCampaings = 0.5;
 const postsPerProfileForEachIterationMax = 5;
+const likesPerProfileMax = 100;
+const followsPerProfileMax = 50;
 
 exports.seed = () => {
   // Indexes: the first index (0) in the array is not used.
@@ -268,9 +270,30 @@ exports.seed = () => {
     });
   })
   .then(() => {
-    generateFollows();
-    generateLikes();
-
+    return generateLikes();
+  })
+  .then(likesTable => {
+    return sequenceWithDelay(likesTable, msDbQueryGracePeriod, like => {
+      return createAction(like);
+    }, index => {
+      if (index % 10 === 0) {
+        console.log(`Processed ${index} likes`);
+      }
+    });
+  })
+  .then(() => {
+    return generateFollows();
+  })
+  .then(followsTable => {
+    return sequenceWithDelay(followsTable, msDbQueryGracePeriod, follow => {
+      return createAction(follow);
+    }, index => {
+      if (index % 10 === 0) {
+        console.log(`Processed ${index} follows`);
+      }
+    });
+  })
+  .then(() => {
     console.log('groupToProfiles');
     console.log(groupToProfiles);
 
@@ -591,11 +614,55 @@ exports.seed = () => {
   }
 
   function generateLikes() {
-    return [];
+    let result = [];
+    for (let profile = 1; profile <= profiles; ++profile) {
+      const memberIn = profileToGroups[profile];
+      // A profile might not be member in any group.
+      if (!memberIn || memberIn.length === 0) {
+        continue;
+      }
+      // Collect all posts and reviews from all groups the user has access to.
+      const allEntities = memberIn.reduce((entries, group) => {
+        entries = _.concat(entries, groupToPosts[group], groupToReviews[group]);
+        return entries;
+      }, []);
+      const random = logDistributedRandom(likesPerProfileMax);
+      const entries = uniqueRandomListTakenFrom(allEntities, random);
+      entries.forEach(entity => {
+        result.push({
+          type: 'like',
+          owner_id: profile,
+          entity_ref: entity
+        });
+      });
+    }
+    return result;
   }
 
   function generateFollows() {
-    return [];
+    let result = [];
+    for (let profile = 1; profile <= profiles; ++profile) {
+      const memberIn = profileToGroups[profile];
+      // A profile might not be member in any group.
+      if (!memberIn || memberIn.length === 0) {
+        continue;
+      }
+      // Collect all profiles from all groups the user has access to.
+      const allProfiles = memberIn.reduce((profs, group) => {
+        profs = _.concat(profs, groupToProfiles[group]);
+        return profs;
+      }, []);
+      const random = logDistributedRandom(followsPerProfileMax);
+      const others = uniqueRandomListTakenFrom(allProfiles, random);
+      others.forEach(other => {
+        result.push({
+          type: 'follow',
+          owner_id: profile,
+          profile_ref: other
+        });
+      });
+    }
+    return result;
   }
 
   function selectRandomlyFrom(array) {
