@@ -719,7 +719,7 @@ exports.seed = () => {
             setTimeout(resolve, msDelay);
           })
           .catch(error => {
-            concole.log({inside: error});
+            console.log({inside: error});
             reject(error);
           });
         });

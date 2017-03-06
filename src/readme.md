@@ -23,6 +23,12 @@ The various settings are [described in the main README](../README.md).
 
 Use `npm run dev` to start a local server according to the settings in `current.env`.  The server restarts when the source code changes.
 
+You can populate a database with a large test community by running
+
+    $ node generate-integration-db.js
+
+when the service is up and running, but beware that this will drop all existing data from the `elvis` database.
+
 ## Lint
 
 Use `npm run lint --silent` to run all code through ESLint.
@@ -60,5 +66,5 @@ Each directory can have a `readme.md` file that further explains the contents of
 
 ## Naming conventions
 
-Functions returning [promises](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise) are named with an initial verb in present participle, like `validatingInput` to signify that the operation will span some time.
+Functions returning [promises](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise) are named with an initial verb in present participle, like `validatingInput` to signify that the operation is taken place immediately but will possibly span some time.
 
