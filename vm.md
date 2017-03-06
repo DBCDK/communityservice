@@ -36,5 +36,5 @@ For examples of how to run commands inside the VM from the outside, use commands
 
     $ vagrant ssh -c "cd /vagrant; npm run alltests --silent"
     $ vagrant ssh -c "cd /vagrant; npm run unittest --silent"
-    $ vagrant ssh -c "cd /vagrant; npm run integrationtest --silent"
+    $ vagrant ssh -c "cd /vagrant; npm run dbtest --silent"
     $ vagrant ssh -c "cd /vagrant; npm run coverage --silent"

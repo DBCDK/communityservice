@@ -22,14 +22,14 @@ To run the unit tests against the server:
     $ cp environments/developer.env current.env
     $ npm test
 
-To run the integration tests against the server (requires postgresql):
+To run the database tests against the server (requires postgresql):
 
     $ cd src
     $ . /nvm.sh
     $ nvm install
     $ npm install
     $ cp environments/travis.env current.env
-    $ npm run integrationtest --silent
+    $ npm run dbtest --silent
 
 To start the server in staging or production mode:
 

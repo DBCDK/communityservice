@@ -25,9 +25,21 @@ Use `npm run dev` to start a local server according to the settings in `current.
 
 You can populate a database with a large test community by running
 
-    $ node generate-integration-db.js
+    $ node generate-test-db.js
 
 when the service is up and running, but beware that this will drop all existing data from the `elvis` database.
+
+The generated test database can be stored for later use by
+
+    $ pg_dump elvis > fixtures/big.sql
+
+and reinstated by
+
+    $ psql elvis < fixtures/big.sql
+
+which is exactly what is done to test the complex queries in
+
+    $ npm run querytest
 
 ## Lint
 
@@ -37,13 +49,13 @@ Use `npm run lint --silent` to run all code through ESLint.
 
 All files matching the pattern `*_test.js` are considered unit tests, and they will be included automatically when you `npm run unittest --silent`.  This means that you can (and should) put your unittest next to the files your are testing.
 
-Use `npm test --silent` to run all tests that do not require a database..
+Use `npm test --silent` to run all tests that do not require a database.
 
-All files matching the pattern `*_integration.js` are considered integration tests that need a running database, and they will be included automatically when you `npm run integrationtest --silent`.
+All files matching the pattern `*_test-db.js` are unit tests that need a running database, and they will be included automatically when you `npm run dbtest --silent`.
 
-To run only a part of the integration tests, use the `--grep` parameter of mocha, for example
+To run only a part of the unit tests, use the `--grep` parameter of mocha, for example
 
-  $ npm run integrationtest --silent -- --grep 'community endpoints'
+  $ npm run dbtest --silent -- --grep 'community endpoints'
 
 To debug the service during test, make sure you set `LOG_SERVICE_ERRORS=1` in your `current.env`.
 

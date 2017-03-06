@@ -5,7 +5,7 @@ const logger = require('__/logging')(config.logger);
 const dbconfig = config.db;
 const knex = require('knex')(dbconfig);
 const db = require('server/v1/current-db')(knex);
-const seedBigDb = require('server/seeds/integration-big').seed;
+const seedBigDb = require('server/seeds/big').seed;
 
 db.destroy()
 .then(db.setup)

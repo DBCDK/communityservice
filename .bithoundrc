@@ -5,7 +5,7 @@
   ],
   "test": [
     "**/*_test.js",
-    "**/*_integration.js"
+    "**/*_test-db.js"
   ],
   "critics": {
     "lint": {"engine": "eslint"}

@@ -2,7 +2,7 @@
 
 const expect = require('chai').expect;
 const request = require('supertest');
-const expectFailure = require('server/integration-verifiers').expectFailure;
+const expectFailure = require('server/test-verifiers').expectFailure;
 const app = require('server');
 
 describe('service meta API', () => {

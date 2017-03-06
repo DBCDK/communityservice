@@ -1,1 +1,1 @@
-# Database seeds for integration testing
+# Database seeds for testing
