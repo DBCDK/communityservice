@@ -98,13 +98,37 @@ describe('Schema for queries', () => {
     });
 
     it('should reject query with several extractors', () => {
-      validate({List: {Profile: 1}, Limit: 8, Include: 'id', Case: {}});
+      validate({List: {Entity: {type: 'post'}}, Limit: 8, Include: 'id', Case: {}});
       expectFailure();
     });
 
-    it('should accept query with a limitor', () => {
-      validate({List: {Profile: 1}, Limit: 8, Include: 'id'});
+    it('should accept query with a single limitor', () => {
+      validate({List: {Entity: {type: 'post'}}, Limit: 8, Include: 'id'});
       expectSuccess();
+    });
+
+    it('should accept query with all limitors', () => {
+      validate({
+        List: {Entity: {type: 'post'}},
+        SortBy: 'modified',
+        Order: 'ascending',
+        Limit: 8,
+        Offset: 10,
+        Include: 'attributes.text'}
+      );
+      expectSuccess();
+    });
+
+    it('should reject query with all extra properties', () => {
+      validate({
+        List: {Entity: {type: 'post'}},
+        SortBy: 'modified',
+        Order: 'ascending',
+        Limit: 8,
+        Ost: 0,
+        Include: 'attributes.text'}
+      );
+      expectFailure();
     });
 
   });

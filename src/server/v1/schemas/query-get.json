@@ -33,22 +33,29 @@
       "type": "object",
       "properties": {
         "List": {"$ref": "#/definitions/criteria"},
+        "SortBy": {"$ref": "#/definitions/sort"},
+        "Order": {"$ref": "#/definitions/order"},
+        "Limit": "integer",
+        "Offset": "integer",
         "Include": {"$ref": "#/definitions/include"}
       },
-      "required": ["List", "Include"],
-      "minProperties": 3,
-      "additionalProperties": {"$ref": "#/definitions/limitor"}
+      "required": ["List", "Include", "Limit"],
+      "additionalProperties": false
     },
     "list-conditional": {
       "description": "List of objects matching the criteria.",
       "type": "object",
       "properties": {
         "List": {"$ref": "#/definitions/criteria"},
+        "SortBy": {"$ref": "#/definitions/sort"},
+        "Order": {"$ref": "#/definitions/order"},
+        "Limit": "integer",
+        "Offset": "integer",
         "Case": {"$ref": "#/definitions/case"}
       },
-      "required": ["List", "Case"],
-      "minProperties": 3,
-      "additionalProperties": {"$ref": "#/definitions/limitor"}
+      "additionalProperties": {"$ref": "#/definitions/limitor"},
+      "required": ["List", "Case", "Limit"],
+      "additionalProperties": false
     },
     "count": {
       "description": "Number of items matching the criteria.",
@@ -66,12 +73,8 @@
         {"$ref": "#/definitions/map"}
       ]
     },
-    "limitor": {
-      "SortBy": {"enum": ["created", "modified"]},
-      "Order": {"enum": ["descending", "ascending"]},
-      "Limit": "integer",
-      "Offset": "integer"
-    },
+    "sort": {"enum": ["created", "modified"]},
+    "order": {"enum": ["descending", "ascending"]},
     "case": {},
     "criteria": {},
     "reference": {
