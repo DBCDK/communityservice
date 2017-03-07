@@ -14,11 +14,13 @@ In this document we write the queries directly as JavaScript objects as they wou
 
 Operators are written with capital initial letter to make them stand out from names that will be part of the result.
 
+There are three kinds of operators: *selectors*, *limitors*, and *extractors*.
+
 ### `Singleton`
 
 Request a single database object that meets some criteria.
 
-Format: `{Singleton: ` *criteria*`,` *selector* `}`
+Format: `{Singleton: ` *criteria*`,` *extractor* `}`
 
 Example:
 
@@ -39,7 +41,7 @@ The result is a single object that matches the query.  If there are no or severa
 
 Requests a list of database objects that macth some criteria.
 
-Format: `{List:` *criteria* `,` *limit* `,` *limit* `,` ... `,` *selector* `}`
+Format: `{List:` *criteria* `,` *limitor* `,` *limitor* `,` ... `,` *extractor* `}`
 
 Example:
 
@@ -112,7 +114,7 @@ Result:
 
 ### `Context`
 
-Extracts database objects by following their linkage.  The result is the set of objects from the object in current context to the end of the linkage chain.  Each object in the result is embedded into the next object in the chain, so effectively the chain is reversed, the first object being the inner-most embedded object.
+Extracts database objects by following their linkage to other objects.  The result is the set of objects from the object in current context to the end of the linkage chain.  Each object in the result is embedded into the next object in the chain, so effectively the chain is reversed, the first object being the inner-most embedded object.
 
 Example:
 
