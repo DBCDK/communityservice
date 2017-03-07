@@ -4,7 +4,7 @@ The purpose of the query language is to make it possible for a web service to ex
 
 (There is a fourth "object" `Community` which is used internally to use the same database for several communities at the same time, a feature that will not be discussed here.)
 
-A query is a [JSON](http://json.org) structure where each *name* is either an operator or a literal key that will appear in the result of the query.  The structure of the result should thus be apparent from the structure of the query.
+A query is a [JSON](http://json.org) structure where each *name* is either an operator or a literal property that will appear in the result of the query.  The structure of the result should thus be apparent from the structure of the query.
 
 In a query, each name has a *value* which determines what data will be extracted from the database being queried.
 

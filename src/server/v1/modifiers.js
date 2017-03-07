@@ -34,7 +34,7 @@ exports.gettingCurrentTimeAsEpoch = gettingCurrentTimeAsEpoch;
 
 /**
  * Prepare an object so that it can be used in a SQL row `update`.
- * The key `attributes` gets special treatment in that each attribute in this object
+ * The property `attributes` gets special treatment in that each attribute in this object
  * is also treated as an update to the existing attributes.  To delete an attribute,
  * set it to null.
  *
@@ -42,7 +42,7 @@ exports.gettingCurrentTimeAsEpoch = gettingCurrentTimeAsEpoch;
  * @param  {[type]} change      Values to change or add.
  * @param  {[type]} before      Object as it were before the change.
  * @param  {[type]} epochNow    Timestamp for change.
- * @param  {[type]} loggedKeys  Changes to theese keys are recorded in log.
+ * @param  {[type]} loggedKeys  Changes to these properties are recorded in log.
  * @return {[type]}             Object to use in SQL update query.
  */
 function updateOrDelete(change, before, epochNow, loggedKeys) {
