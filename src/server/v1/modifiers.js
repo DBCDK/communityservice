@@ -49,7 +49,7 @@ function updateOrDelete(change, before, epochNow, loggedKeys) {
   const changeKeys = _.keys(change);
   if (changeKeys.length === 1 && changeKeys[0] === 'modified_by') {
     // Delete instead of update modify.
-    return setDeletedBy(before, change.modified_by, epochNow);
+    return setDeletedBy({}, change.modified_by, epochNow);
   }
   let logEntry = setModifiedBy({}, change.modified_by, epochNow);
   const keys = _.intersection(_.keys(change), loggedKeys);

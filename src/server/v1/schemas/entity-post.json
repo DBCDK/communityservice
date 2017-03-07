@@ -2,6 +2,10 @@
   "required": true,
   "type": "object",
   "properties": {
+    "owner_id": {
+      "required": true,
+      "type": "integer"
+    },
     "type": {
       "required": true,
       "type": "string"
@@ -25,10 +29,6 @@
     "attributes": {
       "required": false,
       "type": "object"
-    },
-    "owner_id": {
-      "required": true,
-      "type": "integer"
     },
     "entity_ref": {
       "required": false,

@@ -1,6 +1,6 @@
 { "build_systems":
   [ { "name": "elvis"
-    , "cmd": ["npm","run","integrationtest","--silent"]
+    , "cmd": ["npm","run","dbtest","--silent"]
     , "file_regex": "^([^\n:]+):([0-9]+):([0-9]+): (.*)$"
     , "working_dir": "${project_path}/src"
     , "variants":
@@ -30,6 +30,7 @@
       [ "npm-debug.log"
       , "src/nvm.sh"
       , "src/server/config.js"
+      , "src/fixtures/big.sql"
       ]
     }
   ]

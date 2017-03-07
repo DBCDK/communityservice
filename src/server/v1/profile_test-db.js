@@ -7,10 +7,10 @@ const config = require('server/config');
 const dbconfig = config.db;
 const knex = require('knex')(dbconfig);
 const db = require('server/v1/current-db')(knex);
-const seedBigDb = require('server/seeds/integration-test-big').seed;
-const expectSuccess = require('server/integration-verifiers').expectSuccess;
-const expectFailure = require('server/integration-verifiers').expectFailure;
-const expectValidate = require('server/integration-verifiers').expectValidate;
+const seedSmallDb = require('server/seeds/small').seed;
+const expectSuccess = require('server/test-verifiers').expectSuccess;
+const expectFailure = require('server/test-verifiers').expectFailure;
+const expectValidate = require('server/test-verifiers').expectValidate;
 
 /* eslint-disable no-unused-expressions */
 describe('API v1 profile endpoints', () => {
@@ -25,7 +25,7 @@ describe('API v1 profile endpoints', () => {
   beforeEach(done => {
     db.clear()
     .then(() => {
-      return seedBigDb(knex);
+      return seedSmallDb(knex);
     })
     .then(() => {
       done();
@@ -365,6 +365,46 @@ describe('API v1 profile endpoints', () => {
         });
       })
       .end(done);
+    });
+
+    it('should mark as deleted when a log exists', done => {
+      service.put(url)
+      .send({modified_by: id, name: 'Change'})
+      .expect(200)
+      .then(() => {
+        service.put(url)
+        .send({modified_by: id})
+        .expect(200)
+        .expect(res => {
+          expectSuccess(res.body, (links, data) => {
+            expect(links).to.have.property('self');
+            expect(links.self).to.equal(url);
+            expectValidate(data, 'v1/schemas/profile-out.json');
+            expect(data).to.have.property('id');
+            expect(data.id).to.equal(id);
+            expect(data).to.have.property('name');
+            expect(data.name).to.equal('Change');
+            expect(data).to.have.property('attributes');
+            expect(data).to.have.property('created_epoch');
+            expect(data.created_epoch).to.match(/^[0-9]+$/);
+            expect(data).to.have.property('modified_epoch');
+            expect(data.modified_epoch).to.match(/^[0-9]+$/);
+            expect(data).to.have.property('modified_by');
+            expect(data.modified_by).to.equal(id);
+            expect(data).to.have.property('deleted_epoch');
+            expect(data.deleted_epoch).to.match(/^[0-9]+$/);
+            expect(data.deleted_epoch).to.not.be.below(data.created_epoch);
+            expect(data).to.have.property('deleted_by');
+            expect(data.deleted_by).to.equal(id);
+            expect(data).to.have.property('log');
+            expect(data.log).to.not.be.null;
+          });
+        })
+        .end(done);
+      })
+      .catch(error => {
+        done(error);
+      });
     });
 
     it('should update log with minimal attributes', done => {

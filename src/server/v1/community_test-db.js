@@ -7,10 +7,10 @@ const config = require('server/config');
 const dbconfig = config.db;
 const knex = require('knex')(dbconfig);
 const db = require('server/v1/current-db')(knex);
-const seedBigDb = require('server/seeds/integration-test-big').seed;
-const expectSuccess = require('server/integration-verifiers').expectSuccess;
-const expectFailure = require('server/integration-verifiers').expectFailure;
-const expectValidate = require('server/integration-verifiers').expectValidate;
+const seedSmallDb = require('server/seeds/small').seed;
+const expectSuccess = require('server/test-verifiers').expectSuccess;
+const expectFailure = require('server/test-verifiers').expectFailure;
+const expectValidate = require('server/test-verifiers').expectValidate;
 
 /* eslint-disable no-unused-expressions */
 describe('API v1 community endpoints', () => {
@@ -25,7 +25,7 @@ describe('API v1 community endpoints', () => {
   beforeEach(done => {
     db.clear()
     .then(() => {
-      return seedBigDb(knex);
+      return seedSmallDb(knex);
     })
     .then(() => {
       done();
@@ -66,8 +66,19 @@ describe('API v1 community endpoints', () => {
   describe('GET /community/:name', () => {
 
     it('should return Not Found on unknown name', done => {
-      service.get('/v1/community/Osten Feldt')
+      const url = '/v1/community/Osten Feldt';
+      service.get(url)
       .expect(404)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          const error = errors[0];
+          expect(error.title).to.equal('Community does not exist');
+          expect(error).to.have.property('meta');
+          expect(error.meta).to.have.property('resource');
+          expect(error.meta.resource).to.equal(url);
+        });
+      })
       .end(done);
     });
 
@@ -98,8 +109,19 @@ describe('API v1 community endpoints', () => {
   describe('GET /community/:id', () => {
 
     it('should return Not Found on unknown community', done => {
-      service.get('/v1/community/10')
+      const url = '/v1/community/10';
+      service.get(url)
       .expect(404)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          const error = errors[0];
+          expect(error.title).to.equal('Community does not exist');
+          expect(error).to.have.property('meta');
+          expect(error.meta).to.have.property('resource');
+          expect(error.meta.resource).to.equal(url);
+        });
+      })
       .end(done);
     });
   });
@@ -107,9 +129,20 @@ describe('API v1 community endpoints', () => {
   describe('PUT /community/:id', () => {
 
     it('should return Not Found on any non-existing community', done => {
-      service.put('/v1/community/10')
+      const url = '/v1/community/10';
+      service.put(url)
       .send({name: 'Name'})
       .expect(404)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          const error = errors[0];
+          expect(error.title).to.equal('Community does not exist');
+          expect(error).to.have.property('meta');
+          expect(error.meta).to.have.property('resource');
+          expect(error.meta.resource).to.equal(url);
+        });
+      })
       .end(done);
     });
   });
