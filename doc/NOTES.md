@@ -1,5 +1,86 @@
 # Data formats
 
+## (Scribbles)
+
+To approve new reviews
+As admin
+I want to search for reviews that need approval.
+
+```json
+{ Entities: { type: 'review', 'attributes.approvedBy': null }
+, Limit: 100
+, Sort: 'created'
+, Order: 'ascending'
+, Include:
+  { id: 'id'
+  , review: 'contents'
+  , image: 'attribute.picture'
+  , profile:
+    { Profile: { id: '^owner_id' }
+    , Include: { id: 'id', name: 'name' }
+    }
+  }
+}
+```
+
+To display the best books
+As a community developer
+I want to find the most recent reviews that give the highest rating.
+
+```json
+{ Entities: { type: 'review', created: {newer: '14 days'} }
+, Limit: 8
+, Sort: 'attribute.rating'
+, Order: 'descending'
+, Include:
+  { id: 'id'
+  , review: 'contents'
+  , image: 'attribute.picture'
+  , profile:
+    { Profile: { id: '^owner_id' }
+    , Include: { id: 'id', name: 'name' }
+    }
+  }
+}
+```
+
+## Extractors
+
+```
+Include:
+  string => return extracted property.
+  object =>
+    left-hand side => the property that will be present in the resulting object.
+    right-hand sides:
+      string ==> assign extracted property.
+      object ==> perform subquery and assing result.
+
+Type:
+  object =>
+    left-hand side => matched against the type of the context object.
+```
+
+
+## Embedding / Follow
+
+Embed is always on entity_ref and always Case.
+
+```json
+{ Entity: { id: 15532 }
+, FollowEntities:
+  { group: { Include: 'attribute.name' }
+  , post: { Include: 'attribute.text' }
+  , comment: { Include: { id: 'id', answer: 'attribute.comment' } }
+  }
+}
+```
+
+## Conventions
+
+Because Actions can point to Entities and/or Profiles, the community has to keep Actions strictly separated by their `type` based on whether the Action points to a Profile, an Entity, or both.
+
+*Possible improvement (v2)*: Split Actions into three separate tables.
+
 ## Profile page
 
 To show a profile, Biblo needs data form Elvis like:
