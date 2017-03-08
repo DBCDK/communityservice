@@ -29,6 +29,9 @@ describe('API v1 entity endpoints', () => {
     })
     .then(() => {
       done();
+    })
+    .catch(errors => {
+      done(errors);
     });
   });
 

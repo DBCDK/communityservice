@@ -1,6 +1,6 @@
 { "build_systems":
   [ { "name": "elvis"
-    , "cmd": ["npm","run","dbtest","--silent"]
+    , "cmd": ["npm","run","unittest","--silent","--","--grep","query"]
     , "file_regex": "^([^\n:]+):([0-9]+):([0-9]+): (.*)$"
     , "working_dir": "${project_path}/src"
     , "variants":
@@ -9,6 +9,9 @@
         }
       , { "name": "units"
         , "cmd": ["npm","run","unittest","--silent"]
+        }
+      , { "name": "dbtest"
+        , "cmd": ["npm","run","dbtest","--silent"]
         }
       , { "name": "coverage"
         , "cmd": ["npm","run","coverage","--silent"]

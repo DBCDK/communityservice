@@ -29,7 +29,11 @@ describe('API v1 profile endpoints', () => {
     })
     .then(() => {
       done();
+    })
+    .catch(errors => {
+      done(errors);
     });
+
   });
 
   describe('GET /community/:id/profile', () => {

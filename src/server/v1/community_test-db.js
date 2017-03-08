@@ -29,6 +29,9 @@ describe('API v1 community endpoints', () => {
     })
     .then(() => {
       done();
+    })
+    .catch(errors => {
+      done(errors);
     });
   });
 

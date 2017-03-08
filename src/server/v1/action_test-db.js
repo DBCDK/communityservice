@@ -29,6 +29,9 @@ describe('API v1 action endpoints', () => {
     })
     .then(() => {
       done();
+    })
+    .catch(errors => {
+      done(errors);
     });
   });
 

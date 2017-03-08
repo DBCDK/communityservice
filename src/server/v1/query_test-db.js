@@ -20,6 +20,10 @@ describe('API v1 query endpoint', () => {
     })
     .then(() => {
       done();
+    })
+    .catch(errors => {
+      console.log(errors); // eslint-disable-line no-console
+      done(errors);
     });
   });
   it('should test something...');
