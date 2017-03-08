@@ -18,13 +18,11 @@ There are three kinds of operators: *selectors*, *limitors*, and *extractors*.  
 
 ### Selectors
 
-They selectors correspond to the basic objects in the database.  They come in two versions, one for selecting a single object, and one for selecting a list of objects.
+They selectors correspond to the basic objects in the database.  They come in three versions, one for selecting a single object, and one for selecting a list of objects, and one for counting objects.
 
-Thus, the following selectors exist: `Profile`, `Profiles`, `Entity`, `Entities`, `Action`, `Actions`.
+Thus, the following selectors exist: `Profile`, `Profiles`, `CountProfiles`, `Entity`, `Entities`, `CountEntities`, `Action`, `Actions`, `CountActions`.
 
-Format: `{`*selector* `: {`*criteria*`},` *extractor* `}`
-
-(The criteria and extractor are explained in detail later.)
+Format: `{`*selector* `: {`*criteria*`},` ... `}`
 
 #### Single object selectors
 
@@ -45,6 +43,24 @@ Result:
 ```
 
 The result is a single object that matches the query.  If there are no or several matches, an error is returned.
+
+#### Count of objects selector
+
+Request the count of  database objects that macth some criteria.
+
+Format: `{`*selector* `: {`*criteria*`} }`
+
+Example query:
+
+```js
+{ CountActions: { type: 'like', entity_ref: 3217 } }
+```
+
+Result:
+
+```json
+5
+```
 
 
 #### List of objects selector
@@ -75,18 +91,6 @@ Result query:
 }
 ```
 
-Example query:
-
-```js
-{ Actions: { type: 'like', entity_ref: 3217 }
-, Count
-}
-```
-Result:
-```json
-5
-```
-
 ### Limitors
 
 Limitors are used to limit and sort the reusult of list selectors.
@@ -95,7 +99,7 @@ The `Limit` operator limits the length of results list, and it must be present i
 
 The `Offset` operator can be used to continue from the point where a previous query was cut off be a `Limit`.
 
-The `SortBy` and `Order` operator can be used to prescribe how the selection is ordered before limiting is effectuated.  `SortBy` takes a string that refers to a property in the selected objects.  `Order` can be `ascending` or `descending`.
+The `SortBy` and `Order` operator can be used to prescribe how the selection is ordered before limiting is effectuated.  `SortBy` takes a string that refers to a property in the selected objects.  `Order` can be `ascending` or `descending` (default).
 
 ### Extractors
 
@@ -138,7 +142,7 @@ Result:
 { "number": 552, "who": "D. Duck" }
 ```
 
-The right-hand sides of the extractor object can be *subqueries*, in addition to simple strings above.  For example, consider a community administrator that wants to search for reviews that need approval:
+The right-hand sides of the extractor object can be *subqueries*, in addition to simple strings above.  For example, consider a community administrator who wants to search for reviews that need approval:
 
 Example query:
 
@@ -168,9 +172,9 @@ refers to the `owner_id` of the objects found by the main query.  See the sectio
 
 #### `IncludeSwitch` extractor
 
-The `IncludeSwitch` extractor is used when the selected objects are of various different types, based on the `type` property of the objects.
+The `IncludeSwitch` extractor is used when the selected objects are of mixed types, based on the `type` property of the objects.
 
-Consider the following database structure of an Action:
+Consider the following example database structure for an Action:
 
 ```json
 { "id": 1234
@@ -214,12 +218,12 @@ The right-hand sides of type switch are treated like `Include`s, so they can als
 
 The `IncludeEntitiesRecursively` extractor follows the `entity_ref` property chain in objects in the database.  The result is an object that recursively embeds all the entities from the chain.
 
-The chain starts from the object found by the selector, and continues until it reaches an entity that has a null `entity_ref`.  Each object in the result is embedded into the next object in the chain, so effectively the chain is reversed, the first object being the inner-most embedded object.
+The chain starts from the object found by the selector, and continues until it reaches an entity that has a null `entity_ref`.  Each object in the result is embedded into the next object in the chain, so effectively the chain is reversed, the first object ending up as the inner-most embedded object.
 
 Example query:
 
 ```js
-{ Entity: { id: 15532 }
+{ Action: { id: 836635 }
 , IncludeEntitiesRecursively:
   { comment: { id: 'id', text: 'contents' }
   , post: { id: 'id', text: 'contents' }
@@ -252,6 +256,8 @@ When an extrator refers to a property as in
 the object in the inner-most context must have a property `attributes` which in turn must have a property `approved`.
 
 If the reference is prefixed with a carret `^`, the next-to-inner context is used, like in `^owner_id`.
+
+{ In IncludeEntitiesRecursively the next-to-inner context is not couting the next-in-chain of entities, only the entity itself or the entity that started the chain.  See front-page example. }
 
 ## Errors
 
