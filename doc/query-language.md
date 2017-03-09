@@ -97,9 +97,9 @@ Limitors are used to limit and sort the reusult of list selectors.
 
 The `Limit` operator limits the length of results list, and it must be present in any list selection.
 
-The `Offset` operator can be used to continue from the point where a previous query was cut off be a `Limit`.
+The `Offset` operator can be used to continue from the point where a previous query was cut off be a `Limit`.  Defaults to 0.
 
-The `SortBy` and `Order` operator can be used to prescribe how the selection is ordered before limiting is effectuated.  `SortBy` takes a string that refers to a property in the selected objects.  `Order` can be `ascending` or `descending` (default).
+The `SortBy` and `Order` operator can be used to prescribe how the selection is ordered before limiting is effectuated.  `SortBy` takes a string that refers to a property in the selected objects, default to `modified_epoch`.  `Order` can be `ascending` or `descending` (default).
 
 ### Extractors
 
@@ -161,14 +161,16 @@ Example query:
 }
 ```
 
-The subquery
-```json
+The subquery refers to the `owner_id` of the objects found by the main query:
+
+
+```js
 { Profile: { id: '^owner_id' }
 , Include: { id: 'id', who: 'attributes.name' }
 }
 ```
-refers to the `owner_id` of the objects found by the main query.  See the section on scoping for a detailed explanation.
 
+See the section on scoping for a detailed explanation
 
 #### `IncludeSwitch` extractor
 

@@ -85,6 +85,9 @@ Because Actions can point to Entities and/or Profiles, the community has to keep
 
 { What to do about objects marked as deleted?  The community should decide how to deal with them, but then the community needs to know when something is deleted. }
 
+*Possible improvement (v2)*: Never use id numbers directly, always use the URL.
+
+
 ## Profile page
 
 To show a profile, Biblo needs data form Elvis like:
@@ -447,7 +450,7 @@ The query to Elvis would be like:
         , Include: { id: 'id', name: 'name', avatar: 'attributes.avatar' }
         }
       , comments:
-        { Entities: { type: post, id: '^id' }
+        { Entities: { type: post, entity_id: '^id' }
         , SortBy: 'created_epoch'
         , Limit: 2
         , Include:
