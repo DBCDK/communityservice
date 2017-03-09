@@ -1,6 +1,12 @@
 'use strict';
 
 const _ = require('lodash');
+const config = require('server/config');
+const knex = require('knex')(config.db);
+const constants = require('server/constants')();
+const profileTable = constants.profileTable;
+const actionTable = constants.actionTable;
+const entityTable = constants.entityTable;
 
 /**
  * A recursive parser for query inputs for use in the community service.
@@ -27,36 +33,75 @@ exports.builder = request => {
     return Promise.reject(
       new QueryParserErrors([{
         problem: `a query must have exactly one selector: ${selectors.join(', ')}`,
-        query: JSON.stringify(request)
+        query: request
       }])
     );
   }
   switch (commonKeys[0]) {
-    case 'CountProfiles': return willSucceed('Not implemented');
-    case 'CountActions': return willSucceed('Not implemented');
-    case 'CountEntities': return willSucceed('Not implemented');
-    case 'Profile': return willSucceed('Not implemented');
-    case 'Action': return willSucceed('Not implemented');
-    case 'Entity': return willSucceed('Not implemented');
-    default: return willFail(`Not handled: ${commonKeys[0]}`, request);
+    case 'CountProfiles': return count(request, 'CountProfiles', profileTable);
+    case 'CountActions': return count(request, 'CountActions', actionTable);
+    case 'CountEntities': return count(request, 'CountEntities', entityTable);
+    case 'Profile': return singleton(request, 'Profile');
+    case 'Action': return singleton(request, 'Action');
+    case 'Entity': return singleton(request, 'Entity');
+    default: return Promise.reject(
+      new QueryParserErrors([{
+        problem: `Not handled: ${commonKeys[0]}`,
+        query: request
+      }])
+    );
   }
 };
 
-function willSucceed(message) {
-  return new Promise(resolve => {
-    resolve(context => { // eslint-disable-line no-unused-vars
-      return Promise.resolve(message);
+function count(request, selector, table) {
+  const keys = _.pull(_.keys(request), selector);
+  if (keys.length > 0) {
+    return Promise.reject(
+      new QueryParserErrors([{
+        problem: `a count selector cannot have any limitors or extractors, but found: ${keys.join(', ')}`,
+        query: request
+      }])
+    );
+  }
+  const criteria = request[selector];
+  if (_.isEmpty(criteria)) {
+    return Promise.resolve(context => { // eslint-disable-line no-unused-vars
+      return knex(table).count().select()
+        .then(results => {
+          if (results.length !== 1) {
+            throw new QueryDynamicError('No result from query', request, context);
+          }
+          const result = results[0].count;
+          const number = parseInt(result, 10);
+          if (_.isNaN(number)) {
+            throw new QueryDynamicError(
+              `Expected a count as result from query, got ${result}`,
+              request,
+              context
+            );
+          }
+          return number;
+        });
     });
+  }
+  return willSucceed('Not implemented');
+}
+
+function singleton(request) { // eslint-disable-line no-unused-vars
+  return willSucceed('Not implemented');
+}
+
+function willSucceed(message) {
+  return Promise.resolve(context => { // eslint-disable-line no-unused-vars
+    return Promise.resolve(message);
   });
 }
 
 function willFail(message, query) {
-  return new Promise(resolve => {
-    resolve(context => {
-      return Promise.reject(
-        new QueryDynamicError(message, query, context)
-      );
-    });
+  return Promise.resolve(context => {
+    return Promise.reject(
+      new QueryDynamicError(message, query, context)
+    );
   });
 }
 

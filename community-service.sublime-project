@@ -1,6 +1,6 @@
 { "build_systems":
   [ { "name": "elvis"
-    , "cmd": ["npm","run","unittest","--silent","--","--grep","query"]
+    , "cmd": ["npm","run","dbtest","--silent","--","--grep","query"]
     , "file_regex": "^([^\n:]+):([0-9]+):([0-9]+): (.*)$"
     , "working_dir": "${project_path}/src"
     , "variants":
