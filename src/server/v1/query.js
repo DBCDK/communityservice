@@ -6,18 +6,38 @@
 
 const express = require('express');
 const router = express.Router();
-// const config = require('server/config');
-// const logger = require('__/logging')(config.logger);
-// const knex = require('knex')(config.db);
-// const validatingInput = require('server/v1/verifiers').validatingInput;
-// const constants = require('server/constants')();
-// const communityTable = constants.communityTable;
+const build = require('./query-parser');
 
-router.route('/')
-
-  .get((req, res, next) => {
-    next();
+router.route('/').post((req, res, next) => {
+  build(req.body)
+  .then(performingQuery => {
+    return performingQuery({});
   })
-  ;
+  .then(result => {
+    res.status(200).json({
+      data: result
+    });
+  })
+  .catch(error => {
+    switch (error.name) {
+      case 'QueryParserErrors':
+        return next({
+          status: 400,
+          title: error.message,
+          detail: error.errors,
+          meta: {query: req.body}
+        });
+      case 'QueryDynamicError':
+        return next({
+          status: 500,
+          title: 'Error during execution of query',
+          detail: error.message,
+          meta: {query: error.query, context: error.context}
+        });
+      default:
+        return next(error);
+    }
+  });
+});
 
 module.exports = router;

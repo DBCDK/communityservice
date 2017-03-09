@@ -12,7 +12,6 @@ function expectSuccess(document, next) {
   validate(document);
   const errors = JSON.stringify(validate.errors);
   expect(errors).to.equal('null');
-  expect(document).to.have.property('links');
   const links = document.links;
   expect(document).to.have.property('data');
   const data = document.data;

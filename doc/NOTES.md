@@ -28,7 +28,7 @@ As a community developer
 I want to find the most recent reviews that give the highest rating.
 
 ```js
-{ Entities: { type: 'review', created_epoch: {newer: '14 days'} }
+{ Entities: { type: 'review', created_epoch: {operator: 'newer', value: 14, unit: 'days'} }
 , Limit: 8
 , Sort: 'attributes.rating'
 , Order: 'descending'
