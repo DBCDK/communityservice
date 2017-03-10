@@ -20,7 +20,7 @@ router.route('/').post((req, res, next) => {
   })
   .catch(error => {
     switch (error.name) {
-      case 'QueryParserErrors':
+      case 'QueryParserError':
         return next({
           status: 400,
           title: error.message,
