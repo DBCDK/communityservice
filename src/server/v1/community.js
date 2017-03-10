@@ -12,7 +12,7 @@ const knex = require('knex')(config.db);
 const validatingInput = require('server/v1/verifiers').validatingInput;
 const updateCommunity = require('server/v1/modifiers').updateCommunity;
 const constants = require('server/constants')();
-const communityTable = constants.communityTable;
+const communityTable = constants.community.table;
 
 router.route('/')
 

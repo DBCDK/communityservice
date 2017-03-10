@@ -1,10 +1,10 @@
 'use strict';
 
 const constants = require('server/constants')();
-const communityTable = constants.communityTable;
-const profileTable = constants.profileTable;
-const entityTable = constants.entityTable;
-const actionTable = constants.actionTable;
+const communityTable = constants.community.table;
+const profileTable = constants.profile.table;
+const entityTable = constants.entity.table;
+const actionTable = constants.action.table;
 
 exports.seed = knex => {
   /*

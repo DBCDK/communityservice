@@ -4,9 +4,6 @@ const _ = require('lodash');
 const config = require('server/config');
 const knex = require('knex')(config.db);
 const constants = require('server/constants')();
-const profileTable = constants.profileTable;
-const actionTable = constants.actionTable;
-const entityTable = constants.entityTable;
 
 /**
  * A recursive parser for query inputs for use in the community service.
@@ -38,9 +35,9 @@ exports.builder = request => {
     );
   }
   switch (commonKeys[0]) {
-    case 'CountProfiles': return count({}, request, 'CountProfiles', profileTable);
-    case 'CountActions': return count({}, request, 'CountActions', actionTable);
-    case 'CountEntities': return count({}, request, 'CountEntities', entityTable);
+    case 'CountProfiles': return count({}, request, 'CountProfiles', constants.profile);
+    case 'CountActions': return count({}, request, 'CountActions', constants.action);
+    case 'CountEntities': return count({}, request, 'CountEntities', constants.entity);
     case 'Profile': return singleton({}, request, 'Profile');
     case 'Action': return singleton({}, request, 'Action');
     case 'Entity': return singleton({}, request, 'Entity');
@@ -53,7 +50,7 @@ exports.builder = request => {
   }
 };
 
-function count(env, request, selector, table) {
+function count(env, request, selector, defs) {
   const keys = _.pull(_.keys(request), selector);
   if (keys.length > 0) {
     return Promise.reject(
@@ -64,16 +61,16 @@ function count(env, request, selector, table) {
     );
   }
   const criteria = request[selector];
-  const parseResult = buildWhereClause(env, criteria);
+  const parseResult = buildWhereClause(env, criteria, defs.keys);
   if (!_.isEmpty(parseResult.errors)) {
     return Promise.reject(
       new QueryParserError(parseResult.errors)
     );
   }
   return Promise.resolve(context => { // eslint-disable-line no-unused-vars
-    let querying = knex(table).count();
+    let querying = knex(defs.table).count();
     querying = parseResult.queryingModifier(querying);
-    console.log(querying.toString());
+    // console.log(querying.toString());
     return querying.select()
       .then(results => {
         if (results.length !== 1) {
@@ -97,12 +94,10 @@ function singleton(context, request) { // eslint-disable-line no-unused-vars
   return willSucceed('Not implemented');
 }
 
-function buildWhereClause(context, criteria) {
+function buildWhereClause(context, criteria, keys) {
   if (_.isEmpty(criteria)) {
     return QueryingModifier(querying => querying);
   }
-  // TODO: should we have an acceptable set for each
-  const acceptableKeyPatterns = constants.actionCriteriaKeys;
   let errors = [];
   const modifier = _.reduce(criteria, (mod, value, key) => {
     // TODO: figure out how to search in a json column.
@@ -113,8 +108,8 @@ function buildWhereClause(context, criteria) {
       });
       return mod;
     }
-    const m = _.find(acceptableKeyPatterns, pattern => key.match(pattern));
-    if (!m) {
+    const m = _.find(keys, pattern => key.match(pattern));
+    if (_.isNil(m)) {
       errors.push({
         problem: `unknown key ${key}`,
         query: criteria

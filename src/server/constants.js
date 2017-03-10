@@ -2,18 +2,27 @@
 
 const constants = {
 
-  communityTable: 'communities',
-  profileTable: 'profiles',
-  entityTable: 'entities',
-  actionTable: 'actions',
+  community: {
+    table: 'communities'
+  },
 
-  profileCriteriaKeys: ['id', 'deleted_by', 'modified_by', 'name', '^attributes\\.'],
-  entityCriteriaKeys: ['id', 'deleted_by', 'modified_by', 'owner_id', 'entity_ref', 'type', 'title', 'contents', '^attributes\\.'],
-  actionCriteriaKeys: ['id', 'deleted_by', 'modified_by', 'owner_id', 'entity_ref', 'profile_ref', 'type', '^attributes\\.'],
+  profile: {
+    table: 'profiles',
+    keys: ['^id$', '^deleted_by$', '^modified_by$', '^name$', '^attributes\\.'],
+    timeKeys: ['^created_epoch$', '^deleted_epoch$', '^modified_epoch$']
+  },
 
-  profileCriteriaTimeKeys: ['created_epoch', 'deleted_epoch', 'modified_epoch'],
-  entityCriteriaTimeKeys: ['created_epoch', 'deleted_epoch', 'modified_epoch', 'start_epoch', 'end_epoch'],
-  actionCriteriaTimeKeys: ['created_epoch', 'deleted_epoch', 'modified_epoch', 'start_epoch', 'end_epoch']
+  entity: {
+    table: 'entities',
+    keys: ['^id$', '^deleted_by$', '^modified_by$', '^owner_id$', '^entity_ref$', '^type$', '^title$', '^contents$', '^attributes\\.'],
+    timeKeys: ['^created_epoch$', '^deleted_epoch$', '^modified_epoch$', '^start_epoch$', '^end_epoch$']
+  },
+
+  action: {
+    table: 'actions',
+    keys: ['^id$', '^deleted_by$', '^modified_by$', '^owner_id$', '^entity_ref$', '^profile_ref$', '^type$', '^attributes\\.'],
+    timeKeys: ['^created_epoch$', '^deleted_epoch$', '^modified_epoch$', '^start_epoch$', '^end_epoch$']
+  }
 };
 
 module.exports = function() {

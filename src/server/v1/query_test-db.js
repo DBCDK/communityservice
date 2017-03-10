@@ -127,7 +127,6 @@ describe('API v1 query endpoint', () => {
         service.post('/v1/community/1/query')
         .send({CountActions: {type: 'like', owner_id: 147}})
         .expect(res => {
-          console.log(JSON.stringify(res.body));
           expectSuccess(res.body, (links, data) => {
             expect(data).to.deep.equal(16);
           });
@@ -138,9 +137,47 @@ describe('API v1 query endpoint', () => {
 
       it('should accept CountActions selector with all equality criteria', done => {
         service.post('/v1/community/1/query')
-        .send({CountActions: {type: 'like', owner_id: 147, deleted_by: null, id: 234, modified_by: 147, entity_ref: 353, profile_ref: 4}})
+        .send({CountActions: {
+          type: 'like',
+          owner_id: 147,
+          deleted_by: null,
+          id: 234,
+          modified_by: 147,
+          entity_ref: 353,
+          profile_ref: 4
+        }})
         .expect(res => {
-          console.log(JSON.stringify(res.body));
+          expectSuccess(res.body, (links, data) => {
+            expect(data).to.deep.equal(0);
+          });
+        })
+        .expect(200)
+        .end(done);
+      });
+
+      it('should reject unknown criteria key that is substring of known key', done => {
+        const query = {CountProfiles: {owner_id: 1}};
+        service.post('/v1/community/1/query')
+        .send(query)
+        .expect(res => {
+          expectFailure(res.body, errors => {
+            expect(errors).to.have.length(1);
+            expectErrorMalformed(errors[0], /unknown key owner_id/, query);
+          });
+        })
+        .expect(400)
+        .end(done);
+      });
+
+      it('should accept CountProfiles selector with all equality criteria', done => {
+        service.post('/v1/community/1/query')
+        .send({CountProfiles: {
+          deleted_by: null,
+          id: 234,
+          modified_by: 147,
+          name: 'Goofy'
+        }})
+        .expect(res => {
           expectSuccess(res.body, (links, data) => {
             expect(data).to.deep.equal(0);
           });
