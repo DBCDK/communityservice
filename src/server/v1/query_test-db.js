@@ -155,20 +155,6 @@ describe('API v1 query endpoint', () => {
         .end(done);
       });
 
-      it('should reject unknown criteria key that is substring of known key', done => {
-        const query = {CountProfiles: {owner_id: 1}};
-        service.post('/v1/community/1/query')
-        .send(query)
-        .expect(res => {
-          expectFailure(res.body, errors => {
-            expect(errors).to.have.length(1);
-            expectErrorMalformed(errors[0], /unknown key owner_id/, query);
-          });
-        })
-        .expect(400)
-        .end(done);
-      });
-
       it('should accept CountProfiles selector with all equality criteria', done => {
         service.post('/v1/community/1/query')
         .send({CountProfiles: {
@@ -186,19 +172,9 @@ describe('API v1 query endpoint', () => {
         .end(done);
       });
 
-      it('should accept CountProfiles selector with attribute criteria', done => {
-        const query = {CountProfiles: {'attributes.admin': true}};
-        service.post('/v1/community/1/query')
-        .send(query)
-        .expect(res => {
-          expectFailure(res.body, errors => {
-            expect(errors).to.have.length(1);
-            expectErrorMalformed(errors[0], /attribute matching not implemented/, query);
-          });
-        })
-        .expect(400)
-        .end(done);
-      });
+    });
+
+    describe('criteria', () => {
 
       it('should reject criteria with unknown keys', done => {
         const query = {CountActions: {unknownKey: 'boom'}};
@@ -211,6 +187,96 @@ describe('API v1 query endpoint', () => {
             expectErrorMalformed(errors[0], /unknown key.*unknownKey/, query);
           });
         })
+        .end(done);
+      });
+
+      it('should reject unknown criteria key that is substring of known key', done => {
+        const query = {CountProfiles: {owner_id: 1}};
+        service.post('/v1/community/1/query')
+        .send(query)
+        .expect(res => {
+          expectFailure(res.body, errors => {
+            expect(errors).to.have.length(1);
+            expectErrorMalformed(errors[0], /unknown key owner_id/, query);
+          });
+        })
+        .expect(400)
+        .end(done);
+      });
+
+      it('should reject time criteria with missing keys', done => {
+        const query = {CountEntities: {end_epoch: {operator: 'newerThan', value: 0}}};
+        service.post('/v1/community/1/query')
+        .send(query)
+        .expect(res => {
+          expectFailure(res.body, errors => {
+            expect(errors).to.have.length(1);
+            expectErrorMalformed(errors[0], /exactly three properties expected in time-based comparison: operator, unit & value/i, query);
+          });
+        })
+        .expect(400)
+        .end(done);
+      });
+
+      it('should reject time criteria with unknown keys', done => {
+        const query = {CountEntities: {end_epoch: {operator: 'newerThan', days: 0}}};
+        service.post('/v1/community/1/query')
+        .send(query)
+        .expect(res => {
+          expectFailure(res.body, errors => {
+            expect(errors).to.have.length(1);
+            expectErrorMalformed(errors[0], /exactly three properties expected in time-based comparison: operator, unit & value/i, query);
+          });
+        })
+        .expect(400)
+        .end(done);
+      });
+
+      it('should reject time criteria with unknown values', done => {
+        const timeCriteria = {operator: '>', unit: 'weeks', value: 'a lot'};
+        const query = {CountEntities: {end_epoch: timeCriteria}};
+        service.post('/v1/community/1/query')
+        .send(query)
+        .expect(res => {
+          expectFailure(res.body, errors => {
+            expect(errors).to.have.length(1);
+            expectErrorMalformedDetail(errors[0], 0, /operator must be one of: newerThan, olderThan/i, timeCriteria);
+            expectErrorMalformedDetail(errors[0], 1, /unit must be one of: daysAgo/i, timeCriteria);
+            expectErrorMalformedDetail(errors[0], 2, /value must be a number/i, timeCriteria);
+          });
+        })
+        .expect(400)
+        .end(done);
+      });
+
+/*
+      it('should accept criteria for future events', done => {
+        service.post('/v1/community/1/query')
+        .send({CountEntities: {
+          type: 'campaign',
+          end_epoch: {operator: 'newerThan', unit: 'daysAgo', value: 0}
+        }})
+        .expect(res => {
+          console.log(JSON.stringify(res.body));
+          expectSuccess(res.body, (links, data) => {
+            expect(data).to.deep.equal(10);
+          });
+        })
+        .expect(200)
+        .end(done);
+      });
+*/
+      it('should accept attribute criteria', done => {
+        const query = {CountProfiles: {'attributes.admin': true}};
+        service.post('/v1/community/1/query')
+        .send(query)
+        .expect(res => {
+          expectFailure(res.body, errors => {
+            expect(errors).to.have.length(1);
+            expectErrorMalformed(errors[0], /attribute matching not implemented/, query);
+          });
+        })
+        .expect(400)
         .end(done);
       });
 
@@ -291,4 +357,14 @@ function expectErrorMalformed(error, pattern, query) {
   expect(error).to.have.property('meta');
   expect(error.meta).to.have.property('query');
   expect(error.meta.query).to.deep.equal(query);
+}
+
+function expectErrorMalformedDetail(error, index, pattern, query) {
+  expect(error).to.have.property('title');
+  expect(error.title).to.match(/query is malformed/i);
+  expect(error).to.have.property('detail');
+  const detail = error.detail[index];
+  expect(JSON.stringify(detail)).to.match(pattern);
+  expect(detail).to.have.property('query');
+  expect(detail.query).to.deep.equal(query);
 }

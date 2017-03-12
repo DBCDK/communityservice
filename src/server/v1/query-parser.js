@@ -61,7 +61,7 @@ function count(env, request, selector, defs) {
     );
   }
   const criteria = request[selector];
-  const parseResult = buildWhereClause(env, criteria, defs.keys);
+  const parseResult = buildWhereClause(env, criteria, defs.keys, defs.timeKeys);
   if (!_.isEmpty(parseResult.errors)) {
     return Promise.reject(
       new QueryParserError(parseResult.errors)
@@ -94,13 +94,13 @@ function singleton(context, request) { // eslint-disable-line no-unused-vars
   return willSucceed('Not implemented');
 }
 
-function buildWhereClause(context, criteria, keys) {
+function buildWhereClause(context, criteria, keys, timeKeys) {
   if (_.isEmpty(criteria)) {
     return QueryingModifier(querying => querying);
   }
   let errors = [];
   const modifier = _.reduce(criteria, (mod, value, key) => {
-    // TODO: figure out how to search in a json column.
+    // TODO: figure out how to search in a json column in PostgresSQL with knex.
     if (key.match('^attributes\\.')) {
       errors.push({
         problem: `attribute matching not implemented: ${key}`,
@@ -108,12 +108,51 @@ function buildWhereClause(context, criteria, keys) {
       });
       return mod;
     }
-    const m = _.find(keys, pattern => key.match(pattern));
-    if (_.isNil(m)) {
+    if (_.includes(timeKeys, key)) {
+      const ks = _.keys(value);
+      if (
+        ks.length !== 3 ||
+        !_.includes(ks, 'operator') ||
+        !_.includes(ks, 'unit') ||
+        !_.includes(ks, 'value')
+      ) {
+        errors.push({
+          problem: 'Exactly three properties expected in time-based comparison: operator, unit & value',
+          query: value
+        });
+        return mod;
+      }
+      if (value.operator !== 'newerThan' || value.operator !== 'olderThan') {
+        errors.push({
+          problem: 'operator must be one of: newerThan, olderThan',
+          query: value
+        });
+      }
+      if (value.unit !== 'daysAgo') {
+        errors.push({
+          problem: 'unit must be one of: daysAgo',
+          query: value
+        });
+      }
+      const number = parseInt(value.value, 10);
+      if (_.isNaN(number)) {
+        errors.push({
+          problem: 'value must be a number',
+          query: value
+        });
+      }
+      if (!_.isEmpty(errors)) {
+        return mod;
+      }
+      // TODO: time search.
+    }
+    if (_.isNil(_.find(keys, pattern => key.match(pattern)))) {
       errors.push({
         problem: `unknown key ${key}`,
         query: criteria
       });
+    }
+    if (!_.isEmpty(errors)) {
       return mod;
     }
     return querying => {

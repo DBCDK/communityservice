@@ -253,7 +253,7 @@ Result:
 
 Properties of the Criteria object are *and*ed together.  Empty critiria object means no criteria.  `x: y` generally means property `x` must have the value `y`.  If `y` starts with a carret `^` it is a reference, see the Scoping section.
 
-If `y` is an object is must be of the form `{ operator: `*operator*`, unit: `*unit*`, value: `*value*`}`.  Currently supported *operator*s are `newer` and `older`, supported *unit* is `days`, and *value* must be a number.
+If `y` is an object is must be of the form `{ operator: `*operator*`, unit: `*unit*`, value: `*value*`}`.  Currently supported *operator*s are `newerThan` and `olderThan`, supported *unit* is `daysAgo`, and *value* must be a number.
 
 ## Scoping
 
