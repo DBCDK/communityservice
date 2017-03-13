@@ -56,7 +56,7 @@ describe('API v1 profile endpoints', () => {
             expect(data).to.have.property('created_epoch');
             expect(data.created_epoch).to.match(/^[0-9]+$/);
             expect(data).to.have.property('modified_epoch');
-            expect(data.modified_epoch).to.be.null;
+            expect(data.modified_epoch).to.deep.equal(data.created_epoch);
             expect(data).to.have.property('modified_by');
             expect(data.modified_by).to.be.null;
             expect(data).to.have.property('deleted_epoch');
@@ -186,7 +186,7 @@ describe('API v1 profile endpoints', () => {
           expect(data).to.have.property('created_epoch');
           expect(data.created_epoch).to.match(/^[0-9]+$/);
           expect(data).to.have.property('modified_epoch');
-          expect(data.modified_epoch).to.be.null;
+          expect(data.modified_epoch).to.deep.equal(data.created_epoch);
           expect(data).to.have.property('deleted_epoch');
           expect(data.deleted_epoch).to.be.null;
           expect(data).to.have.property('log');
@@ -356,7 +356,7 @@ describe('API v1 profile endpoints', () => {
           expect(data).to.have.property('created_epoch');
           expect(data.created_epoch).to.match(/^[0-9]+$/);
           expect(data).to.have.property('modified_epoch');
-          expect(data.modified_epoch).to.be.null;
+          expect(data.modified_epoch).to.deep.equal(data.created_epoch);
           expect(data).to.have.property('modified_by');
           expect(data.modified_by).to.be.null;
           expect(data).to.have.property('deleted_epoch');

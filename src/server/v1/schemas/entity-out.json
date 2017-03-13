@@ -11,7 +11,7 @@
     },
     "modified_epoch": {
       "required": true,
-      "type": ["null", "integer"]
+      "type": "integer"
     },
     "modified_by": {
       "required": true,

@@ -22,7 +22,7 @@ Parts in parentheses are not implemented yet.  Parts with O might not be impleme
 | `/v1/community/`*name*                  |      |     | X   |
 | `/v1/community/`*id*                    |      | X   | X   |
 
-- POST on `/community` sets `created_epoch`.
+- POST on `/community` sets `created_epoch` & `modified_epoch`.
 - POST & PUT on other endpoints sets `modified_epoch`.
 - (PUT on `/community/`*id* can set `deleted_epoch`.)
 
@@ -33,7 +33,7 @@ Parts in parentheses are not implemented yet.  Parts with O might not be impleme
 | `/v1/community/`*id*`/profile`                         | X    |     | X   |
 | `/v1/community/`*id*`/profile/`*id*                    |      | X   | X   |
 
-- POST on `/profile` sets `created_epoch`.
+- POST on `/profile` sets `created_epoch` & `modified_epoch`.
 - POST & PUT on other endpoints sets `modified_epoch` & `modified_by`.
 - PUT on `/profile/`*id* can set `deleted_epoch` & `deleted_by`.
 
@@ -44,7 +44,7 @@ Parts in parentheses are not implemented yet.  Parts with O might not be impleme
 | `/v1/community/`*id*`/entity`                          | X    |     | X   |
 | `/v1/community/`*id*`/entity/`*id*                     |      | X   | X   |
 
-- POST on `/entity` sets `created_epoch`.
+- POST on `/entity` sets `created_epoch` & `modified_epoch`.
 - POST & PUT on other endpoints sets `modified_epoch` & `modified_by`.
 - PUT on `/entity/`*id* can set `deleted_epoch` & `deleted_by`.
 
@@ -55,7 +55,7 @@ Parts in parentheses are not implemented yet.  Parts with O might not be impleme
 | `/v1/community/`*id*`/action`                          |  X   |     | X   |
 | `/v1/community/`*id*`/action/`*id*                     |      | X   | X   |
 
-- POST on `/action` sets `created_epoch`.
+- POST on `/action` sets `created_epoch` & `modified_epoch`.
 - POST & PUT on other endpoints sets `modified_epoch` & `modified_by`.
 - PUT on `/action/`*id* can set `deleted_epoch` & `deleted_by`.
 

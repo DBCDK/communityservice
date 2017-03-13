@@ -16,7 +16,7 @@ module.exports = knex => {
 
   function addModifyByDeletedByCommunityRef(table) {
     addCreatedDeletedTimestamp(table);
-    table.integer('modified_epoch').nullable();
+    table.integer('modified_epoch').notNullable().defaultTo(knex.raw('extract(\'epoch\' from now())'));
     table.integer('modified_by');
     table.foreign('modified_by').references(`${profileTable}.id`);
     table.integer('deleted_by');
