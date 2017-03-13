@@ -34,7 +34,7 @@ Referenced by:
 ----------------+------------------------+-------------------------------------------------------+----------+--------------+-------------
  id             | integer                | not null default nextval('profiles_id_seq'::regclass) | plain    |              |
  created_epoch  | integer                | not null default date_part('epoch'::text, now())      | plain    |              |
- modified_epoch | integer                |                                                       | plain    |              |
+ modified_epoch | integer                | not null default date_part('epoch'::text, now())      | plain    |              |
  deleted_epoch  | integer                |                                                       | plain    |              |
  modified_by    | integer                |                                                       | plain    |              |
  deleted_by     | integer                |                                                       | plain    |              |
@@ -68,7 +68,7 @@ Referenced by:
 ----------------+------------------------+-------------------------------------------------------+----------+--------------+-------------
  id             | integer                | not null default nextval('entities_id_seq'::regclass) | plain    |              |
  created_epoch  | integer                | not null default date_part('epoch'::text, now())      | plain    |              |
- modified_epoch | integer                |                                                       | plain    |              |
+ modified_epoch | integer                | not null default date_part('epoch'::text, now())      | plain    |              |
  deleted_epoch  | integer                |                                                       | plain    |              |
  modified_by    | integer                |                                                       | plain    |              |
  deleted_by     | integer                |                                                       | plain    |              |
@@ -104,7 +104,7 @@ Referenced by:
  id             | integer                | not null default nextval('actions_id_seq'::regclass) | plain    |              |
  created_epoch  | integer                | not null default date_part('epoch'::text, now())     | plain    |              |
  deleted_epoch  | integer                |                                                      | plain    |              |
- modified_epoch | integer                |                                                      | plain    |              |
+ modified_epoch | integer                | not null default date_part('epoch'::text, now())     | plain    |              |
  modified_by    | integer                |                                                      | plain    |              |
  deleted_by     | integer                |                                                      | plain    |              |
  community_id   | integer                | not null                                             | plain    |              |
