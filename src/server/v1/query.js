@@ -11,6 +11,7 @@ const build = require('./query-parser');
 router.route('/').post((req, res, next) => {
   build(req.body)
   .then(performingQuery => {
+    // Initially the context is empty.
     return performingQuery({});
   })
   .then(result => {
@@ -29,10 +30,17 @@ router.route('/').post((req, res, next) => {
         });
       case 'QueryDynamicError':
         return next({
+          status: 400,
+          title: 'Error during execution of query',
+          detail: error.message,
+          meta: {query: req.body, subquery: error.query, context: error.context}
+        });
+      case 'QueryServerError':
+        return next({
           status: 500,
           title: 'Error during execution of query',
           detail: error.message,
-          meta: {query: error.query, context: error.context}
+          meta: {query: req.body, subquery: error.query, context: error.context}
         });
       default:
         return next(error);

@@ -35,12 +35,12 @@ exports.builder = request => {
     );
   }
   switch (commonKeys[0]) {
-    case 'CountProfiles': return count({}, request, 'CountProfiles', constants.profile);
-    case 'CountActions': return count({}, request, 'CountActions', constants.action);
-    case 'CountEntities': return count({}, request, 'CountEntities', constants.entity);
-    case 'Profile': return singleton({}, request, 'Profile');
-    case 'Action': return singleton({}, request, 'Action');
-    case 'Entity': return singleton({}, request, 'Entity');
+    case 'CountProfiles': return count(request, 'CountProfiles', constants.profile);
+    case 'CountActions': return count(request, 'CountActions', constants.action);
+    case 'CountEntities': return count(request, 'CountEntities', constants.entity);
+    case 'Profile': return singleton(request, 'Profile', constants.profile);
+    case 'Action': return singleton(request, 'Action', constants.action);
+    case 'Entity': return singleton(request, 'Entity', constants.entity);
     default: return Promise.reject(
       new QueryParserError([{
         problem: `Not handled: ${commonKeys[0]}`,
@@ -50,7 +50,7 @@ exports.builder = request => {
   }
 };
 
-function count(env, request, selector, defs) {
+function count(request, selector, defs) {
   const keys = _.pull(_.keys(request), selector);
   if (keys.length > 0) {
     return Promise.reject(
@@ -61,25 +61,30 @@ function count(env, request, selector, defs) {
     );
   }
   const criteria = request[selector];
-  const parseResult = buildWhereClause(env, criteria, defs.keys, defs.timeKeys);
+  const parseResult = buildWhereClause(criteria, defs.keys, defs.timeKeys);
   if (!_.isEmpty(parseResult.errors)) {
     return Promise.reject(
       new QueryParserError(parseResult.errors)
     );
   }
-  return Promise.resolve(context => { // eslint-disable-line no-unused-vars
+  return Promise.resolve(context => {
     let querying = knex(defs.table).count();
-    querying = parseResult.queryingModifier(querying);
+    try {
+      querying = parseResult.queryingModifier(context, querying);
+    }
+    catch (dynError) {
+      return Promise.reject(dynError);
+    }
     // console.log(querying.toString());
     return querying.select()
       .then(results => {
         if (results.length !== 1) {
-          throw new QueryDynamicError('No result from query', request, context);
+          throw new QueryServerError('No result from query', request, context);
         }
         const result = results[0].count;
         const number = parseInt(result, 10);
         if (_.isNaN(number)) {
-          throw new QueryDynamicError(
+          throw new QueryServerError(
             `Expected a count as result from query, got ${result}`,
             request,
             context
@@ -90,13 +95,68 @@ function count(env, request, selector, defs) {
   });
 }
 
-function singleton(context, request) { // eslint-disable-line no-unused-vars
+function singleton(request, selector, defs) {
+  const keys = _.pull(_.keys(request), selector);
+  const extractors = ['Include', 'IncludeSwitch', 'IncludeEntitiesRecursively'];
+  const extractor = _.intersection(keys, extractors);
+  let errors = [];
+  if (extractor.length !== 1) {
+    errors.push({
+      problem: `a singleton selector must have exactly one extractor: ${extractors.join(', ')}`,
+      query: request
+    });
+  }
+  _.pullAll(keys, extractor);
+  if (keys.length > 0) {
+    errors.push({
+      problem: `a singleton selector must not have additional properties, but found: ${keys}`,
+      query: request
+    });
+  }
+  if (errors.length > 0) {
+    return Promise.reject(new QueryParserError(errors));
+  }
+  const criteria = request[selector];
+  const parseResult = buildWhereClause(criteria, defs.keys, defs.timeKeys);
+  let extractorResult = buildExtractor(extractor[0], request[extractor[0]], defs);
+  if (!_.isEmpty(parseResult.errors) || !_.isEmpty(extractorResult.errors)) {
+    return Promise.reject(new QueryParserError(
+      _.concat(parseResult.errors, extractorResult.errors)
+    ));
+  }
+   // TODO:
+  //
   return willSucceed('Not implemented');
 }
 
-function buildWhereClause(context, criteria, keys, timeKeys) {
+function buildExtractor(extractor, rhs, defs) {
+  let errors = [];
+  // TODO:
+  const extractorObj = {};
+  extractorObj[extractor] = rhs;
+  errors.push({
+    problem: `Not implemented: ${extractor}`,
+    query: extractorObj
+  });
+  return ParserErrors(errors);
+/*
+  switch (extractor[0]) {
+    case 'Include': extract = ;
+    case 'IncludeSwitch': return willSucceed('Not implemented');
+    case 'IncludeEntitiesRecursively': return willSucceed('Not implemented');
+    default: return Promise.reject(
+      new QueryParserError([{
+        problem: `Not handled: ${extractor[0]}`,
+        query: request
+      }])
+    );
+  }
+  */
+}
+
+function buildWhereClause(criteria, keys, timeKeys) {
   if (_.isEmpty(criteria)) {
-    return QueryingModifier(querying => querying);
+    return QueryingModifier((context, querying) => querying);
   }
   let errors = [];
   const modifier = _.reduce(criteria, (mod, value, key) => {
@@ -106,7 +166,7 @@ function buildWhereClause(context, criteria, keys, timeKeys) {
         problem: `attribute matching not implemented: ${key}`,
         query: criteria
       });
-      return mod;
+      return (context, modi) => modi;
     }
     if (_.includes(timeKeys, key)) {
       const ks = _.keys(value);
@@ -120,7 +180,7 @@ function buildWhereClause(context, criteria, keys, timeKeys) {
           problem: 'Exactly three properties expected in time-based comparison: operator, unit & value',
           query: value
         });
-        return mod;
+        return (context, modi) => modi;
       }
       if (value.operator !== 'newerThan' && value.operator !== 'olderThan') {
         errors.push({
@@ -142,20 +202,18 @@ function buildWhereClause(context, criteria, keys, timeKeys) {
         });
       }
       if (!_.isEmpty(errors)) {
-        return mod;
+        return (context, modi) => modi;
       }
       // TODO: Implement nowEpoch.
-      const nowEpoch = 1489392319;
+      const nowEpoch = 1489397775;
       const pointInTimeEpoch = nowEpoch - (daysAgo * 3600 * 24);
       if (value.operator === 'olderThan') {
-        return querying => {
-          // TODO: modified_epoch
-          return mod(querying).where('created_epoch', '<', pointInTimeEpoch);
+        return (context, querying) => {
+          return mod(context, querying).where('modified_epoch', '<', pointInTimeEpoch);
         };
       }
-      return querying => {
-          // TODO: modified_epoch
-        return mod(querying).where('created_epoch', '>=', pointInTimeEpoch);
+      return (context, querying) => {
+        return mod(context, querying).where('modified_epoch', '>=', pointInTimeEpoch);
       };
     }
     if (_.isNil(_.find(keys, pattern => key.match(pattern)))) {
@@ -164,13 +222,30 @@ function buildWhereClause(context, criteria, keys, timeKeys) {
         query: criteria
       });
     }
-    if (!_.isEmpty(errors)) {
-      return mod;
+    if (_.startsWith(value, '^')) {
+      const reference = _.trim(value, '^');
+      // look for reference in context
+      return (context, querying) => {
+        if (!_.has(context, reference)) {
+          throw new QueryDynamicError(
+            `reference ${value} does not exist in current context`,
+            criteria,
+            context
+          );
+        }
+        const valueOfRef = context[reference];
+        const q = mod(context, querying).where(key, valueOfRef);
+        // console.log(q.toString());
+        return q;
+      };
     }
-    return querying => {
-      return mod(querying).where(key, value);
+    if (!_.isEmpty(errors)) {
+      return (context, modi) => modi;
+    }
+    return (context, querying) => {
+      return mod(context, querying).where(key, value);
     };
-  }, querying => querying);
+  }, (context, querying) => querying);
   if (_.isEmpty(errors)) {
     return QueryingModifier(modifier);
   }
@@ -183,15 +258,13 @@ function willSucceed(message) {
   });
 }
 
-/*
 function willFail(message, query) {
   return Promise.resolve(context => {
     return Promise.reject(
-      new QueryDynamicError(message, query, context)
+      new QueryServerError(message, query, context)
     );
   });
 }
-*/
 
 function QueryingModifier(queryingModifier) {
   if (typeof queryingModifier !== 'function') {
@@ -203,10 +276,12 @@ function QueryingModifier(queryingModifier) {
   };
 }
 
-// TODO: enforce format
-//        problem: `malformed criteria: ${JSON.stringify(criteria)}`,
-//        query: request
 function ParserErrors(errors) {
+  errors.forEach(error => {
+    if (!_.has(error, 'problem') || !_.has(error, 'query')) {
+      throw new Error(`expected at least properties 'problem' and 'query': ${errors}`);
+    }
+  });
   return {
     errors,
     queryingModifier: querying => querying
@@ -225,6 +300,15 @@ class QueryDynamicError extends Error {
   constructor(message, query, context) {
     super(message);
     this.name = 'QueryDynamicError';
+    this.query = query;
+    this.context = context;
+  }
+}
+
+class QueryServerError extends Error {
+  constructor(message, query, context) {
+    super(message);
+    this.name = 'QueryServerError';
     this.query = query;
     this.context = context;
   }

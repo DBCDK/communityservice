@@ -256,7 +256,6 @@ describe('API v1 query endpoint', () => {
           end_epoch: {operator: 'olderThan', unit: 'daysAgo', value: 0}
         }})
         .expect(res => {
-          console.log(JSON.stringify(res.body));
           expectSuccess(res.body, (links, data) => {
             expect(data).to.deep.equal(42);
           });
@@ -270,6 +269,7 @@ describe('API v1 query endpoint', () => {
         service.post('/v1/community/1/query')
         .send(query)
         .expect(res => {
+          // TODO:
           expectFailure(res.body, errors => {
             expect(errors).to.have.length(1);
             expectErrorMalformed(errors[0], /attribute matching not implemented/, query);
@@ -279,63 +279,144 @@ describe('API v1 query endpoint', () => {
         .end(done);
       });
 
+      it('should reject references to keys that do not exist in dynamic context', done => {
+        const query = {CountProfiles: {deleted_by: '^id'}};
+        service.post('/v1/community/1/query')
+        .send(query)
+        .expect(res => {
+          expectFailure(res.body, errors => {
+            expect(errors).to.have.length(1);
+            expectErrorDynamic(errors[0], /reference \^id does not exist in current context/i, query);
+          });
+        })
+        .expect(400)
+        .end(done);
+      });
     });
 
     describe('singleton selector', () => {
 
-      it('should reject Profile selector without extractor'/* , done => {
+      it('should reject selector without extractor', done => {
         const query = {Profile: {id: 1}};
+        service.post('/v1/community/1/query')
+        .send(query)
+        .expect(res => {
+          expectFailure(res.body, errors => {
+            expect(errors).to.have.length(1);
+            expectErrorMalformed(
+              errors[0],
+              /must have exactly one extractor.*Include, IncludeSwitch, IncludeEntitiesRecursively/i,
+              query
+            );
+          });
+        })
+        .expect(400)
+        .end(done);
+      });
+
+      it('should reject limitors', done => {
+        const query = {Profile: {id: 1}, Limit: 10, Include: 'name'};
+        service.post('/v1/community/1/query')
+        .send(query)
+        .expect(res => {
+          expectFailure(res.body, errors => {
+            expect(errors).to.have.length(1);
+            expectErrorMalformed(
+              errors[0],
+              /must not have additional properties, but found.*Include/i,
+              query
+            );
+          });
+        })
+        .expect(400)
+        .end(done);
+      });
+
+      it('should reject unknown keys', done => {
+        const query = {Profile: {id: 1}, Follow: 'entity_ref', Include: 'name'};
+        service.post('/v1/community/1/query')
+        .send(query)
+        .expect(res => {
+          expectFailure(res.body, errors => {
+            expect(errors).to.have.length(1);
+            expectErrorMalformed(
+              errors[0],
+              /must not have additional properties, but found.*Follow/i,
+              query
+            );
+          });
+        })
+        .expect(400)
+        .end(done);
+      });
+
+      it('should reject criteria with unknown keys', done => {
+        const query = {Entity: {unknownKey: 'boom'}, Include: 'title'};
         service.post('/v1/community/1/query')
         .send(query)
         .expect(400)
         .expect(res => {
           expectFailure(res.body, errors => {
             expect(errors).to.have.length(1);
-            expectErrorMalformed(errors[0], /must have an extractor/, query);
+            expectErrorMalformed(errors[0], /unknown key.*unknownKey/, query);
           });
         })
         .end(done);
-      }*/);
+      });
 
       it('should accept Profile selector', done => {
         service.post('/v1/community/1/query')
         .send({Profile: {id: 1}, Include: 'name'})
-        .expect(200)
         .expect(res => {
+          console.log(JSON.stringify(res.body));
           expectSuccess(res.body, (links, data) => {
-            // TODO:
-            expect(data).to.deep.equal('Not implemented');
+            expect(data).to.deep.equal('Conor');
           });
         })
+        .expect(200)
         .end(done);
       });
 
       it('should accept Action selector', done => {
         service.post('/v1/community/1/query')
         .send({Action: {id: 1}, Include: 'type'})
-        .expect(200)
         .expect(res => {
           expectSuccess(res.body, (links, data) => {
-            // TODO:
-            expect(data).to.deep.equal('Not implemented');
+            expect(data).to.deep.equal('member');
           });
         })
+        .expect(200)
         .end(done);
       });
 
       it('should accept Entity selector', done => {
         service.post('/v1/community/1/query')
         .send({Entity: {id: 1}, Include: 'type'})
-        .expect(200)
         .expect(res => {
-          // console.log(JSON.stringify(res.body));
           expectSuccess(res.body, (links, data) => {
-            // TODO:
-            expect(data).to.deep.equal('Not implemented');
+            expect(data).to.deep.equal('group');
           });
         })
+        .expect(200)
         .end(done);
       });
+    });
+
+    describe('extractor', () => {
+
+      it('should accept simple direct property extrator', done => {
+        service.post('/v1/community/1/query')
+        .send({Profile: {id: 2}, Include: 'name'})
+        .expect(res => {
+          console.log(JSON.stringify(res.body));
+          expectSuccess(res.body, (links, data) => {
+            expect(data).to.deep.equal('Lora');
+          });
+        })
+        .expect(200)
+        .end(done);
+      });
+
     });
 
     describe('list selector', () => {
@@ -367,3 +448,14 @@ function expectErrorMalformedDetail(error, index, pattern, query) {
   expect(detail).to.have.property('query');
   expect(detail.query).to.deep.equal(query);
 }
+
+function expectErrorDynamic(error, pattern, query) {
+  expect(error).to.have.property('title');
+  expect(error.title).to.match(/Error during execution of query/i);
+  expect(error).to.have.property('detail');
+  expect(JSON.stringify(error.detail)).to.match(pattern);
+  expect(error).to.have.property('meta');
+  expect(error.meta).to.have.property('query');
+  expect(error.meta.query).to.deep.equal(query);
+}
+
