@@ -122,7 +122,7 @@ function buildWhereClause(context, criteria, keys, timeKeys) {
         });
         return mod;
       }
-      if (value.operator !== 'newerThan' || value.operator !== 'olderThan') {
+      if (value.operator !== 'newerThan' && value.operator !== 'olderThan') {
         errors.push({
           problem: 'operator must be one of: newerThan, olderThan',
           query: value
@@ -134,8 +134,8 @@ function buildWhereClause(context, criteria, keys, timeKeys) {
           query: value
         });
       }
-      const number = parseInt(value.value, 10);
-      if (_.isNaN(number)) {
+      const daysAgo = parseInt(value.value, 10);
+      if (_.isNaN(daysAgo)) {
         errors.push({
           problem: 'value must be a number',
           query: value
@@ -144,7 +144,19 @@ function buildWhereClause(context, criteria, keys, timeKeys) {
       if (!_.isEmpty(errors)) {
         return mod;
       }
-      // TODO: time search.
+      // TODO: Implement nowEpoch.
+      const nowEpoch = 1489392319;
+      const pointInTimeEpoch = nowEpoch - (daysAgo * 3600 * 24);
+      if (value.operator === 'olderThan') {
+        return querying => {
+          // TODO: modified_epoch
+          return mod(querying).where('created_epoch', '<', pointInTimeEpoch);
+        };
+      }
+      return querying => {
+          // TODO: modified_epoch
+        return mod(querying).where('created_epoch', '>=', pointInTimeEpoch);
+      };
     }
     if (_.isNil(_.find(keys, pattern => key.match(pattern)))) {
       errors.push({
@@ -182,6 +194,9 @@ function willFail(message, query) {
 */
 
 function QueryingModifier(queryingModifier) {
+  if (typeof queryingModifier !== 'function') {
+    throw `Expected function, got ${JSON.stringify(queryingModifier)}`;
+  }
   return {
     errors: [],
     queryingModifier

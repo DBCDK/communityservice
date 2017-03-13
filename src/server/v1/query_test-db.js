@@ -249,23 +249,22 @@ describe('API v1 query endpoint', () => {
         .end(done);
       });
 
-/*
       it('should accept criteria for future events', done => {
         service.post('/v1/community/1/query')
         .send({CountEntities: {
           type: 'campaign',
-          end_epoch: {operator: 'newerThan', unit: 'daysAgo', value: 0}
+          end_epoch: {operator: 'olderThan', unit: 'daysAgo', value: 0}
         }})
         .expect(res => {
           console.log(JSON.stringify(res.body));
           expectSuccess(res.body, (links, data) => {
-            expect(data).to.deep.equal(10);
+            expect(data).to.deep.equal(42);
           });
         })
         .expect(200)
         .end(done);
       });
-*/
+
       it('should accept attribute criteria', done => {
         const query = {CountProfiles: {'attributes.admin': true}};
         service.post('/v1/community/1/query')
