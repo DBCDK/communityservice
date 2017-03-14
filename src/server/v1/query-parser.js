@@ -12,11 +12,13 @@ const constants = require('server/constants')();
 // In the rest of this file the input is called the 'request' and the promised
 // operation on the database is called the 'query'.
 
+// ParserResult = { error: ..., querying: ... }
+
 /**
  * The parser function recursively parses a request and constructs a promise
  * of result (performed by database query).
  * @param  {object} request Object as described in doc/query-language.md.
- * @return {Promise}        Promise of a function that takes a context and returns a promise of a database result.
+ * @return {ParserResult}   Error or Promise of a function that takes a context and returns a promise of a database result.
  */
 
 function builder(request) {
@@ -27,12 +29,10 @@ function builder(request) {
   const keys = _.keys(request);
   const commonKeys = _.intersection(selectors, keys);
   if (commonKeys.length !== 1) {
-    return Promise.reject(
-      new QueryParserError([{
-        problem: `a query must have exactly one selector: ${selectors.join(', ')}`,
-        query: request
-      }])
-    );
+    return ParserResultIsError([{
+      problem: `a query must have exactly one selector: ${selectors.join(', ')}`,
+      query: request
+    }]);
   }
   switch (commonKeys[0]) {
     case 'CountProfiles': return count(request, 'CountProfiles', constants.profile);
@@ -41,33 +41,27 @@ function builder(request) {
     case 'Profile': return singleton(request, 'Profile', constants.profile);
     case 'Action': return singleton(request, 'Action', constants.action);
     case 'Entity': return singleton(request, 'Entity', constants.entity);
-    default: return Promise.reject(
-      new QueryParserError([{
-        problem: `Not handled: ${commonKeys[0]}`,
-        query: request
-      }])
-    );
+    default: return ParserResultIsError([{
+      problem: `Not handled: ${commonKeys[0]}`,
+      query: request
+    }]);
   }
 }
 
 function count(request, selector, defs) {
   const keys = _.pull(_.keys(request), selector);
   if (keys.length > 0) {
-    return Promise.reject(
-      new QueryParserError([{
-        problem: `a count selector cannot have any limitors or extractors, but found: ${keys.join(', ')}`,
-        query: request
-      }])
-    );
+    return ParserResultIsError([{
+      problem: `a count selector cannot have any limitors or extractors, but found: ${keys.join(', ')}`,
+      query: request
+    }]);
   }
   const criteria = request[selector];
   const parseResult = buildWhereClause(criteria, defs.keys, defs.timeKeys);
   if (!_.isEmpty(parseResult.errors)) {
-    return Promise.reject(
-      new QueryParserError(parseResult.errors)
-    );
+    return parseResult;
   }
-  return Promise.resolve(context => {
+  return ParserResultIsQuerying(context => {
     let querying = knex(defs.table).count();
     try {
       querying = parseResult.queryingModifier(context, querying);
@@ -114,17 +108,21 @@ function singleton(request, selector, defs) {
     });
   }
   if (errors.length > 0) {
-    return Promise.reject(new QueryParserError(errors));
+    return ParserResultIsError(errors);
   }
   const criteria = request[selector];
   const parseResult = buildWhereClause(criteria, defs.keys, defs.timeKeys);
-  let extractorResult = buildExtractor(extractor[0], request[extractor[0]], defs);
+  const extractorResult = buildExtractor(extractor[0], request[extractor[0]], defs);
   if (!_.isEmpty(parseResult.errors) || !_.isEmpty(extractorResult.errors)) {
-    return Promise.reject(new QueryParserError(
-      _.concat(parseResult.errors, extractorResult.errors)
-    ));
+    if (!_.isEmpty(parseResult.errors)) {
+      errors = _.concat(errors, parseResult.errors);
+    }
+    if (!_.isEmpty(extractorResult.errors)) {
+      errors = _.concat(errors, extractorResult.errors);
+    }
+    return ParserResultIsError(errors);
   }
-  return Promise.resolve(context => {
+  return ParserResultIsQuerying(context => {
     let querying = knex(defs.table);
     try {
       querying = parseResult.queryingModifier(context, querying);
@@ -155,7 +153,7 @@ function buildExtractor(extractor, rhs, defs) {
     // TODO:
     // case 'IncludeEntitiesRecursively': return QueryingProcessor(_.identity);
     default: return Promise.reject(
-      new QueryParserError([{
+      new ParserResultIsError([{
         problem: `Not handled: ${extractor}`,
         query: extractor
       }])
@@ -168,7 +166,7 @@ function include(spec, defs) {
   if (typeof spec === 'string') {
     if (_.startsWith(spec, '^')) {
       // const reference = _.trim(value, '^');
-      return ParserErrors([{
+      return ParserResultIsError([{
         problem: 'references not allowed in extractors',
         query: extractorObj
       }]);
@@ -177,17 +175,17 @@ function include(spec, defs) {
       defs.timeKeys.indexOf(spec) < 0 &&
       _.isNil(_.find(defs.keys, pattern => spec.match(pattern)))
     ) {
-      return ParserErrors([{
+      return ParserResultIsError([{
         problem: `unknown key ${spec}`,
         query: extractorObj
       }]);
     }
-    return QueryingProcessor(context => {
+    return ParserResultIsQueryingProcessor(context => {
       return context[spec];
     });
   }
   if (typeof spec !== 'object' || Object.prototype.toString.call(spec) === '[object Array]') {
-    return ParserErrors([{
+    return ParserResultIsError([{
       problem: 'complex extractor must be an object',
       query: extractorObj
     }]);
@@ -226,33 +224,19 @@ function include(spec, defs) {
       return;
     }
     // TODO:
-    const subquery =
-      builder(value)
-      .then(performingQuery => {
-        console.log(`performingQuery: ${performingQuery}`);
-        return context => {
-          performingQuery(context)
-          .then(result => {
-            return result;
-          })
-          .catch(error => {
-            throw error;
-          });
-        };
-      })
-      .catch(error => {
-        console.log(`Caught ${error}`);
-        errors = _.concat(errors, error.errors);
-        return _.constant('malformed subquery');
-      });
-    console.log(`subquery: ${subquery}`);
-    formular[key] = subquery;
+    const subquery = builder(value);
+    if (!_.isEmpty(subquery.errors)) {
+      errors = _.concat(errors, subquery.errors);
+      return;
+    }
+    console.log(`subquery: ${subquery.querying}`);
+    formular[key] = subquery.querying;
     return;
   });
   if (errors.length > 0) {
-    return ParserErrors(errors);
+    return ParserResultIsError(errors);
   }
-  return QueryingProcessor(context => {
+  return ParserResultIsQueryingProcessor(context => {
     return _.mapValues(formular, extractor => {
       console.log(`extractor: ${extractor}`);
       return extractor(context);
@@ -262,7 +246,7 @@ function include(spec, defs) {
 
 function buildWhereClause(criteria, keys, timeKeys) {
   if (_.isEmpty(criteria)) {
-    return QueryingModifier((context, querying) => querying);
+    return ParserResultIsQueryingModifier((context, querying) => querying);
   }
   let errors = [];
   const modifier = _.reduce(criteria, (mod, value, key) => {
@@ -272,7 +256,7 @@ function buildWhereClause(criteria, keys, timeKeys) {
         problem: `attribute matching not implemented: ${key}`,
         query: criteria
       });
-      return (context, modi) => modi;
+      return (context, querying) => querying;
     }
     if (_.includes(timeKeys, key)) {
       const ks = _.keys(value);
@@ -286,7 +270,7 @@ function buildWhereClause(criteria, keys, timeKeys) {
           problem: 'Exactly three properties expected in time-based comparison: operator, unit & value',
           query: value
         });
-        return (context, modi) => modi;
+        return (context, querying) => querying;
       }
       if (value.operator !== 'newerThan' && value.operator !== 'olderThan') {
         errors.push({
@@ -308,7 +292,7 @@ function buildWhereClause(criteria, keys, timeKeys) {
         });
       }
       if (!_.isEmpty(errors)) {
-        return (context, modi) => modi;
+        return (context, querying) => querying;
       }
       // TODO: Implement nowEpoch.
       const nowEpoch = 1489397775;
@@ -346,72 +330,66 @@ function buildWhereClause(criteria, keys, timeKeys) {
       };
     }
     if (!_.isEmpty(errors)) {
-      return (context, modi) => modi;
+      return (context, querying) => querying;
     }
     return (context, querying) => {
       return mod(context, querying).where(key, value);
     };
   }, (context, querying) => querying);
   if (_.isEmpty(errors)) {
-    return QueryingModifier(modifier);
+    return ParserResultIsQueryingModifier(modifier);
   }
-  return ParserErrors(errors);
+  return ParserResultIsError(errors);
 }
 
-/*
-function willSucceed(message) {
-  return Promise.resolve(context => { // eslint-disable-line no-unused-vars
-    return Promise.resolve(message);
-  });
-}
-*/
-
-function willFail(message, query) {
-  return Promise.resolve(context => {
-    return Promise.reject(
-      new QueryServerError(message, query, context)
-    );
-  });
-}
-
-function QueryingProcessor(queryingProcessor) {
-  if (typeof queryingProcessor !== 'function') {
-    throw `Expected function, got ${JSON.stringify(queryingProcessor)}`;
-  }
-  return {
-    errors: [],
-    queryingProcessor
-  };
-}
-
-function QueryingModifier(queryingModifier) {
-  if (typeof queryingModifier !== 'function') {
-    throw `Expected function, got ${JSON.stringify(queryingModifier)}`;
-  }
-  return {
-    errors: [],
-    queryingModifier
-  };
-}
-
-function ParserErrors(errors) {
+function ParserResultIsError(errors) {
   errors.forEach(error => {
     if (!_.has(error, 'problem') || !_.has(error, 'query')) {
-      throw new Error(`expected at least properties 'problem' and 'query': ${errors}`);
+      throw new Error(`expected at least properties 'problem' and 'query': ${JSON.stringify(error)}`);
     }
   });
   return {
     errors,
-    queryingModifier: querying => querying
+    querying: null,
+    queryingModifier: null,
+    queryingProcessor: null
   };
 }
 
-class QueryParserError extends Error {
-  constructor(errors) {
-    super('Query is malformed');
-    this.name = 'QueryParserError';
-    this.errors = errors;
+function ParserResultIsQuerying(querying) {
+  if (typeof querying !== 'function') {
+    throw new Error(`expected 'querying' to be a function generating a promise: ${querying}`);
   }
+  return {
+    errors: null,
+    querying,
+    queryingModifier: null,
+    queryingProcessor: null
+  };
+}
+
+function ParserResultIsQueryingModifier(queryingModifier) {
+  if (typeof queryingModifier !== 'function') {
+    throw new Error(`expected 'queryingModifier' to be a function generating a promise: ${queryingModifier}`);
+  }
+  return {
+    errors: null,
+    querying: null,
+    queryingModifier,
+    queryingProcessor: null
+  };
+}
+
+function ParserResultIsQueryingProcessor(queryingProcessor) {
+  if (typeof queryingProcessor !== 'function') {
+    throw new Error(`expected 'queryingProcessor' to be a function generating a promise: ${queryingProcessor}`);
+  }
+  return {
+    errors: null,
+    querying: null,
+    queryingModifier: null,
+    queryingProcessor
+  };
 }
 
 class QueryDynamicError extends Error {

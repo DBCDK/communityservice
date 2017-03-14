@@ -4,16 +4,24 @@
 
 'use strict';
 
+const _ = require('lodash');
 const express = require('express');
 const router = express.Router();
 const build = require('./query-parser');
 
 router.route('/').post((req, res, next) => {
-  build(req.body)
-  .then(performingQuery => {
-    // Initially the context is empty.
-    return performingQuery({});
-  })
+  const queryingOrError = build(req.body);
+  if (!_.isEmpty(queryingOrError.errors)) {
+    const errors = queryingOrError.errors;
+    return next({
+      status: 400,
+      title: 'Query is malformed',
+      detail: errors,
+      meta: {query: req.body}
+    });
+  }
+  // Initially the context is empty.
+  queryingOrError.querying({})
   .then(result => {
     res.status(200).json({
       data: result
@@ -21,13 +29,6 @@ router.route('/').post((req, res, next) => {
   })
   .catch(error => {
     switch (error.name) {
-      case 'QueryParserError':
-        return next({
-          status: 400,
-          title: error.message,
-          detail: error.errors,
-          meta: {query: req.body}
-        });
       case 'QueryDynamicError':
         return next({
           status: 400,
@@ -43,6 +44,7 @@ router.route('/').post((req, res, next) => {
           meta: {query: req.body, subquery: error.query, context: error.context}
         });
       default:
+        console.log(`Unexpected error: ${error}`);
         return next(error);
     }
   });

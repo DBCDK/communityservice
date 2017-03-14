@@ -249,7 +249,22 @@ describe('API v1 query endpoint', () => {
         .end(done);
       });
 
-      it('should accept criteria for future events', done => {
+      it('should accept criteria for recent events', done => {
+        service.post('/v1/community/1/query')
+        .send({CountEntities: {
+          type: 'campaign',
+          end_epoch: {operator: 'newerThan', unit: 'daysAgo', value: 14}
+        }})
+        .expect(res => {
+          expectSuccess(res.body, (links, data) => {
+            expect(data).to.deep.equal(42);
+          });
+        })
+        .expect(200)
+        .end(done);
+      });
+
+      it('should accept criteria for past events', done => {
         service.post('/v1/community/1/query')
         .send({CountEntities: {
           type: 'campaign',
@@ -480,20 +495,19 @@ describe('API v1 query endpoint', () => {
         .end(done);
       });
 
-/*
       it('should reject malformed subquery extractor', done => {
         const query = {Profile: {id: 3}, Include: {ost: {Count: {}}}};
         service.post('/v1/community/1/query')
         .send(query)
         .expect(res => {
           expectFailure(res.body, errors => {
-            expectErrorMalformed(errors[0], /malformed subquery/i, query);
+            expectErrorMalformed(errors[0], /must have exactly one selector/i, query);
           });
         })
         .expect(400)
         .end(done);
       });
-*/
+
       it('should reject malformed extractor', done => {
         const query = {Profile: {id: 3}, Include: ['id', 'name']};
         service.post('/v1/community/1/query')
@@ -600,4 +614,3 @@ function expectErrorDynamic(error, pattern, query) {
   expect(error.meta).to.have.property('query');
   expect(error.meta.query).to.deep.equal(query);
 }
-
