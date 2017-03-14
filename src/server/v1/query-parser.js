@@ -181,7 +181,7 @@ function include(spec, defs) {
       }]);
     }
     return ParserResultIsQueryingProcessor(context => {
-      return context[spec];
+      return _.get(context, spec);
     });
   }
   if (typeof spec !== 'object' || Object.prototype.toString.call(spec) === '[object Array]') {
@@ -213,7 +213,8 @@ function include(spec, defs) {
         });
         return;
       }
-      formular[key] = context => _.get(context, value);
+      // Promise needed?
+      formular[key] = context => Promise.resolve(_.get(context, value));
       return;
     }
     if (typeof value !== 'object' || Object.prototype.toString.call(value) === '[object Array]') {
@@ -237,9 +238,16 @@ function include(spec, defs) {
     return ParserResultIsError(errors);
   }
   return ParserResultIsQueryingProcessor(context => {
-    return _.mapValues(formular, extractor => {
-      console.log(`extractor: ${extractor}`);
-      return extractor(context);
+    const keys = [];
+    const extractings = _.reduce(formular, (acc, value, key) => {
+      keys.push(key);
+      const extracting = value(context);
+      acc.push(extracting);
+      return acc;
+    }, []);
+    return Promise.all(extractings)
+    .then(extractors => {
+      return _.fromPairs(_.zip(keys, extractors));
     });
   });
 }
