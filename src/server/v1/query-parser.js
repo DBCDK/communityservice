@@ -124,26 +124,34 @@ function singleton(request, selector, defs) {
       _.concat(parseResult.errors, extractorResult.errors)
     ));
   }
-   // TODO:
-  //
-  return willSucceed('Not implemented');
+  return Promise.resolve(context => {
+    let querying = knex(defs.table);
+    try {
+      querying = parseResult.queryingModifier(context, querying);
+    }
+    catch (dynError) {
+      return Promise.reject(dynError);
+    }
+    // console.log(querying.toString());
+    return querying.select()
+      .then(results => {
+        if (results.length === 0) {
+          throw new QueryDynamicError('No result from singleton selector', criteria, context);
+        }
+        if (results.length > 1) {
+          throw new QueryDynamicError('Several results from singleton selector', criteria, context);
+        }
+        const result = results[0];
+        return extractorResult.queryingProcessor(result);
+      });
+  });
 }
 
 function buildExtractor(extractor, rhs, defs) {
-  let errors = [];
-  // TODO:
-  const extractorObj = {};
-  extractorObj[extractor] = rhs;
-  errors.push({
-    problem: `Not implemented: ${extractor}`,
-    query: extractorObj
-  });
-  return ParserErrors(errors);
-/*
-  switch (extractor[0]) {
-    case 'Include': extract = ;
-    case 'IncludeSwitch': return willSucceed('Not implemented');
-    case 'IncludeEntitiesRecursively': return willSucceed('Not implemented');
+  switch (extractor) {
+    case 'Include': return include(rhs, defs);
+    case 'IncludeSwitch': return QueryingProcessor(_.identity);
+    case 'IncludeEntitiesRecursively': return QueryingProcessor(_.identity);
     default: return Promise.reject(
       new QueryParserError([{
         problem: `Not handled: ${extractor[0]}`,
@@ -151,7 +159,38 @@ function buildExtractor(extractor, rhs, defs) {
       }])
     );
   }
-  */
+}
+
+function include(spec, defs) {
+  const extractorObj = {Include: spec};
+  if (typeof spec === 'string') {
+    if (_.startsWith(spec, '^')) {
+      // const reference = _.trim(value, '^');
+      return ParserErrors([{
+        problem: `references not implemented: ${spec}`,
+        query: extractorObj
+      }]);
+    }
+    if (
+      defs.timeKeys.indexOf(spec) < 0 &&
+      _.isNil(_.find(defs.keys, pattern => spec.match(pattern)))
+    ) {
+      return ParserErrors([{
+        problem: `unknown key ${spec}`,
+        query: extractorObj
+      }]);
+    }
+    return QueryingProcessor(context => {
+      return context[spec];
+    });
+  }
+  // TODO:
+  let errors = [];
+  errors.push({
+    problem: `Not implemented: ${spec}`,
+    query: extractorObj
+  });
+  return ParserErrors(errors);
 }
 
 function buildWhereClause(criteria, keys, timeKeys) {
@@ -258,12 +297,24 @@ function willSucceed(message) {
   });
 }
 
+/*
 function willFail(message, query) {
   return Promise.resolve(context => {
     return Promise.reject(
       new QueryServerError(message, query, context)
     );
   });
+}
+*/
+
+function QueryingProcessor(queryingProcessor) {
+  if (typeof queryingProcessor !== 'function') {
+    throw `Expected function, got ${JSON.stringify(queryingProcessor)}`;
+  }
+  return {
+    errors: [],
+    queryingProcessor
+  };
 }
 
 function QueryingModifier(queryingModifier) {

@@ -364,11 +364,36 @@ describe('API v1 query endpoint', () => {
         .end(done);
       });
 
+      it('should return dynamic error on empty search result', done => {
+        const query = {Profile: {id: 987654}, Include: 'name'};
+        service.post('/v1/community/1/query')
+        .send(query)
+        .expect(res => {
+          expectFailure(res.body, errors => {
+            expectErrorDynamic(errors[0], /no result/i, query);
+          });
+        })
+        .expect(400)
+        .end(done);
+      });
+
+      it('should return dynamic error on more-than-one search result', done => {
+        const query = {Profile: {}, Include: 'name'};
+        service.post('/v1/community/1/query')
+        .send(query)
+        .expect(res => {
+          expectFailure(res.body, errors => {
+            expectErrorDynamic(errors[0], /several results/i, query);
+          });
+        })
+        .expect(400)
+        .end(done);
+      });
+
       it('should accept Profile selector', done => {
         service.post('/v1/community/1/query')
         .send({Profile: {id: 1}, Include: 'name'})
         .expect(res => {
-          console.log(JSON.stringify(res.body));
           expectSuccess(res.body, (links, data) => {
             expect(data).to.deep.equal('Conor');
           });
@@ -408,12 +433,37 @@ describe('API v1 query endpoint', () => {
         service.post('/v1/community/1/query')
         .send({Profile: {id: 2}, Include: 'name'})
         .expect(res => {
-          console.log(JSON.stringify(res.body));
           expectSuccess(res.body, (links, data) => {
             expect(data).to.deep.equal('Lora');
           });
         })
         .expect(200)
+        .end(done);
+      });
+
+      it('should reject extractor with unknown key', done => {
+        const query = {Profile: {id: 3}, Include: 'not_exist'};
+        service.post('/v1/community/1/query')
+        .send(query)
+        .expect(res => {
+          expectFailure(res.body, errors => {
+            expectErrorMalformed(errors[0], /unknown key/i, query);
+          });
+        })
+        .expect(400)
+        .end(done);
+      });
+
+      it('should reject extractor with reference', done => {
+        const query = {Profile: {id: 3}, Include: '^id'};
+        service.post('/v1/community/1/query')
+        .send(query)
+        .expect(res => {
+          expectFailure(res.body, errors => {
+            expectErrorMalformed(errors[0], /references not implemented/i, query);
+          });
+        })
+        .expect(400)
         .end(done);
       });
 
