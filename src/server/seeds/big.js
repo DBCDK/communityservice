@@ -45,7 +45,7 @@ const msDbQueryGracePeriod = 30;
 
 const groups = 100;
 const profiles = 10 * groups;
-const admins = 1;
+const admins = 10;
 const membersPerGroupMax = 5;
 const campaigns = 2 * groups;
 const reviewsPerProfileMax = 10;

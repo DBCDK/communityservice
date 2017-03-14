@@ -429,7 +429,7 @@ describe('API v1 query endpoint', () => {
 
     describe('extractor', () => {
 
-      it('should accept simple direct property extrator', done => {
+      it('should accept simple direct property extractor', done => {
         service.post('/v1/community/1/query')
         .send({Profile: {id: 2}, Include: 'name'})
         .expect(res => {
@@ -441,18 +441,59 @@ describe('API v1 query endpoint', () => {
         .end(done);
       });
 
-      it('should accept complex direct extrator', done => {
+      it('should accept complex direct extractor', done => {
         service.post('/v1/community/1/query')
-        .send({Profile: {id: 2}, Include: {number: 'id', who: 'name'}})
+        .send({Profile: {id: 2}, Include: {number: 'id', who: 'name', email: 'attributes.email'}})
         .expect(res => {
           expectSuccess(res.body, (links, data) => {
-            expect(data).to.deep.equal({number: 2, who: 'Lora'});
+            expect(data).to.deep.equal({number: 2, who: 'Lora', email: 'Lila48@hotmail.com'});
           });
         })
         .expect(200)
         .end(done);
       });
 
+/*
+      it('should accept extractor with subquery', done => {
+        service.post('/v1/community/1/query')
+        .send({Profile: {id: 2}, Include: {followers: {CountActions: {profile_ref: '^id'}}}})
+        .expect(res => {
+          console.log(JSON.stringify(res.body));
+          expectSuccess(res.body, (links, data) => {
+            expect(data).to.deep.equal({followers: 3});
+          });
+        })
+        .expect(200)
+        .end(done);
+      });
+*/
+      it('should reject malformed extractor rhs', done => {
+        const query = {Profile: {id: 3}, Include: {ost: ['id']}};
+        service.post('/v1/community/1/query')
+        .send(query)
+        .expect(res => {
+          expectFailure(res.body, errors => {
+            expectErrorMalformed(errors[0], /must be a string or a subquery/i, query);
+          });
+        })
+        .expect(400)
+        .end(done);
+      });
+
+/*
+      it('should reject malformed subquery extractor', done => {
+        const query = {Profile: {id: 3}, Include: {ost: {Count: {}}}};
+        service.post('/v1/community/1/query')
+        .send(query)
+        .expect(res => {
+          expectFailure(res.body, errors => {
+            expectErrorMalformed(errors[0], /malformed subquery/i, query);
+          });
+        })
+        .expect(400)
+        .end(done);
+      });
+*/
       it('should reject malformed extractor', done => {
         const query = {Profile: {id: 3}, Include: ['id', 'name']};
         service.post('/v1/community/1/query')
@@ -510,7 +551,6 @@ describe('API v1 query endpoint', () => {
         service.post('/v1/community/1/query')
         .send(query)
         .expect(res => {
-          console.log(JSON.stringify(res.body));
           expectFailure(res.body, errors => {
             expectErrorMalformed(errors[0], /references not allowed in extractors/i, query);
           });

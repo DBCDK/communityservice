@@ -81,8 +81,6 @@ Because Actions can point to Entities and/or Profiles, the community has to keep
 
 *Possible improvement (v2)*: Split Actions into three separate tables.
 
-{ What to do about `SortBy: 'modified_epoch'` if there is no modification time?  It should fall back to created_epoch or deleted_epoch, so actually it should probably be someting like `SortBy: 'TIME'`.  Alternatively, modified_epoch could be set on creation. }
-
 { What to do about objects marked as deleted?  The community should decide how to deal with them, but then the community needs to know when something is deleted. }
 
 *Possible improvement (v2)*: Never use id numbers directly, always use the URL.

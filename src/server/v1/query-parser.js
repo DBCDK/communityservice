@@ -19,7 +19,7 @@ const constants = require('server/constants')();
  * @return {Promise}        Promise of a function that takes a context and returns a promise of a database result.
  */
 
-exports.builder = request => {
+function builder(request) {
   const selectors = [
     'CountProfiles', 'CountActions', 'CountEntities',
     'Profile', 'Action', 'Entity'
@@ -48,7 +48,7 @@ exports.builder = request => {
       }])
     );
   }
-};
+}
 
 function count(request, selector, defs) {
   const keys = _.pull(_.keys(request), selector);
@@ -150,8 +150,10 @@ function singleton(request, selector, defs) {
 function buildExtractor(extractor, rhs, defs) {
   switch (extractor) {
     case 'Include': return include(rhs, defs);
-    case 'IncludeSwitch': return QueryingProcessor(_.identity);
-    case 'IncludeEntitiesRecursively': return QueryingProcessor(_.identity);
+    // TODO:
+    // case 'IncludeSwitch': return QueryingProcessor(_.identity);
+    // TODO:
+    // case 'IncludeEntitiesRecursively': return QueryingProcessor(_.identity);
     default: return Promise.reject(
       new QueryParserError([{
         problem: `Not handled: ${extractor}`,
@@ -191,40 +193,69 @@ function include(spec, defs) {
     }]);
   }
   let errors = [];
-  // Check rhs
-  _.forEach(spec, value => {
-    if (typeof value !== 'string') {
+  // Process right-hand sides.
+  let formular = {};
+  _.forEach(spec, (value, key) => {
+    if (typeof value === 'string') {
+      if (_.startsWith(value, '^')) {
+        // const reference = _.trim(value, '^');
+        errors.push({
+          problem: 'references not allowed in extractors',
+          query: extractorObj
+        });
+        return;
+      }
+      if (
+        defs.timeKeys.indexOf(value) < 0 &&
+        _.isNil(_.find(defs.keys, pattern => value.match(pattern)))
+      ) {
+        errors.push({
+          problem: `unknown key ${spec}`,
+          query: extractorObj
+        });
+        return;
+      }
+      formular[key] = context => _.get(context, value);
+      return;
+    }
+    if (typeof value !== 'object' || Object.prototype.toString.call(value) === '[object Array]') {
       errors.push({
-        problem: 'right-hand side of extractor must be simple',
+        problem: 'right-hand side of complex extractor must be a string or a subquery',
         query: value
       });
       return;
     }
-    if (_.startsWith(value, '^')) {
-      // const reference = _.trim(value, '^');
-      errors.push({
-        problem: 'references not allowed in extractors',
-        query: extractorObj
+    // TODO:
+    const subquery =
+      builder(value)
+      .then(performingQuery => {
+        console.log(`performingQuery: ${performingQuery}`);
+        return context => {
+          performingQuery(context)
+          .then(result => {
+            return result;
+          })
+          .catch(error => {
+            throw error;
+          });
+        };
+      })
+      .catch(error => {
+        console.log(`Caught ${error}`);
+        errors = _.concat(errors, error.errors);
+        return _.constant('malformed subquery');
       });
-      return;
-    }
-    if (
-      defs.timeKeys.indexOf(value) < 0 &&
-      _.isNil(_.find(defs.keys, pattern => value.match(pattern)))
-    ) {
-      errors.push({
-        problem: `unknown key ${spec}`,
-        query: extractorObj
-      });
-      return;
-    }
+    console.log(`subquery: ${subquery}`);
+    formular[key] = subquery;
+    return;
   });
   if (errors.length > 0) {
     return ParserErrors(errors);
   }
   return QueryingProcessor(context => {
-    return _.mapValues(spec, value => {
-      return context[value];
+    return _.mapValues(formular, extractor => {
+      console.log(`extractor: ${extractor}`);
+      return extractor(context);
     });
   });
 }
@@ -327,13 +358,14 @@ function buildWhereClause(criteria, keys, timeKeys) {
   return ParserErrors(errors);
 }
 
+/*
 function willSucceed(message) {
   return Promise.resolve(context => { // eslint-disable-line no-unused-vars
     return Promise.resolve(message);
   });
 }
+*/
 
-/*
 function willFail(message, query) {
   return Promise.resolve(context => {
     return Promise.reject(
@@ -341,7 +373,6 @@ function willFail(message, query) {
     );
   });
 }
-*/
 
 function QueryingProcessor(queryingProcessor) {
   if (typeof queryingProcessor !== 'function') {
@@ -402,5 +433,5 @@ class QueryServerError extends Error {
 }
 
 module.exports = exports = request => {
-  return this.builder(request);
+  return builder(request);
 };
