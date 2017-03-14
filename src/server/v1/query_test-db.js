@@ -441,7 +441,32 @@ describe('API v1 query endpoint', () => {
         .end(done);
       });
 
-      it('should reject extractor with unknown key', done => {
+      it('should accept complex direct extrator', done => {
+        service.post('/v1/community/1/query')
+        .send({Profile: {id: 2}, Include: {number: 'id', who: 'name'}})
+        .expect(res => {
+          expectSuccess(res.body, (links, data) => {
+            expect(data).to.deep.equal({number: 2, who: 'Lora'});
+          });
+        })
+        .expect(200)
+        .end(done);
+      });
+
+      it('should reject malformed extractor', done => {
+        const query = {Profile: {id: 3}, Include: ['id', 'name']};
+        service.post('/v1/community/1/query')
+        .send(query)
+        .expect(res => {
+          expectFailure(res.body, errors => {
+            expectErrorMalformed(errors[0], /complex extractor must be an object/i, query);
+          });
+        })
+        .expect(400)
+        .end(done);
+      });
+
+      it('should reject simple extractor with unknown key', done => {
         const query = {Profile: {id: 3}, Include: 'not_exist'};
         service.post('/v1/community/1/query')
         .send(query)
@@ -454,13 +479,40 @@ describe('API v1 query endpoint', () => {
         .end(done);
       });
 
-      it('should reject extractor with reference', done => {
+      it('should reject complex extractor with unknown key', done => {
+        const query = {Profile: {id: 3}, Include: {name: 'not_exist'}};
+        service.post('/v1/community/1/query')
+        .send(query)
+        .expect(res => {
+          expectFailure(res.body, errors => {
+            expectErrorMalformed(errors[0], /unknown key/i, query);
+          });
+        })
+        .expect(400)
+        .end(done);
+      });
+
+      it('should reject simple extractor with reference', done => {
         const query = {Profile: {id: 3}, Include: '^id'};
         service.post('/v1/community/1/query')
         .send(query)
         .expect(res => {
           expectFailure(res.body, errors => {
-            expectErrorMalformed(errors[0], /references not implemented/i, query);
+            expectErrorMalformed(errors[0], /references not allowed in extractors/i, query);
+          });
+        })
+        .expect(400)
+        .end(done);
+      });
+
+      it('should reject complex extractor with reference', done => {
+        const query = {Profile: {id: 3}, Include: {what: '^id'}};
+        service.post('/v1/community/1/query')
+        .send(query)
+        .expect(res => {
+          console.log(JSON.stringify(res.body));
+          expectFailure(res.body, errors => {
+            expectErrorMalformed(errors[0], /references not allowed in extractors/i, query);
           });
         })
         .expect(400)

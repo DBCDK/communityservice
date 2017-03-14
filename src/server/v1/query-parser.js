@@ -154,8 +154,8 @@ function buildExtractor(extractor, rhs, defs) {
     case 'IncludeEntitiesRecursively': return QueryingProcessor(_.identity);
     default: return Promise.reject(
       new QueryParserError([{
-        problem: `Not handled: ${extractor[0]}`,
-        query: request
+        problem: `Not handled: ${extractor}`,
+        query: extractor
       }])
     );
   }
@@ -167,7 +167,7 @@ function include(spec, defs) {
     if (_.startsWith(spec, '^')) {
       // const reference = _.trim(value, '^');
       return ParserErrors([{
-        problem: `references not implemented: ${spec}`,
+        problem: 'references not allowed in extractors',
         query: extractorObj
       }]);
     }
@@ -184,13 +184,49 @@ function include(spec, defs) {
       return context[spec];
     });
   }
-  // TODO:
+  if (typeof spec !== 'object' || Object.prototype.toString.call(spec) === '[object Array]') {
+    return ParserErrors([{
+      problem: 'complex extractor must be an object',
+      query: extractorObj
+    }]);
+  }
   let errors = [];
-  errors.push({
-    problem: `Not implemented: ${spec}`,
-    query: extractorObj
+  // Check rhs
+  _.forEach(spec, value => {
+    if (typeof value !== 'string') {
+      errors.push({
+        problem: 'right-hand side of extractor must be simple',
+        query: value
+      });
+      return;
+    }
+    if (_.startsWith(value, '^')) {
+      // const reference = _.trim(value, '^');
+      errors.push({
+        problem: 'references not allowed in extractors',
+        query: extractorObj
+      });
+      return;
+    }
+    if (
+      defs.timeKeys.indexOf(value) < 0 &&
+      _.isNil(_.find(defs.keys, pattern => value.match(pattern)))
+    ) {
+      errors.push({
+        problem: `unknown key ${spec}`,
+        query: extractorObj
+      });
+      return;
+    }
   });
-  return ParserErrors(errors);
+  if (errors.length > 0) {
+    return ParserErrors(errors);
+  }
+  return QueryingProcessor(context => {
+    return _.mapValues(spec, value => {
+      return context[value];
+    });
+  });
 }
 
 function buildWhereClause(criteria, keys, timeKeys) {
