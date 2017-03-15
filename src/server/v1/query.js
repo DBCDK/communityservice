@@ -44,7 +44,7 @@ router.route('/').post((req, res, next) => {
           meta: {query: req.body, subquery: error.query, context: error.context}
         });
       default:
-        console.log(`Unexpected error: ${error}`);
+        // console.log(`Unexpected error: ${error}`);
         return next(error);
     }
   });

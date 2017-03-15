@@ -316,7 +316,6 @@ describe('API v1 query endpoint', () => {
         service.post('/v1/community/1/query')
         .send(query)
         .expect(res => {
-          // console.log(JSON.stringify(res.body));
           expectSuccess(res.body, (links, data) => {
             expect(data).to.deep.equal(1);
           });
@@ -617,8 +616,137 @@ describe('API v1 query endpoint', () => {
     });
 
     describe('list selector', () => {
-    });
 
+      it('should reject list selector without limit', done => {
+        const query = {Entities: {}, Include: 'id'};
+        service.post('/v1/community/1/query')
+        .send(query)
+        .expect(res => {
+          expectFailure(res.body, errors => {
+            expectErrorMalformed(errors[0], /list selector must have a Limit/i, query);
+          });
+        })
+        .expect(400)
+        .end(done);
+      });
+
+      it('should reject list selector with non-numeric limit', done => {
+        const query = {Entities: {}, Limit: 'a lot', Include: 'id'};
+        service.post('/v1/community/1/query')
+        .send(query)
+        .expect(res => {
+          expectFailure(res.body, errors => {
+            expectErrorMalformed(errors[0], /list selector must have a numeric Limit/i, query);
+          });
+        })
+        .expect(400)
+        .end(done);
+      });
+
+      it('should reject list selector with additional keys', done => {
+        const query = {Entities: {}, Limit: 1, Include: 'id', Recursive: true};
+        service.post('/v1/community/1/query')
+        .send(query)
+        .expect(res => {
+          expectFailure(res.body, errors => {
+            expectErrorMalformed(errors[0], /list selector must not have additional properties, but found: Recursive/i, query);
+          });
+        })
+        .expect(400)
+        .end(done);
+      });
+
+      it('should reject malformed limitors', done => {
+        const query = {Entities: {}, Limit: 1, Offset: 'some', SortBy: 1, Order: 'upwards', Include: 'id'};
+        service.post('/v1/community/1/query')
+        .send(query)
+        .expect(res => {
+          expectFailure(res.body, errors => {
+            expectErrorMalformedDetail(errors[0], 0, /list selector must have a numeric Offset, but found: some/i, query);
+            expectErrorMalformedDetail(errors[0], 1, /list selector must sort by known property, but found: 1/i, query);
+            expectErrorMalformedDetail(errors[0], 2, /list selector must order descending or ascending/i, query);
+          });
+        })
+        .expect(400)
+        .end(done);
+      });
+
+      it('should reject malformed selector', done => {
+        const query = {Profiles: {'attributes.admin.top': true}, Limit: 10, Include: 'name'};
+        service.post('/v1/community/1/query')
+        .send(query)
+        .expect(res => {
+          expectFailure(res.body, errors => {
+            expectErrorMalformed(errors[0], /deep attribute paths are not supported/i, query);
+          });
+        })
+        .expect(400)
+        .end(done);
+      });
+
+      it('should reject malformed extractor', done => {
+        const query = {Profiles: {}, Limit: 10, Include: ['id', 'name']};
+        service.post('/v1/community/1/query')
+        .send(query)
+        .expect(res => {
+          expectFailure(res.body, errors => {
+            expectErrorMalformed(errors[0], /complex extractor must be an object/i, query);
+          });
+        })
+        .expect(400)
+        .end(done);
+      });
+
+      it('should fill the list up if smaller than the limit', done => {
+        service.post('/v1/community/1/query')
+        .send({Profiles: {'attributes.admin': true}, Limit: 100, Include: 'id'})
+        .expect(res => {
+          expectSuccess(res.body, (links, data) => {
+            expect(data).to.deep.equal({
+              Total: 1,
+              NextOffset: null,
+              List: [601]
+            });
+          });
+        })
+        .expect(200)
+        .end(done);
+      });
+
+      it('should limit the list', done => {
+        service.post('/v1/community/1/query')
+        .send({Entities: {owner_id: 2}, Limit: 10, Include: 'id'})
+        .expect(res => {
+          expectSuccess(res.body, (links, data) => {
+            expect(data).to.deep.equal({
+              Total: 37,
+              NextOffset: 10,
+              List: [144, 237, 761, 763, 765, 767, 769, 760, 762, 764]
+            });
+          });
+        })
+        .expect(200)
+        .end(done);
+      });
+
+      it('should offset the list', done => {
+        service.post('/v1/community/1/query')
+        .send({Entities: {owner_id: 2}, Limit: 5, Offset: 10, Include: 'id'})
+        .expect(res => {
+          // console.log(JSON.stringify(res.body));
+          expectSuccess(res.body, (links, data) => {
+            expect(data).to.deep.equal({
+              Total: 37,
+              NextOffset: 15,
+              List: [766, 768, 2862, 2864, 2866]
+            });
+          });
+        })
+        .expect(200)
+        .end(done);
+      });
+
+    });
   });
 
   describe('dynamic errors', () => {
@@ -641,6 +769,7 @@ function expectErrorMalformedDetail(error, index, pattern, query) {
   expect(error).to.have.property('title');
   expect(error.title).to.match(/query is malformed/i);
   expect(error).to.have.property('detail');
+  expect(error.detail.length).to.be.at.least(index + 1);
   const detail = error.detail[index];
   expect(JSON.stringify(detail)).to.match(pattern);
   expect(detail).to.have.property('query');

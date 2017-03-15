@@ -24,6 +24,7 @@ const constants = require('server/constants')();
 function builder(request) {
   const selectors = [
     'CountProfiles', 'CountActions', 'CountEntities',
+    'Profiles', 'Actions', 'Entities',
     'Profile', 'Action', 'Entity'
   ];
   const keys = _.keys(request);
@@ -38,6 +39,9 @@ function builder(request) {
     case 'CountProfiles': return count(request, 'CountProfiles', constants.profile);
     case 'CountActions': return count(request, 'CountActions', constants.action);
     case 'CountEntities': return count(request, 'CountEntities', constants.entity);
+    case 'Profiles': return list(request, 'Profiles', constants.profile);
+    case 'Actions': return list(request, 'Actions', constants.action);
+    case 'Entities': return list(request, 'Entities', constants.entity);
     case 'Profile': return singleton(request, 'Profile', constants.profile);
     case 'Action': return singleton(request, 'Action', constants.action);
     case 'Entity': return singleton(request, 'Entity', constants.entity);
@@ -89,14 +93,132 @@ function count(request, selector, defs) {
   });
 }
 
-function singleton(request, selector, defs) {
+function list(request, selector, defs) {
   const keys = _.pull(_.keys(request), selector);
-  const extractors = ['Include', 'IncludeSwitch', 'IncludeEntitiesRecursively'];
-  const extractor = _.intersection(keys, extractors);
+  const extractor = _.intersection(keys, constants.extractors);
   let errors = [];
   if (extractor.length !== 1) {
     errors.push({
-      problem: `a singleton selector must have exactly one extractor: ${extractors.join(', ')}`,
+      problem: `a list selector must have exactly one extractor: ${constants.extractors.join(', ')}`,
+      query: request
+    });
+  }
+  _.pullAll(keys, extractor);
+  if (!keys.includes('Limit')) {
+    errors.push({
+      problem: 'a list selector must have a Limit',
+      query: request
+    });
+  }
+  const limit = parseInt(request.Limit, 10);
+  if (_.isNaN(limit)) {
+    errors.push({
+      problem: `a list selector must have a numeric Limit, but found: ${request.Limit}`,
+      query: request
+    });
+  }
+  let offset = 0;
+  let sortBy;
+  let order = 'descending';
+  const limitors = _.intersection(keys, constants.limitors);
+  _.forEach(limitors, key => {
+    switch (key) {
+      case 'Offset':
+        offset = parseInt(request.Offset, 10);
+        if (_.isNaN(offset)) {
+          errors.push({
+            problem: `a list selector must have a numeric Offset, but found: ${request.Offset}`,
+            query: request
+          });
+        }
+        return;
+      case 'Order':
+        order = request.Order;
+        if (order !== 'descending' && order !== 'ascending') {
+          errors.push({
+            problem: `a list selector must order descending or ascending, but found: ${order}`,
+            query: request
+          });
+        }
+        return;
+      case 'SortBy':
+        sortBy = request.SortBy.toString();
+        if (
+          !defs.timeKeys.includes(sortBy) &&
+          _.isNil(_.find(defs.keys, pattern => sortBy.match(pattern)))
+        ) {
+          errors.push({
+            problem: `a list selector must sort by known property, but found: ${sortBy}`,
+            query: request
+          });
+        }
+        return;
+      default:
+    }
+  });
+  _.pullAll(keys, limitors);
+  if (keys.length > 0) {
+    errors.push({
+      problem: `a list selector must not have additional properties, but found: ${keys}`,
+      query: request
+    });
+  }
+  if (errors.length > 0) {
+    return ParserResultIsError(errors);
+  }
+  const criteria = request[selector];
+  const parseResult = buildWhereClause(criteria, defs.keys, defs.timeKeys);
+  const extractorResult = buildExtractor(extractor[0], request[extractor[0]], defs);
+  if (!_.isEmpty(parseResult.errors) || !_.isEmpty(extractorResult.errors)) {
+    if (!_.isEmpty(parseResult.errors)) {
+      errors = _.concat(errors, parseResult.errors);
+    }
+    if (!_.isEmpty(extractorResult.errors)) {
+      errors = _.concat(errors, extractorResult.errors);
+    }
+    return ParserResultIsError(errors);
+  }
+  // TODO:
+  return ParserResultIsQuerying(context => {
+    let querying = knex(defs.table);
+    try {
+      querying = parseResult.queryingModifier(context, querying);
+    }
+    catch (dynError) {
+      return Promise.reject(dynError);
+    }
+    // console.log(querying.toString());
+    return querying.select()
+      .then(contexts => {
+        // Sum up result size and feed it through the promise chain as the first "result".
+        const total = contexts.length;
+        const selection = _.take(_.drop(contexts, offset), limit);
+        let nextOffset = offset + limit;
+        if (nextOffset >= total) {
+          nextOffset = null;
+        }
+        return Promise.all(
+          _.concat(
+            [{Total: total, NextOffset: nextOffset}],
+            _.map(selection, extractorResult.queryingProcessor)
+          )
+        );
+      })
+      .then(results => {
+        const result = results[0];
+        result.List = _.tail(results);
+        return result;
+      });
+  });
+}
+
+function singleton(request, selector, defs) {
+  const keys = _.pull(_.keys(request), selector);
+  const extractor = _.intersection(keys, constants.extractors);
+  let errors = [];
+  if (extractor.length !== 1) {
+    errors.push({
+      problem: `a singleton selector must have exactly one extractor: ${constants.extractors.join(', ')}`,
       query: request
     });
   }
