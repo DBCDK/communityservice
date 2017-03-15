@@ -224,13 +224,12 @@ function include(spec, defs) {
       });
       return;
     }
-    // TODO:
     const subquery = builder(value);
     if (!_.isEmpty(subquery.errors)) {
       errors = _.concat(errors, subquery.errors);
       return;
     }
-    console.log(`subquery: ${subquery.querying}`);
+    // console.log(`subquery: ${subquery.querying}`);
     formular[key] = subquery.querying;
     return;
   });
@@ -259,6 +258,8 @@ function buildWhereClause(criteria, keys, timeKeys) {
   let errors = [];
   const modifier = _.reduce(criteria, (mod, value, key) => {
     // TODO: figure out how to search in a json column in PostgresSQL with knex.
+    // Needs JSONB columns in PostgreSQL.
+    // See http://schinckel.net/2014/05/25/querying-json-in-postgres/
     if (key.match('^attributes\\.')) {
       errors.push({
         problem: `attribute matching not implemented: ${key}`,

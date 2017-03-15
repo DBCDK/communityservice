@@ -249,6 +249,24 @@ describe('API v1 query endpoint', () => {
         .end(done);
       });
 
+      it('should collect errors from several layers of queries', done => {
+        const timeCriteria = {operator: '>', unit: 'weeks', value: 1};
+        const refCriteria = {foo: '^id'};
+        const query = {Profile: refCriteria, Include: {unrelated: {CountEntities: {end_epoch: timeCriteria}}}};
+        service.post('/v1/community/1/query')
+        .send(query)
+        .expect(res => {
+          expectFailure(res.body, errors => {
+            expect(errors).to.have.length(1);
+            expectErrorMalformedDetail(errors[0], 0, /unknown key foo/i, refCriteria);
+            expectErrorMalformedDetail(errors[0], 1, /operator must be one of: newerThan, olderThan/i, timeCriteria);
+            expectErrorMalformedDetail(errors[0], 2, /unit must be one of: daysAgo/i, timeCriteria);
+          });
+        })
+        .expect(400)
+        .end(done);
+      });
+
       it('should accept criteria for recent events', done => {
         service.post('/v1/community/1/query')
         .send({CountEntities: {
@@ -484,7 +502,7 @@ describe('API v1 query endpoint', () => {
         service.post('/v1/community/1/query')
         .send({Profile: {id: 2}, Include: {followers: {CountActions: {profile_ref: '^id'}}}})
         .expect(res => {
-          console.log(JSON.stringify(res.body));
+          // console.log(JSON.stringify(res.body));
           expectSuccess(res.body, (links, data) => {
             expect(data).to.deep.equal({followers: 3});
           });
@@ -591,8 +609,9 @@ describe('API v1 query endpoint', () => {
 
   });
 
-  describe('generator', () => {
-    it('should test something...');
+  describe('dynamic errors', () => {
+    it('should handle database errors');
+    it('should handle query errors');
   });
 });
 

@@ -265,7 +265,7 @@ the object in the inner-most context must have a property `attributes` which in 
 
 If the reference is prefixed with a carret `^`, the next-to-inner context is used, like in `^owner_id`.
 
-{ In IncludeEntitiesRecursively the next-to-inner context is not couting the next-in-chain of entities, only the entity itself or the entity that started the chain.  See front-page example. }
+{ In IncludeEntitiesRecursively the next-to-inner context is not counting the next-in-chain of entities, only the entity itself or the entity that started the chain.  See front-page example. }
 
 ## Errors
 
