@@ -183,12 +183,11 @@ function list(request, selector, defs) {
     try {
       let counting = knex(defs.table).count();
       counting = parseResult.queryingModifier(context, counting);
-      console.log(counting.toString());
+      // console.log(counting.toString());
       const knexOrder = (order === 'ascending') ? 'asc' : 'desc';
       let querying = knex(defs.table).orderBy(sortBy, knexOrder).limit(limit).offset(offset);
       querying = parseResult.queryingModifier(context, querying);
-      console.log(querying.toString());
-
+      // console.log(querying.toString());
       return querying.select()
         .then(contexts => {
           return Promise.all(_.map(contexts, extractorResult.queryingProcessor));
@@ -202,13 +201,11 @@ function list(request, selector, defs) {
         .then(results => {
           const countResult = results[0];
           if (countResult.length !== 1) {
-            // TODO: request, context?
             throw new QueryServerError('No result from query', request, context);
           }
           const number = countResult[0].count;
           const total = parseInt(number, 10);
           if (_.isNaN(total)) {
-            // TODO: request, context?
             throw new QueryServerError(
               `Expected a count as result from query, got ${number}`,
               request,
@@ -216,7 +213,6 @@ function list(request, selector, defs) {
             );
           }
           const result = results[1];
-          // const collected = result.length;
           let nextOffset = offset + limit;
           if (nextOffset >= total) {
             nextOffset = null;

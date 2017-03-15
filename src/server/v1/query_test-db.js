@@ -746,6 +746,22 @@ describe('API v1 query endpoint', () => {
         .end(done);
       });
 
+      it('should sort the list ascending', done => {
+        service.post('/v1/community/1/query')
+        .send({Actions: {owner_id: 2}, Limit: 5, Order: 'ascending', Include: 'id'})
+        .expect(res => {
+          expectSuccess(res.body, (links, data) => {
+            expect(data).to.deep.equal({
+              Total: 53,
+              NextOffset: 5,
+              List: [171, 323, 356, 357, 355]
+            });
+          });
+        })
+        .expect(200)
+        .end(done);
+      });
+
     });
   });
 

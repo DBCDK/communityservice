@@ -61,4 +61,4 @@ Parts in parentheses are not implemented yet.  Parts with O might not be impleme
 
 ## Complex queries
 
-The endpoint `/query` accepts complex [queries](query-language.md), either as a GET request with the query encoded by [jsurl](https://www.npmjs.com/package/jsurl), or as a POST request with the body contining the unencoded JSON query.
+The endpoint `/query` accepts complex [queries](query-language.md), ~~either as a GET request with the query encoded by [jsurl](https://www.npmjs.com/package/jsurl), or~~ as a POST request with the body contining the unencoded JSON query.
