@@ -721,7 +721,7 @@ describe('API v1 query endpoint', () => {
             expect(data).to.deep.equal({
               Total: 37,
               NextOffset: 10,
-              List: [144, 237, 761, 763, 765, 767, 769, 760, 762, 764]
+              List: [6125, 6124, 6126, 6127, 6123, 6122, 6120, 6119, 6121, 5367]
             });
           });
         })
@@ -738,7 +738,7 @@ describe('API v1 query endpoint', () => {
             expect(data).to.deep.equal({
               Total: 37,
               NextOffset: 15,
-              List: [766, 768, 2862, 2864, 2866]
+              List: [5365, 5368, 5367, 5363, 5364]
             });
           });
         })

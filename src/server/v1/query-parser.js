@@ -117,8 +117,9 @@ function list(request, selector, defs) {
       query: request
     });
   }
+  // Defaults.
   let offset = 0;
-  let sortBy;
+  let sortBy = 'modified_epoch';
   let order = 'descending';
   const limitors = _.intersection(keys, constants.limitors);
   _.forEach(limitors, key => {
@@ -178,37 +179,58 @@ function list(request, selector, defs) {
     }
     return ParserResultIsError(errors);
   }
-  // TODO:
   return ParserResultIsQuerying(context => {
-    let querying = knex(defs.table);
     try {
+      let counting = knex(defs.table).count();
+      counting = parseResult.queryingModifier(context, counting);
+      console.log(counting.toString());
+      const knexOrder = (order === 'ascending') ? 'asc' : 'desc';
+      let querying = knex(defs.table).orderBy(sortBy, knexOrder).limit(limit).offset(offset);
       querying = parseResult.queryingModifier(context, querying);
+      console.log(querying.toString());
+
+      return querying.select()
+        .then(contexts => {
+          return Promise.all(_.map(contexts, extractorResult.queryingProcessor));
+        })
+        .then(results => {
+          return Promise.all([
+            counting.select(),
+            results
+          ]);
+        })
+        .then(results => {
+          const countResult = results[0];
+          if (countResult.length !== 1) {
+            // TODO: request, context?
+            throw new QueryServerError('No result from query', request, context);
+          }
+          const number = countResult[0].count;
+          const total = parseInt(number, 10);
+          if (_.isNaN(total)) {
+            // TODO: request, context?
+            throw new QueryServerError(
+              `Expected a count as result from query, got ${number}`,
+              request,
+              context
+            );
+          }
+          const result = results[1];
+          // const collected = result.length;
+          let nextOffset = offset + limit;
+          if (nextOffset >= total) {
+            nextOffset = null;
+          }
+          return {
+            Total: total,
+            NextOffset: nextOffset,
+            List: result
+          };
+        });
     }
     catch (dynError) {
       return Promise.reject(dynError);
     }
-    // console.log(querying.toString());
-    return querying.select()
-      .then(contexts => {
-        // Sum up result size and feed it through the promise chain as the first "result".
-        const total = contexts.length;
-        const selection = _.take(_.drop(contexts, offset), limit);
-        let nextOffset = offset + limit;
-        if (nextOffset >= total) {
-          nextOffset = null;
-        }
-        return Promise.all(
-          _.concat(
-            [{Total: total, NextOffset: nextOffset}],
-            _.map(selection, extractorResult.queryingProcessor)
-          )
-        );
-      })
-      .then(results => {
-        const result = results[0];
-        result.List = _.tail(results);
-        return result;
-      });
   });
 }
 
