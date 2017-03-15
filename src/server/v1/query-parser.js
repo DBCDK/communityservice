@@ -257,16 +257,6 @@ function buildWhereClause(criteria, keys, timeKeys) {
   }
   let errors = [];
   const modifier = _.reduce(criteria, (mod, value, key) => {
-    // TODO: figure out how to search in a json column in PostgresSQL with knex.
-    // Needs JSONB columns in PostgreSQL.
-    // See http://schinckel.net/2014/05/25/querying-json-in-postgres/
-    if (key.match('^attributes\\.')) {
-      errors.push({
-        problem: `attribute matching not implemented: ${key}`,
-        query: criteria
-      });
-      return (context, querying) => querying;
-    }
     if (_.includes(timeKeys, key)) {
       const ks = _.keys(value);
       if (
@@ -336,6 +326,19 @@ function buildWhereClause(criteria, keys, timeKeys) {
         const q = mod(context, querying).where(key, valueOfRef);
         // console.log(q.toString());
         return q;
+      };
+    }
+    if (key.match('^attributes\\.')) {
+      const path = _.split(key, '.');
+      if (path.length > 2) {
+        errors.push({
+          problem: `deep attribute paths are not supported: ${key}`,
+          query: criteria
+        });
+        return;
+      }
+      return (context, querying) => {
+        return mod(context, querying).whereRaw(`${path[0]}->>'${path[1]}' = '${value}'`);
       };
     }
     if (!_.isEmpty(errors)) {

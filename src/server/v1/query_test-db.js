@@ -297,18 +297,31 @@ describe('API v1 query endpoint', () => {
         .end(done);
       });
 
+      it('should reject deep attribute paths criteria', done => {
+        const query = {CountProfiles: {'attributes.bundle.id': 1}};
+        service.post('/v1/community/1/query')
+        .send(query)
+        .expect(res => {
+          expectFailure(res.body, errors => {
+            expect(errors).to.have.length(1);
+            expectErrorMalformed(errors[0], /deep attribute paths are not supported/i, query);
+          });
+        })
+        .expect(400)
+        .end(done);
+      });
+
       it('should accept attribute criteria', done => {
         const query = {CountProfiles: {'attributes.admin': true}};
         service.post('/v1/community/1/query')
         .send(query)
         .expect(res => {
-          // TODO:
-          expectFailure(res.body, errors => {
-            expect(errors).to.have.length(1);
-            expectErrorMalformed(errors[0], /attribute matching not implemented/, query);
+          // console.log(JSON.stringify(res.body));
+          expectSuccess(res.body, (links, data) => {
+            expect(data).to.deep.equal(1);
           });
         })
-        .expect(400)
+        .expect(200)
         .end(done);
       });
 
@@ -502,7 +515,6 @@ describe('API v1 query endpoint', () => {
         service.post('/v1/community/1/query')
         .send({Profile: {id: 2}, Include: {followers: {CountActions: {profile_ref: '^id'}}}})
         .expect(res => {
-          // console.log(JSON.stringify(res.body));
           expectSuccess(res.body, (links, data) => {
             expect(data).to.deep.equal({followers: 3});
           });
