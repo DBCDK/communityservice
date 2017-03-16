@@ -288,17 +288,47 @@ function singleton(request, selector, defs, epochNow) {
 function buildExtractor(extractor, rhs, defs, epochNow) {
   switch (extractor) {
     case 'Include': return include(rhs, defs, epochNow);
-    // TODO:
-    // case 'IncludeSwitch': return QueryingProcessor(_.identity);
+    case 'IncludeSwitch': return includeSwitch(rhs, defs, epochNow);
     // TODO:
     // case 'IncludeEntitiesRecursively': return QueryingProcessor(_.identity);
-    default: return Promise.reject(
-      new ParserResultIsError([{
+    default:
+      throw {
+        title: 'Internal error',
         problem: `Not handled: ${extractor}`,
         query: extractor
-      }])
-    );
+      };
   }
+}
+
+function includeSwitch(spec, defs, epochNow) {
+  const extractorObj = {IncludeSwitch: spec};
+  if (typeof spec !== 'object' || Object.prototype.toString.call(spec) === '[object Array]') {
+    return ParserResultIsError([{
+      problem: `switch must be an object, but found: ${JSON.stringify(spec)}`,
+      query: extractorObj
+    }]);
+  }
+  let errors = [];
+  const cases = _.mapValues(spec, rhs => {
+    const cse = include(rhs, defs, epochNow);
+    if (!_.isEmpty(cse.errors)) {
+      errors = _.concat(errors, cse.errors);
+    }
+    return cse.queryingProcessor;
+  });
+  if (!_.isEmpty(errors)) {
+    return ParserResultIsError(errors);
+  }
+  return ParserResultIsQueryingProcessor(context => {
+    const extractor = _.get(cases, context.type, ctx => {
+      throw new QueryDynamicError(
+        `entity type unhandled in switch: ${context.type}`,
+        spec,
+        ctx
+      );
+    });
+    return extractor(context);
+  });
 }
 
 function include(spec, defs, epochNow) {

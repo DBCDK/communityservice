@@ -214,7 +214,7 @@ Result:
 }
 ```
 
-The right-hand sides of type switch are treated like `Include`s, so they can also be objects, possibly with subqueries.
+The right-hand sides of type switches are treated like `Include`s, so they can also be objects, possibly with subqueries.
 
 #### `IncludeEntitiesRecursively` extractor
 

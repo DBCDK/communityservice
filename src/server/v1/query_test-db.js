@@ -28,467 +28,468 @@ describe('API v1 query endpoint', () => {
       done(errors);
     });
   });
-  describe('parsing', () => {
 
-    it('should reject an empty query', done => {
-      service.post('/v1/community/1/query')
-      .send({})
-      .expect(400)
-      .expect(res => {
-        expectFailure(res.body, errors => {
-          expect(errors).to.have.length(1);
-          expectErrorMalformed(errors[0], /must have exactly one selector/, {});
-        });
-      })
-      .end(done);
-    });
+  it('should reject an empty query', done => {
+    service.post('/v1/community/1/query')
+    .send({})
+    .expect(400)
+    .expect(res => {
+      expectFailure(res.body, errors => {
+        expect(errors).to.have.length(1);
+        expectErrorMalformed(errors[0], /must have exactly one selector/, {});
+      });
+    })
+    .end(done);
+  });
 
-    it('should reject a query with no selector', done => {
-      const query = {Find: {}, Include: 'name'};
+  it('should reject a query with no selector', done => {
+    const query = {Find: {}, Include: 'name'};
+    service.post('/v1/community/1/query')
+    .send(query)
+    .expect(400)
+    .expect(res => {
+      expectFailure(res.body, errors => {
+        expect(errors).to.have.length(1);
+        expectErrorMalformed(errors[0], /must have exactly one selector/, query);
+      });
+    })
+    .end(done);
+  });
+
+  it('should reject a query with more than one selector', done => {
+    const query = {Profile: {}, Entity: {}, Include: 'name'};
+    service.post('/v1/community/1/query')
+    .send(query)
+    .expect(400)
+    .expect(res => {
+      expectFailure(res.body, errors => {
+        expect(errors).to.have.length(1);
+        expectErrorMalformed(errors[0], /must have exactly one selector/, query);
+      });
+    })
+    .end(done);
+  });
+
+  describe('count selector', () => {
+
+    it('should reject CountActions selector with extractor', done => {
+      const query = {CountActions: {}, Include: 'id'};
       service.post('/v1/community/1/query')
       .send(query)
       .expect(400)
       .expect(res => {
         expectFailure(res.body, errors => {
           expect(errors).to.have.length(1);
-          expectErrorMalformed(errors[0], /must have exactly one selector/, query);
+          expectErrorMalformed(errors[0], /cannot have any limitors or extractors/, query);
         });
       })
       .end(done);
     });
 
-    it('should reject a query with more than one selector', done => {
-      const query = {Profile: {}, Entity: {}, Include: 'name'};
+    it('should accept CountActions selector with empty criteria', done => {
+      service.post('/v1/community/1/query')
+      .send({CountActions: {}})
+      .expect(res => {
+        expectSuccess(res.body, (links, data) => {
+          expect(data).to.deep.equal(4558);
+        });
+      })
+      .expect(200)
+      .end(done);
+    });
+
+    it('should accept CountEntities selector with empty criteria', done => {
+      service.post('/v1/community/1/query')
+      .send({CountEntities: {}})
+      .expect(200)
+      .expect(res => {
+        expectSuccess(res.body, (links, data) => {
+          expect(data).to.deep.equal(6903);
+        });
+      })
+      .end(done);
+    });
+
+    it('should accept CountProfiles selector with empty criteria', done => {
+      service.post('/v1/community/1/query')
+      .send({CountProfiles: {}})
+      .expect(200)
+      .expect(res => {
+        expectSuccess(res.body, (links, data) => {
+          expect(data).to.deep.equal(1000);
+        });
+      })
+      .end(done);
+    });
+
+    it('should accept CountActions selector with some criteria', done => {
+      service.post('/v1/community/1/query')
+      .send({CountActions: {type: 'like', owner_id: 147}})
+      .expect(res => {
+        expectSuccess(res.body, (links, data) => {
+          expect(data).to.deep.equal(16);
+        });
+      })
+      .expect(200)
+      .end(done);
+    });
+
+    it('should accept CountActions selector with all equality criteria', done => {
+      service.post('/v1/community/1/query')
+      .send({CountActions: {
+        type: 'like',
+        owner_id: 147,
+        deleted_by: null,
+        id: 234,
+        modified_by: 147,
+        entity_ref: 353,
+        profile_ref: 4
+      }})
+      .expect(res => {
+        expectSuccess(res.body, (links, data) => {
+          expect(data).to.deep.equal(0);
+        });
+      })
+      .expect(200)
+      .end(done);
+    });
+
+    it('should accept CountProfiles selector with all equality criteria', done => {
+      service.post('/v1/community/1/query')
+      .send({CountProfiles: {
+        deleted_by: null,
+        id: 234,
+        modified_by: 147,
+        name: 'Goofy'
+      }})
+      .expect(res => {
+        expectSuccess(res.body, (links, data) => {
+          expect(data).to.deep.equal(0);
+        });
+      })
+      .expect(200)
+      .end(done);
+    });
+
+  });
+
+  describe('criteria', () => {
+
+    it('should reject criteria with unknown keys', done => {
+      const query = {CountActions: {unknownKey: 'boom'}};
       service.post('/v1/community/1/query')
       .send(query)
       .expect(400)
       .expect(res => {
         expectFailure(res.body, errors => {
           expect(errors).to.have.length(1);
-          expectErrorMalformed(errors[0], /must have exactly one selector/, query);
+          expectErrorMalformed(errors[0], /unknown key.*unknownKey/, query);
         });
       })
       .end(done);
     });
 
-    describe('count selector', () => {
-
-      it('should reject CountActions selector with extractor', done => {
-        const query = {CountActions: {}, Include: 'id'};
-        service.post('/v1/community/1/query')
-        .send(query)
-        .expect(400)
-        .expect(res => {
-          expectFailure(res.body, errors => {
-            expect(errors).to.have.length(1);
-            expectErrorMalformed(errors[0], /cannot have any limitors or extractors/, query);
-          });
-        })
-        .end(done);
-      });
-
-      it('should accept CountActions selector with empty criteria', done => {
-        service.post('/v1/community/1/query')
-        .send({CountActions: {}})
-        .expect(res => {
-          expectSuccess(res.body, (links, data) => {
-            expect(data).to.deep.equal(4558);
-          });
-        })
-        .expect(200)
-        .end(done);
-      });
-
-      it('should accept CountEntities selector with empty criteria', done => {
-        service.post('/v1/community/1/query')
-        .send({CountEntities: {}})
-        .expect(200)
-        .expect(res => {
-          expectSuccess(res.body, (links, data) => {
-            expect(data).to.deep.equal(6903);
-          });
-        })
-        .end(done);
-      });
-
-      it('should accept CountProfiles selector with empty criteria', done => {
-        service.post('/v1/community/1/query')
-        .send({CountProfiles: {}})
-        .expect(200)
-        .expect(res => {
-          expectSuccess(res.body, (links, data) => {
-            expect(data).to.deep.equal(1000);
-          });
-        })
-        .end(done);
-      });
-
-      it('should accept CountActions selector with some criteria', done => {
-        service.post('/v1/community/1/query')
-        .send({CountActions: {type: 'like', owner_id: 147}})
-        .expect(res => {
-          expectSuccess(res.body, (links, data) => {
-            expect(data).to.deep.equal(16);
-          });
-        })
-        .expect(200)
-        .end(done);
-      });
-
-      it('should accept CountActions selector with all equality criteria', done => {
-        service.post('/v1/community/1/query')
-        .send({CountActions: {
-          type: 'like',
-          owner_id: 147,
-          deleted_by: null,
-          id: 234,
-          modified_by: 147,
-          entity_ref: 353,
-          profile_ref: 4
-        }})
-        .expect(res => {
-          expectSuccess(res.body, (links, data) => {
-            expect(data).to.deep.equal(0);
-          });
-        })
-        .expect(200)
-        .end(done);
-      });
-
-      it('should accept CountProfiles selector with all equality criteria', done => {
-        service.post('/v1/community/1/query')
-        .send({CountProfiles: {
-          deleted_by: null,
-          id: 234,
-          modified_by: 147,
-          name: 'Goofy'
-        }})
-        .expect(res => {
-          expectSuccess(res.body, (links, data) => {
-            expect(data).to.deep.equal(0);
-          });
-        })
-        .expect(200)
-        .end(done);
-      });
-
+    it('should reject unknown criteria key that is substring of known key', done => {
+      const query = {CountProfiles: {owner_id: 1}};
+      service.post('/v1/community/1/query')
+      .send(query)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          expectErrorMalformed(errors[0], /unknown key owner_id/, query);
+        });
+      })
+      .expect(400)
+      .end(done);
     });
 
-    describe('criteria', () => {
-
-      it('should reject criteria with unknown keys', done => {
-        const query = {CountActions: {unknownKey: 'boom'}};
-        service.post('/v1/community/1/query')
-        .send(query)
-        .expect(400)
-        .expect(res => {
-          expectFailure(res.body, errors => {
-            expect(errors).to.have.length(1);
-            expectErrorMalformed(errors[0], /unknown key.*unknownKey/, query);
-          });
-        })
-        .end(done);
-      });
-
-      it('should reject unknown criteria key that is substring of known key', done => {
-        const query = {CountProfiles: {owner_id: 1}};
-        service.post('/v1/community/1/query')
-        .send(query)
-        .expect(res => {
-          expectFailure(res.body, errors => {
-            expect(errors).to.have.length(1);
-            expectErrorMalformed(errors[0], /unknown key owner_id/, query);
-          });
-        })
-        .expect(400)
-        .end(done);
-      });
-
-      it('should reject time criteria with missing keys', done => {
-        const query = {CountEntities: {end_epoch: {operator: 'newerThan', value: 0}}};
-        service.post('/v1/community/1/query')
-        .send(query)
-        .expect(res => {
-          expectFailure(res.body, errors => {
-            expect(errors).to.have.length(1);
-            expectErrorMalformed(errors[0], /exactly three properties expected in time-based comparison: operator, unit & value/i, query);
-          });
-        })
-        .expect(400)
-        .end(done);
-      });
-
-      it('should reject time criteria with unknown keys', done => {
-        const query = {CountEntities: {end_epoch: {operator: 'newerThan', days: 0}}};
-        service.post('/v1/community/1/query')
-        .send(query)
-        .expect(res => {
-          expectFailure(res.body, errors => {
-            expect(errors).to.have.length(1);
-            expectErrorMalformed(errors[0], /exactly three properties expected in time-based comparison: operator, unit & value/i, query);
-          });
-        })
-        .expect(400)
-        .end(done);
-      });
-
-      it('should reject time criteria with unknown values', done => {
-        const timeCriteria = {operator: '>', unit: 'weeks', value: 'a lot'};
-        const query = {CountEntities: {end_epoch: timeCriteria}};
-        service.post('/v1/community/1/query')
-        .send(query)
-        .expect(res => {
-          expectFailure(res.body, errors => {
-            expect(errors).to.have.length(1);
-            expectErrorMalformedDetail(errors[0], 0, /operator must be one of: newerThan, olderThan/i, timeCriteria);
-            expectErrorMalformedDetail(errors[0], 1, /unit must be one of: daysAgo/i, timeCriteria);
-            expectErrorMalformedDetail(errors[0], 2, /value must be a number/i, timeCriteria);
-          });
-        })
-        .expect(400)
-        .end(done);
-      });
-
-      it('should collect errors from several layers of queries', done => {
-        const timeCriteria = {operator: '>', unit: 'weeks', value: 1};
-        const refCriteria = {foo: '^id'};
-        const query = {Profile: refCriteria, Include: {unrelated: {CountEntities: {end_epoch: timeCriteria}}}};
-        service.post('/v1/community/1/query')
-        .send(query)
-        .expect(res => {
-          expectFailure(res.body, errors => {
-            expect(errors).to.have.length(1);
-            expectErrorMalformedDetail(errors[0], 0, /unknown key foo/i, refCriteria);
-            expectErrorMalformedDetail(errors[0], 1, /operator must be one of: newerThan, olderThan/i, timeCriteria);
-            expectErrorMalformedDetail(errors[0], 2, /unit must be one of: daysAgo/i, timeCriteria);
-          });
-        })
-        .expect(400)
-        .end(done);
-      });
-
-      it('should accept criteria for recent events', done => {
-        service.post('/v1/community/1/query')
-        .send({CountEntities: {
-          type: 'campaign',
-          end_epoch: {operator: 'newerThan', unit: 'daysAgo', value: 14}
-        }})
-        .expect(res => {
-          expectSuccess(res.body, (links, data) => {
-            expect(data).to.deep.equal(42);
-          });
-        })
-        .expect(200)
-        .end(done);
-      });
-
-      it('should accept criteria for past events', done => {
-        service.post('/v1/community/1/query')
-        .send({CountEntities: {
-          type: 'campaign',
-          end_epoch: {operator: 'olderThan', unit: 'daysAgo', value: 0}
-        }})
-        .expect(res => {
-          expectSuccess(res.body, (links, data) => {
-            expect(data).to.deep.equal(42);
-          });
-        })
-        .expect(200)
-        .end(done);
-      });
-
-      it('should reject deep attribute paths criteria', done => {
-        const query = {CountProfiles: {'attributes.bundle.id': 1}};
-        service.post('/v1/community/1/query')
-        .send(query)
-        .expect(res => {
-          expectFailure(res.body, errors => {
-            expect(errors).to.have.length(1);
-            expectErrorMalformed(errors[0], /deep attribute paths are not supported/i, query);
-          });
-        })
-        .expect(400)
-        .end(done);
-      });
-
-      it('should accept boolean attribute criteria', done => {
-        const query = {CountProfiles: {'attributes.admin': true}};
-        service.post('/v1/community/1/query')
-        .send(query)
-        .expect(res => {
-          expectSuccess(res.body, (links, data) => {
-            expect(data).to.deep.equal(1);
-          });
-        })
-        .expect(200)
-        .end(done);
-      });
-
-      it('should accept string attribute criteria', done => {
-        const query = {CountProfiles: {'attributes.email': 'Lila48@hotmail.com'}};
-        service.post('/v1/community/1/query')
-        .send(query)
-        .expect(res => {
-          expectSuccess(res.body, (links, data) => {
-            expect(data).to.deep.equal(1);
-          });
-        })
-        .expect(200)
-        .end(done);
-      });
-
-      it('should accept array attribute criteria?');
-      it('should accept object attribute criteria?');
-
-      it('should reject references to keys that do not exist in dynamic context', done => {
-        const query = {CountProfiles: {deleted_by: '^id'}};
-        service.post('/v1/community/1/query')
-        .send(query)
-        .expect(res => {
-          expectFailure(res.body, errors => {
-            expect(errors).to.have.length(1);
-            expectErrorDynamic(errors[0], /reference \^id does not exist in current context/i, query);
-          });
-        })
-        .expect(400)
-        .end(done);
-      });
+    it('should reject time criteria with missing keys', done => {
+      const query = {CountEntities: {end_epoch: {operator: 'newerThan', value: 0}}};
+      service.post('/v1/community/1/query')
+      .send(query)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          expectErrorMalformed(errors[0], /exactly three properties expected in time-based comparison: operator, unit & value/i, query);
+        });
+      })
+      .expect(400)
+      .end(done);
     });
 
-    describe('singleton selector', () => {
-
-      it('should reject selector without extractor', done => {
-        const query = {Profile: {id: 1}};
-        service.post('/v1/community/1/query')
-        .send(query)
-        .expect(res => {
-          expectFailure(res.body, errors => {
-            expect(errors).to.have.length(1);
-            expectErrorMalformed(
-              errors[0],
-              /must have exactly one extractor.*Include, IncludeSwitch, IncludeEntitiesRecursively/i,
-              query
-            );
-          });
-        })
-        .expect(400)
-        .end(done);
-      });
-
-      it('should reject limitors', done => {
-        const query = {Profile: {id: 1}, Limit: 10, Include: 'name'};
-        service.post('/v1/community/1/query')
-        .send(query)
-        .expect(res => {
-          expectFailure(res.body, errors => {
-            expect(errors).to.have.length(1);
-            expectErrorMalformed(
-              errors[0],
-              /must not have additional properties, but found.*Include/i,
-              query
-            );
-          });
-        })
-        .expect(400)
-        .end(done);
-      });
-
-      it('should reject unknown keys', done => {
-        const query = {Profile: {id: 1}, Follow: 'entity_ref', Include: 'name'};
-        service.post('/v1/community/1/query')
-        .send(query)
-        .expect(res => {
-          expectFailure(res.body, errors => {
-            expect(errors).to.have.length(1);
-            expectErrorMalformed(
-              errors[0],
-              /must not have additional properties, but found.*Follow/i,
-              query
-            );
-          });
-        })
-        .expect(400)
-        .end(done);
-      });
-
-      it('should reject criteria with unknown keys', done => {
-        const query = {Entity: {unknownKey: 'boom'}, Include: 'title'};
-        service.post('/v1/community/1/query')
-        .send(query)
-        .expect(400)
-        .expect(res => {
-          expectFailure(res.body, errors => {
-            expect(errors).to.have.length(1);
-            expectErrorMalformed(errors[0], /unknown key.*unknownKey/, query);
-          });
-        })
-        .end(done);
-      });
-
-      it('should return dynamic error on empty search result', done => {
-        const query = {Profile: {id: 987654}, Include: 'name'};
-        service.post('/v1/community/1/query')
-        .send(query)
-        .expect(res => {
-          expectFailure(res.body, errors => {
-            expectErrorDynamic(errors[0], /no result/i, query);
-          });
-        })
-        .expect(400)
-        .end(done);
-      });
-
-      it('should return dynamic error on more-than-one search result', done => {
-        const query = {Profile: {}, Include: 'name'};
-        service.post('/v1/community/1/query')
-        .send(query)
-        .expect(res => {
-          expectFailure(res.body, errors => {
-            expectErrorDynamic(errors[0], /several results/i, query);
-          });
-        })
-        .expect(400)
-        .end(done);
-      });
-
-      it('should accept Profile selector', done => {
-        service.post('/v1/community/1/query')
-        .send({Profile: {id: 1}, Include: 'name'})
-        .expect(res => {
-          expectSuccess(res.body, (links, data) => {
-            expect(data).to.deep.equal('Conor');
-          });
-        })
-        .expect(200)
-        .end(done);
-      });
-
-      it('should accept Action selector', done => {
-        service.post('/v1/community/1/query')
-        .send({Action: {id: 1}, Include: 'type'})
-        .expect(res => {
-          expectSuccess(res.body, (links, data) => {
-            expect(data).to.deep.equal('member');
-          });
-        })
-        .expect(200)
-        .end(done);
-      });
-
-      it('should accept Entity selector', done => {
-        service.post('/v1/community/1/query')
-        .send({Entity: {id: 1}, Include: 'type'})
-        .expect(res => {
-          expectSuccess(res.body, (links, data) => {
-            expect(data).to.deep.equal('group');
-          });
-        })
-        .expect(200)
-        .end(done);
-      });
+    it('should reject time criteria with unknown keys', done => {
+      const query = {CountEntities: {end_epoch: {operator: 'newerThan', days: 0}}};
+      service.post('/v1/community/1/query')
+      .send(query)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          expectErrorMalformed(errors[0], /exactly three properties expected in time-based comparison: operator, unit & value/i, query);
+        });
+      })
+      .expect(400)
+      .end(done);
     });
 
-    describe('extractor', () => {
+    it('should reject time criteria with unknown values', done => {
+      const timeCriteria = {operator: '>', unit: 'weeks', value: 'a lot'};
+      const query = {CountEntities: {end_epoch: timeCriteria}};
+      service.post('/v1/community/1/query')
+      .send(query)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          expectErrorMalformedDetail(errors[0], 0, /operator must be one of: newerThan, olderThan/i, timeCriteria);
+          expectErrorMalformedDetail(errors[0], 1, /unit must be one of: daysAgo/i, timeCriteria);
+          expectErrorMalformedDetail(errors[0], 2, /value must be a number/i, timeCriteria);
+        });
+      })
+      .expect(400)
+      .end(done);
+    });
+
+    it('should collect errors from several layers of queries', done => {
+      const timeCriteria = {operator: '>', unit: 'weeks', value: 1};
+      const refCriteria = {foo: '^id'};
+      const query = {Profile: refCriteria, Include: {unrelated: {CountEntities: {end_epoch: timeCriteria}}}};
+      service.post('/v1/community/1/query')
+      .send(query)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          expectErrorMalformedDetail(errors[0], 0, /unknown key foo/i, refCriteria);
+          expectErrorMalformedDetail(errors[0], 1, /operator must be one of: newerThan, olderThan/i, timeCriteria);
+          expectErrorMalformedDetail(errors[0], 2, /unit must be one of: daysAgo/i, timeCriteria);
+        });
+      })
+      .expect(400)
+      .end(done);
+    });
+
+    it('should accept criteria for recent events', done => {
+      service.post('/v1/community/1/query')
+      .send({CountEntities: {
+        type: 'campaign',
+        end_epoch: {operator: 'newerThan', unit: 'daysAgo', value: 14}
+      }})
+      .expect(res => {
+        expectSuccess(res.body, (links, data) => {
+          expect(data).to.deep.equal(42);
+        });
+      })
+      .expect(200)
+      .end(done);
+    });
+
+    it('should accept criteria for past events', done => {
+      service.post('/v1/community/1/query')
+      .send({CountEntities: {
+        type: 'campaign',
+        end_epoch: {operator: 'olderThan', unit: 'daysAgo', value: 0}
+      }})
+      .expect(res => {
+        expectSuccess(res.body, (links, data) => {
+          expect(data).to.deep.equal(42);
+        });
+      })
+      .expect(200)
+      .end(done);
+    });
+
+    it('should reject deep attribute paths criteria', done => {
+      const query = {CountProfiles: {'attributes.bundle.id': 1}};
+      service.post('/v1/community/1/query')
+      .send(query)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          expectErrorMalformed(errors[0], /deep attribute paths are not supported/i, query);
+        });
+      })
+      .expect(400)
+      .end(done);
+    });
+
+    it('should accept boolean attribute criteria', done => {
+      const query = {CountProfiles: {'attributes.admin': true}};
+      service.post('/v1/community/1/query')
+      .send(query)
+      .expect(res => {
+        expectSuccess(res.body, (links, data) => {
+          expect(data).to.deep.equal(1);
+        });
+      })
+      .expect(200)
+      .end(done);
+    });
+
+    it('should accept string attribute criteria', done => {
+      const query = {CountProfiles: {'attributes.email': 'Lila48@hotmail.com'}};
+      service.post('/v1/community/1/query')
+      .send(query)
+      .expect(res => {
+        expectSuccess(res.body, (links, data) => {
+          expect(data).to.deep.equal(1);
+        });
+      })
+      .expect(200)
+      .end(done);
+    });
+
+    it('should accept array attribute criteria?');
+    it('should accept object attribute criteria?');
+
+    it('should reject references to keys that do not exist in dynamic context', done => {
+      const query = {CountProfiles: {deleted_by: '^id'}};
+      service.post('/v1/community/1/query')
+      .send(query)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          expectErrorDynamic(errors[0], /reference \^id does not exist in current context/i, query);
+        });
+      })
+      .expect(400)
+      .end(done);
+    });
+  });
+
+  describe('singleton selector', () => {
+
+    it('should reject selector without extractor', done => {
+      const query = {Profile: {id: 1}};
+      service.post('/v1/community/1/query')
+      .send(query)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          expectErrorMalformed(
+            errors[0],
+            /must have exactly one extractor.*Include, IncludeSwitch, IncludeEntitiesRecursively/i,
+            query
+          );
+        });
+      })
+      .expect(400)
+      .end(done);
+    });
+
+    it('should reject limitors', done => {
+      const query = {Profile: {id: 1}, Limit: 10, Include: 'name'};
+      service.post('/v1/community/1/query')
+      .send(query)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          expectErrorMalformed(
+            errors[0],
+            /must not have additional properties, but found.*Include/i,
+            query
+          );
+        });
+      })
+      .expect(400)
+      .end(done);
+    });
+
+    it('should reject unknown keys', done => {
+      const query = {Profile: {id: 1}, Follow: 'entity_ref', Include: 'name'};
+      service.post('/v1/community/1/query')
+      .send(query)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          expectErrorMalformed(
+            errors[0],
+            /must not have additional properties, but found.*Follow/i,
+            query
+          );
+        });
+      })
+      .expect(400)
+      .end(done);
+    });
+
+    it('should reject criteria with unknown keys', done => {
+      const query = {Entity: {unknownKey: 'boom'}, Include: 'title'};
+      service.post('/v1/community/1/query')
+      .send(query)
+      .expect(400)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expect(errors).to.have.length(1);
+          expectErrorMalformed(errors[0], /unknown key.*unknownKey/, query);
+        });
+      })
+      .end(done);
+    });
+
+    it('should return dynamic error on empty search result', done => {
+      const query = {Profile: {id: 987654}, Include: 'name'};
+      service.post('/v1/community/1/query')
+      .send(query)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expectErrorDynamic(errors[0], /no result/i, query);
+        });
+      })
+      .expect(400)
+      .end(done);
+    });
+
+    it('should return dynamic error on more-than-one search result', done => {
+      const query = {Profile: {}, Include: 'name'};
+      service.post('/v1/community/1/query')
+      .send(query)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expectErrorDynamic(errors[0], /several results/i, query);
+        });
+      })
+      .expect(400)
+      .end(done);
+    });
+
+    it('should accept Profile selector', done => {
+      service.post('/v1/community/1/query')
+      .send({Profile: {id: 1}, Include: 'name'})
+      .expect(res => {
+        expectSuccess(res.body, (links, data) => {
+          expect(data).to.deep.equal('Conor');
+        });
+      })
+      .expect(200)
+      .end(done);
+    });
+
+    it('should accept Action selector', done => {
+      service.post('/v1/community/1/query')
+      .send({Action: {id: 1}, Include: 'type'})
+      .expect(res => {
+        expectSuccess(res.body, (links, data) => {
+          expect(data).to.deep.equal('member');
+        });
+      })
+      .expect(200)
+      .end(done);
+    });
+
+    it('should accept Entity selector', done => {
+      service.post('/v1/community/1/query')
+      .send({Entity: {id: 1}, Include: 'type'})
+      .expect(res => {
+        expectSuccess(res.body, (links, data) => {
+          expect(data).to.deep.equal('group');
+        });
+      })
+      .expect(200)
+      .end(done);
+    });
+  });
+
+  describe('extractor', () => {
+
+    describe('Include', () => {
 
       it('should accept simple direct property extractor', done => {
         service.post('/v1/community/1/query')
@@ -631,81 +632,29 @@ describe('API v1 query endpoint', () => {
 
     });
 
-    describe('list selector', () => {
+    describe('IncludeSwitch', () => {
 
-      it('should reject list selector without limit', done => {
-        const query = {Entities: {}, Include: 'id'};
+      it('should reject non-object arguments', done => {
+        const query = {Actions: {owner_id: 3}, Limit: 5, IncludeSwitch: ['entity_ref']};
         service.post('/v1/community/1/query')
         .send(query)
         .expect(res => {
           expectFailure(res.body, errors => {
-            expectErrorMalformed(errors[0], /list selector must have a Limit/i, query);
+            expectErrorMalformed(errors[0], /switch must be an object/i, query);
           });
         })
         .expect(400)
         .end(done);
       });
 
-      it('should reject list selector with non-numeric limit', done => {
-        const query = {Entities: {}, Limit: 'a lot', Include: 'id'};
+      it('should reject switch with extractor errors', done => {
+        const extractor = {like: '^entity_ref', follow: ['follow_ref']};
+        const query = {Actions: {owner_id: 68}, Limit: 5, IncludeSwitch: extractor};
         service.post('/v1/community/1/query')
         .send(query)
         .expect(res => {
           expectFailure(res.body, errors => {
-            expectErrorMalformed(errors[0], /list selector must have a numeric Limit/i, query);
-          });
-        })
-        .expect(400)
-        .end(done);
-      });
-
-      it('should reject list selector with additional keys', done => {
-        const query = {Entities: {}, Limit: 1, Include: 'id', Recursive: true};
-        service.post('/v1/community/1/query')
-        .send(query)
-        .expect(res => {
-          expectFailure(res.body, errors => {
-            expectErrorMalformed(errors[0], /list selector must not have additional properties, but found: Recursive/i, query);
-          });
-        })
-        .expect(400)
-        .end(done);
-      });
-
-      it('should reject malformed limitors', done => {
-        const query = {Entities: {}, Limit: 1, Offset: 'some', SortBy: 1, Order: 'upwards', Include: 'id'};
-        service.post('/v1/community/1/query')
-        .send(query)
-        .expect(res => {
-          expectFailure(res.body, errors => {
-            expectErrorMalformedDetail(errors[0], 0, /list selector must have a numeric Offset, but found: some/i, query);
-            expectErrorMalformedDetail(errors[0], 1, /list selector must sort by known property, but found: 1/i, query);
-            expectErrorMalformedDetail(errors[0], 2, /list selector must order descending or ascending/i, query);
-          });
-        })
-        .expect(400)
-        .end(done);
-      });
-
-      it('should reject malformed selector', done => {
-        const query = {Profiles: {'attributes.admin.top': true}, Limit: 10, Include: 'name'};
-        service.post('/v1/community/1/query')
-        .send(query)
-        .expect(res => {
-          expectFailure(res.body, errors => {
-            expectErrorMalformed(errors[0], /deep attribute paths are not supported/i, query);
-          });
-        })
-        .expect(400)
-        .end(done);
-      });
-
-      it('should reject malformed extractor', done => {
-        const query = {Profiles: {}, Limit: 10, Include: ['id', 'name']};
-        service.post('/v1/community/1/query')
-        .send(query)
-        .expect(res => {
-          expectFailure(res.body, errors => {
+            expectErrorMalformed(errors[0], /references not allowed in extractors/i, query);
             expectErrorMalformed(errors[0], /complex extractor must be an object/i, query);
           });
         })
@@ -713,15 +662,32 @@ describe('API v1 query endpoint', () => {
         .end(done);
       });
 
-      it('should fill the list up if smaller than the limit', done => {
+      it('should reject switch with unhandled type', done => {
+        const extractor = {like: 'entity_ref'};
+        const query = {Actions: {owner_id: 68}, Limit: 5, IncludeSwitch: extractor};
         service.post('/v1/community/1/query')
-        .send({Profiles: {'attributes.admin': true}, Limit: 100, Include: 'id'})
+        .send(query)
+        .expect(res => {
+          expectFailure(res.body, errors => {
+            expect(errors.length).to.equal(1);
+            expectErrorDynamic(errors[0], /entity type unhandled in switch: follow/i, query);
+          });
+        })
+        .expect(400)
+        .end(done);
+      });
+
+      it('should accept simple switch', done => {
+        const extractor = {like: 'entity_ref', follow: 'profile_ref'};
+        const query = {Actions: {owner_id: 68}, Limit: 5, IncludeSwitch: extractor};
+        service.post('/v1/community/1/query')
+        .send(query)
         .expect(res => {
           expectSuccess(res.body, (links, data) => {
             expect(data).to.deep.equal({
-              Total: 1,
-              NextOffset: null,
-              List: [601]
+              Total: 10,
+              NextOffset: 5,
+              List: [362, 68, 344, 730, 5611]
             });
           });
         })
@@ -729,48 +695,27 @@ describe('API v1 query endpoint', () => {
         .end(done);
       });
 
-      it('should limit the list', done => {
+      it('should accept complex switch', done => {
+        const extractor = {
+          like: {what: {Entity: {id: '^entity_ref'}, Include: 'title'}},
+          follow: {who: {Profile: {id: '^profile_ref'}, Include: 'name'}}
+        };
+        const query = {Actions: {owner_id: 68}, Limit: 5, IncludeSwitch: extractor};
         service.post('/v1/community/1/query')
-        .send({Entities: {owner_id: 2}, Limit: 10, Include: 'id'})
-        .expect(res => {
-          expectSuccess(res.body, (links, data) => {
-            expect(data).to.deep.equal({
-              Total: 37,
-              NextOffset: 10,
-              List: [6125, 6124, 6126, 6127, 6123, 6122, 6120, 6119, 6121, 5367]
-            });
-          });
-        })
-        .expect(200)
-        .end(done);
-      });
-
-      it('should offset the list', done => {
-        service.post('/v1/community/1/query')
-        .send({Entities: {owner_id: 2}, Limit: 5, Offset: 10, Include: 'id'})
+        .send(query)
         .expect(res => {
           // console.log(JSON.stringify(res.body));
           expectSuccess(res.body, (links, data) => {
             expect(data).to.deep.equal({
-              Total: 37,
-              NextOffset: 15,
-              List: [5365, 5368, 5367, 5363, 5364]
-            });
-          });
-        })
-        .expect(200)
-        .end(done);
-      });
-
-      it('should sort the list ascending', done => {
-        service.post('/v1/community/1/query')
-        .send({Actions: {owner_id: 2}, Limit: 5, Order: 'ascending', Include: 'id'})
-        .expect(res => {
-          expectSuccess(res.body, (links, data) => {
-            expect(data).to.deep.equal({
-              Total: 53,
+              Total: 10,
               NextOffset: 5,
-              List: [171, 323, 356, 357, 355]
+              List: [
+                {who: 'Candace'},
+                {who: 'Derek'},
+                {who: 'Tamara'},
+                {who: 'Hollie'},
+                {what: 'Aut dignissimos minima'}
+              ]
             });
           });
         })
@@ -779,6 +724,159 @@ describe('API v1 query endpoint', () => {
       });
 
     });
+
+    describe('IncludeEntitiesRecursively', () => {
+    });
+
+  });
+
+  describe('list selector', () => {
+
+    it('should reject list selector without limit', done => {
+      const query = {Entities: {}, Include: 'id'};
+      service.post('/v1/community/1/query')
+      .send(query)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expectErrorMalformed(errors[0], /list selector must have a Limit/i, query);
+        });
+      })
+      .expect(400)
+      .end(done);
+    });
+
+    it('should reject list selector with non-numeric limit', done => {
+      const query = {Entities: {}, Limit: 'a lot', Include: 'id'};
+      service.post('/v1/community/1/query')
+      .send(query)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expectErrorMalformed(errors[0], /list selector must have a numeric Limit/i, query);
+        });
+      })
+      .expect(400)
+      .end(done);
+    });
+
+    it('should reject list selector with additional keys', done => {
+      const query = {Entities: {}, Limit: 1, Include: 'id', Recursive: true};
+      service.post('/v1/community/1/query')
+      .send(query)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expectErrorMalformed(errors[0], /list selector must not have additional properties, but found: Recursive/i, query);
+        });
+      })
+      .expect(400)
+      .end(done);
+    });
+
+    it('should reject malformed limitors', done => {
+      const query = {Entities: {}, Limit: 1, Offset: 'some', SortBy: 1, Order: 'upwards', Include: 'id'};
+      service.post('/v1/community/1/query')
+      .send(query)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expectErrorMalformedDetail(errors[0], 0, /list selector must have a numeric Offset, but found: some/i, query);
+          expectErrorMalformedDetail(errors[0], 1, /list selector must sort by known property, but found: 1/i, query);
+          expectErrorMalformedDetail(errors[0], 2, /list selector must order descending or ascending/i, query);
+        });
+      })
+      .expect(400)
+      .end(done);
+    });
+
+    it('should reject malformed selector', done => {
+      const query = {Profiles: {'attributes.admin.top': true}, Limit: 10, Include: 'name'};
+      service.post('/v1/community/1/query')
+      .send(query)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expectErrorMalformed(errors[0], /deep attribute paths are not supported/i, query);
+        });
+      })
+      .expect(400)
+      .end(done);
+    });
+
+    it('should reject malformed extractor', done => {
+      const query = {Profiles: {}, Limit: 10, Include: ['id', 'name']};
+      service.post('/v1/community/1/query')
+      .send(query)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expectErrorMalformed(errors[0], /complex extractor must be an object/i, query);
+        });
+      })
+      .expect(400)
+      .end(done);
+    });
+
+    it('should fill the list up if smaller than the limit', done => {
+      service.post('/v1/community/1/query')
+      .send({Profiles: {'attributes.admin': true}, Limit: 100, Include: 'id'})
+      .expect(res => {
+        expectSuccess(res.body, (links, data) => {
+          expect(data).to.deep.equal({
+            Total: 1,
+            NextOffset: null,
+            List: [601]
+          });
+        });
+      })
+      .expect(200)
+      .end(done);
+    });
+
+    it('should limit the list', done => {
+      service.post('/v1/community/1/query')
+      .send({Entities: {owner_id: 2}, Limit: 10, Include: 'id'})
+      .expect(res => {
+        expectSuccess(res.body, (links, data) => {
+          expect(data).to.deep.equal({
+            Total: 37,
+            NextOffset: 10,
+            List: [6125, 6124, 6126, 6127, 6123, 6122, 6120, 6119, 6121, 5367]
+          });
+        });
+      })
+      .expect(200)
+      .end(done);
+    });
+
+    it('should offset the list', done => {
+      service.post('/v1/community/1/query')
+      .send({Entities: {owner_id: 2}, Limit: 5, Offset: 10, Include: 'id'})
+      .expect(res => {
+        // console.log(JSON.stringify(res.body));
+        expectSuccess(res.body, (links, data) => {
+          expect(data).to.deep.equal({
+            Total: 37,
+            NextOffset: 15,
+            List: [5365, 5368, 5367, 5363, 5364]
+          });
+        });
+      })
+      .expect(200)
+      .end(done);
+    });
+
+    it('should sort the list ascending', done => {
+      service.post('/v1/community/1/query')
+      .send({Actions: {owner_id: 2}, Limit: 5, Order: 'ascending', Include: 'id'})
+      .expect(res => {
+        expectSuccess(res.body, (links, data) => {
+          expect(data).to.deep.equal({
+            Total: 53,
+            NextOffset: 5,
+            List: [171, 323, 356, 357, 355]
+          });
+        });
+      })
+      .expect(200)
+      .end(done);
+    });
+
   });
 
   describe('dynamic errors', () => {
