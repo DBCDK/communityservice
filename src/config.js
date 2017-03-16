@@ -4,8 +4,8 @@ const tcp = require('__/tcp');
 const hostname = require('os').hostname;
 const knexfile = require('./knexfile');
 
-// This (and knexfile) is the only place to read process.env settings.  The
-// point is that the server should use the configuration like
+// This (and the included knexfile) is the only place to read process.env
+// settings.  The point is that the servive should use the configuration like
 //
 //     const config = require('server/config')
 //
@@ -26,11 +26,13 @@ function Defaults() {
   const logLevel = process.env.LOG_LEVEL || 'INFO';
   const logServiceErrors = process.env.LOG_SERVICE_ERRORS || 1;
   const niceHostName = hostname().replace('.domain_not_set.invalid', '');
+  const fixedTime = process.env.FIX_TIME_FOR_TESTING || 0;
   return {
     environment,
     hostname: niceHostName,
     port,
     logServiceErrors,
+    fixedTime,
     prettyLog,
     logLevel
   };
@@ -47,6 +49,7 @@ exports.server = {
   logServiceErrors: defaults.logServiceErrors,
   port: defaults.port,
   hostname: 'elvis.com',
+  fixedTime: defaults.fixedTime,
   testTimeoutMs: 20*1000
 };
 

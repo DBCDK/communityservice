@@ -48,10 +48,11 @@ You can edit `current.env` after the above steps to further control the settings
 | DB_NAME                 | elvis       | Name of the database             |
 | DB_USER                 |             | Database user                    |
 | DB_USER_PASSWORD        |             | Database password                |
+| FIX_TIME_FOR_TESTING    | 0           | Pretend now is always a fixed value (1), or ask DB what time it is (0) |
 | LOG_LEVEL               | INFO        | Verbosity of service log (OFF, ERROR, WARN, WARNING, INFO, DEBUG, TRACE) |
 | LOG_SERVICE_ERRORS      | 1           | Record all 5xx errors (1), or ignore errors (0) |
 | NODE_ENV                | development | Controls other service settings  |
-| PORT                    | 3000        | TCP port for the service |
+| PORT                    | 3000        | TCP port for the service         |
 | PRETTY_LOG              | 1           | Pretty printed log statements (1), or one-line log statements (0) |
 
 The web service has the following administrative endpoints:

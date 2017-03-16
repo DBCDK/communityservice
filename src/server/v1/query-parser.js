@@ -21,7 +21,7 @@ const constants = require('server/constants')();
  * @return {ParserResult}   Error or Promise of a function that takes a context and returns a promise of a database result.
  */
 
-function builder(request) {
+function builder(request, epochNow) {
   const selectors = [
     'CountProfiles', 'CountActions', 'CountEntities',
     'Profiles', 'Actions', 'Entities',
@@ -36,15 +36,15 @@ function builder(request) {
     }]);
   }
   switch (commonKeys[0]) {
-    case 'CountProfiles': return count(request, 'CountProfiles', constants.profile);
-    case 'CountActions': return count(request, 'CountActions', constants.action);
-    case 'CountEntities': return count(request, 'CountEntities', constants.entity);
-    case 'Profiles': return list(request, 'Profiles', constants.profile);
-    case 'Actions': return list(request, 'Actions', constants.action);
-    case 'Entities': return list(request, 'Entities', constants.entity);
-    case 'Profile': return singleton(request, 'Profile', constants.profile);
-    case 'Action': return singleton(request, 'Action', constants.action);
-    case 'Entity': return singleton(request, 'Entity', constants.entity);
+    case 'CountProfiles': return count(request, 'CountProfiles', constants.profile, epochNow);
+    case 'CountActions': return count(request, 'CountActions', constants.action, epochNow);
+    case 'CountEntities': return count(request, 'CountEntities', constants.entity, epochNow);
+    case 'Profiles': return list(request, 'Profiles', constants.profile, epochNow);
+    case 'Actions': return list(request, 'Actions', constants.action, epochNow);
+    case 'Entities': return list(request, 'Entities', constants.entity, epochNow);
+    case 'Profile': return singleton(request, 'Profile', constants.profile, epochNow);
+    case 'Action': return singleton(request, 'Action', constants.action, epochNow);
+    case 'Entity': return singleton(request, 'Entity', constants.entity, epochNow);
     default: return ParserResultIsError([{
       problem: `Not handled: ${commonKeys[0]}`,
       query: request
@@ -52,7 +52,7 @@ function builder(request) {
   }
 }
 
-function count(request, selector, defs) {
+function count(request, selector, defs, epochNow) {
   const keys = _.pull(_.keys(request), selector);
   if (keys.length > 0) {
     return ParserResultIsError([{
@@ -61,7 +61,7 @@ function count(request, selector, defs) {
     }]);
   }
   const criteria = request[selector];
-  const parseResult = buildWhereClause(criteria, defs.keys, defs.timeKeys);
+  const parseResult = buildWhereClause(criteria, defs.keys, defs.timeKeys, epochNow);
   if (!_.isEmpty(parseResult.errors)) {
     return parseResult;
   }
@@ -93,7 +93,7 @@ function count(request, selector, defs) {
   });
 }
 
-function list(request, selector, defs) {
+function list(request, selector, defs, epochNow) {
   const keys = _.pull(_.keys(request), selector);
   const extractor = _.intersection(keys, constants.extractors);
   let errors = [];
@@ -168,8 +168,8 @@ function list(request, selector, defs) {
     return ParserResultIsError(errors);
   }
   const criteria = request[selector];
-  const parseResult = buildWhereClause(criteria, defs.keys, defs.timeKeys);
-  const extractorResult = buildExtractor(extractor[0], request[extractor[0]], defs);
+  const parseResult = buildWhereClause(criteria, defs.keys, defs.timeKeys, epochNow);
+  const extractorResult = buildExtractor(extractor[0], request[extractor[0]], defs, epochNow);
   if (!_.isEmpty(parseResult.errors) || !_.isEmpty(extractorResult.errors)) {
     if (!_.isEmpty(parseResult.errors)) {
       errors = _.concat(errors, parseResult.errors);
@@ -230,7 +230,7 @@ function list(request, selector, defs) {
   });
 }
 
-function singleton(request, selector, defs) {
+function singleton(request, selector, defs, epochNow) {
   const keys = _.pull(_.keys(request), selector);
   const extractor = _.intersection(keys, constants.extractors);
   let errors = [];
@@ -251,8 +251,8 @@ function singleton(request, selector, defs) {
     return ParserResultIsError(errors);
   }
   const criteria = request[selector];
-  const parseResult = buildWhereClause(criteria, defs.keys, defs.timeKeys);
-  const extractorResult = buildExtractor(extractor[0], request[extractor[0]], defs);
+  const parseResult = buildWhereClause(criteria, defs.keys, defs.timeKeys, epochNow);
+  const extractorResult = buildExtractor(extractor[0], request[extractor[0]], defs, epochNow);
   if (!_.isEmpty(parseResult.errors) || !_.isEmpty(extractorResult.errors)) {
     if (!_.isEmpty(parseResult.errors)) {
       errors = _.concat(errors, parseResult.errors);
@@ -285,9 +285,9 @@ function singleton(request, selector, defs) {
   });
 }
 
-function buildExtractor(extractor, rhs, defs) {
+function buildExtractor(extractor, rhs, defs, epochNow) {
   switch (extractor) {
-    case 'Include': return include(rhs, defs);
+    case 'Include': return include(rhs, defs, epochNow);
     // TODO:
     // case 'IncludeSwitch': return QueryingProcessor(_.identity);
     // TODO:
@@ -301,7 +301,7 @@ function buildExtractor(extractor, rhs, defs) {
   }
 }
 
-function include(spec, defs) {
+function include(spec, defs, epochNow) {
   const extractorObj = {Include: spec};
   if (typeof spec === 'string') {
     if (_.startsWith(spec, '^')) {
@@ -364,7 +364,7 @@ function include(spec, defs) {
       });
       return;
     }
-    const subquery = builder(value);
+    const subquery = builder(value, epochNow);
     if (!_.isEmpty(subquery.errors)) {
       errors = _.concat(errors, subquery.errors);
       return;
@@ -391,7 +391,7 @@ function include(spec, defs) {
   });
 }
 
-function buildWhereClause(criteria, keys, timeKeys) {
+function buildWhereClause(criteria, keys, timeKeys, epochNow) {
   if (_.isEmpty(criteria)) {
     return ParserResultIsQueryingModifier((context, querying) => querying);
   }
@@ -433,9 +433,7 @@ function buildWhereClause(criteria, keys, timeKeys) {
       if (!_.isEmpty(errors)) {
         return (context, querying) => querying;
       }
-      // TODO: Implement nowEpoch.
-      const nowEpoch = 1489397775;
-      const pointInTimeEpoch = nowEpoch - (daysAgo * 3600 * 24);
+      const pointInTimeEpoch = epochNow - (daysAgo * 3600 * 24);
       if (value.operator === 'olderThan') {
         return (context, querying) => {
           return mod(context, querying).where('modified_epoch', '<', pointInTimeEpoch);
@@ -562,6 +560,6 @@ class QueryServerError extends Error {
   }
 }
 
-module.exports = exports = request => {
-  return builder(request);
+module.exports = exports = (request, epochNow) => {
+  return builder(request, epochNow);
 };
