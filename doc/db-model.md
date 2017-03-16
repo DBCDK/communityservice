@@ -15,8 +15,8 @@ Here are the raw schemas as seen by PostgreSQL.
  created_epoch | integer                | not null default date_part('epoch'::text, now())         | plain    |              |
  deleted_epoch | integer                |                                                          | plain    |              |
  name          | character varying(255) |                                                          | extended |              |
- attributes    | json                   | not null default '{}'::json                              | extended |              |
- log           | json                   |                                                          | extended |              |
+ attributes    | jsonb                  | not null default '{}'::jsonb                             | extended |              |
+ log           | jsonb                  |                                                          | extended |              |
 Indexes:
     "communities_pkey" PRIMARY KEY, btree (id)
     "communities_name_unique" UNIQUE CONSTRAINT, btree (name)
@@ -40,8 +40,8 @@ Referenced by:
  deleted_by     | integer                |                                                       | plain    |              |
  community_id   | integer                | not null                                              | plain    |              |
  name           | character varying(255) | not null                                              | extended |              |
- attributes     | json                   | not null default '{}'::json                           | extended |              |
- log            | json                   |                                                       | extended |              |
+ attributes     | jsonb                  | not null default '{}'::jsonb                          | extended |              |
+ log            | jsonb                  |                                                       | extended |              |
 Indexes:
     "profiles_pkey" PRIMARY KEY, btree (id)
 Foreign-key constraints:
@@ -80,8 +80,8 @@ Referenced by:
  type           | character varying(255) | not null                                              | extended |              |
  title          | character varying(255) | not null                                              | extended |              |
  contents       | text                   | not null                                              | extended |              |
- attributes     | json                   | not null default '{}'::json                           | extended |              |
- log            | json                   |                                                       | extended |              |
+ attributes     | jsonb                  | not null default '{}'::jsonb                          | extended |              |
+ log            | jsonb                  |                                                       | extended |              |
 Indexes:
     "entities_pkey" PRIMARY KEY, btree (id)
 Foreign-key constraints:
@@ -114,8 +114,8 @@ Referenced by:
  entity_ref     | integer                |                                                      | plain    |              |
  profile_ref    | integer                |                                                      | plain    |              |
  type           | character varying(255) | not null                                             | extended |              |
- attributes     | json                   | not null default '{}'::json                          | extended |              |
- log            | json                   |                                                      | extended |              |
+ attributes     | jsonb                  | not null default '{}'::jsonb                         | extended |              |
+ log            | jsonb                  |                                                      | extended |              |
 Indexes:
     "actions_pkey" PRIMARY KEY, btree (id)
 Foreign-key constraints:

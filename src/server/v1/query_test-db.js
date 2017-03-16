@@ -311,7 +311,7 @@ describe('API v1 query endpoint', () => {
         .end(done);
       });
 
-      it('should accept attribute criteria', done => {
+      it('should accept boolean attribute criteria', done => {
         const query = {CountProfiles: {'attributes.admin': true}};
         service.post('/v1/community/1/query')
         .send(query)
@@ -323,6 +323,22 @@ describe('API v1 query endpoint', () => {
         .expect(200)
         .end(done);
       });
+
+      it('should accept string attribute criteria', done => {
+        const query = {CountProfiles: {'attributes.email': 'Lila48@hotmail.com'}};
+        service.post('/v1/community/1/query')
+        .send(query)
+        .expect(res => {
+          expectSuccess(res.body, (links, data) => {
+            expect(data).to.deep.equal(1);
+          });
+        })
+        .expect(200)
+        .end(done);
+      });
+
+      it('should accept array attribute criteria?');
+      it('should accept object attribute criteria?');
 
       it('should reject references to keys that do not exist in dynamic context', done => {
         const query = {CountProfiles: {deleted_by: '^id'}};

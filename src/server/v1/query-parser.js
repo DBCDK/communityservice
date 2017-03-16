@@ -461,9 +461,7 @@ function buildWhereClause(criteria, keys, timeKeys, epochNow) {
           );
         }
         const valueOfRef = context[reference];
-        const q = mod(context, querying).where(key, valueOfRef);
-        // console.log(q.toString());
-        return q;
+        return mod(context, querying).where(key, valueOfRef);
       };
     }
     if (key.match('^attributes\\.')) {
@@ -476,7 +474,9 @@ function buildWhereClause(criteria, keys, timeKeys, epochNow) {
         return;
       }
       return (context, querying) => {
-        return mod(context, querying).whereRaw(`${path[0]}->>'${path[1]}' = '${value}'`);
+        return mod(context, querying).whereRaw(
+          `${path[0]} @> '{"${path[1]}": ${JSON.stringify(value)}}'::jsonb`
+        );
       };
     }
     if (!_.isEmpty(errors)) {
