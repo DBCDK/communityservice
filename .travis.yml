@@ -11,6 +11,8 @@ branches:
   - master
 services:
   - postgresql
+addons:
+  - postgresql: 9.4
 before_install:
   - cd src
   - cp environments/travis.env current.env
