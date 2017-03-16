@@ -3,6 +3,8 @@ node_js:
   - "6"
 sudo: false
 dist: trusty
+addons:
+  - postgresql: "9.6"
 cache:
   directories:
   - node_modules
@@ -11,8 +13,6 @@ branches:
   - master
 services:
   - postgresql
-addons:
-  - postgresql: 9.4
 before_install:
   - cd src
   - cp environments/travis.env current.env
