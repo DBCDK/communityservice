@@ -10,6 +10,7 @@ services:
 cache:
   directories:
   - node_modules
+  - /home/travis/.nvm/.cache/bin
 branches:
   only:
   - master
