@@ -9,7 +9,7 @@ HTTP GET & POST have standard semantics.
 HTTP PUT either works as a selective update or as a delete.  More specifically,
 
 - If the client-sent object *only* has a `modified_by` property, then the object is marked as deleted by setting the `deleted_epoch` and `deleted_by` (instead of `modified_by`).
-- If the client-sent object mentions some (non-empty) subset of the existing properties on the server object, then only the mentioned properties are updated.
+- If the client-sent object mentions some (non-empty) subset of the existing properties on the server object, then only the mentioned properties are updated, and `deleted_epoch` and `deleted_by` are cleared.
 - If the client-sent object mentions `attributes`, the values of `attributes` has to be an object, and the attributes are selectively updated.  To delete an attribute, set its value to null.
 
 Parts in parentheses are not implemented yet.  Parts with O might not be implemented at all.

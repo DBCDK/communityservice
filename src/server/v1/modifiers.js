@@ -51,6 +51,7 @@ function updateOrDelete(change, before, epochNow, loggedKeys) {
     // Delete instead of update modify.
     return setDeletedBy({}, change.modified_by, epochNow);
   }
+  // Start new log entry.
   let logEntry = setModifiedBy({}, change.modified_by, epochNow);
   const keys = _.intersection(_.keys(change), loggedKeys);
   const oldKeyValues = _.pick(before, keys);
@@ -61,6 +62,8 @@ function updateOrDelete(change, before, epochNow, loggedKeys) {
     }
   });
   let update = setModifiedBy(change, change.modified_by, epochNow);
+  // Clear deletion.
+  update = setDeletedBy(update, null, null);
   // Fill in old attribute values if not mentioned in update.
   fillInOldAttributes(update.attributes, before.attributes);
   update = updateModificationLog(update, before, logEntry);
