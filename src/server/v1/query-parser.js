@@ -193,6 +193,7 @@ function list(request, selector, defs, epochNow) {
           return Promise.all(_.map(contexts, extractorResult.queryingProcessor));
         })
         .then(results => {
+          // Pass the real result together with the count of possible results.
           return Promise.all([
             counting.select(),
             results
@@ -266,12 +267,8 @@ function singleton(request, selector, defs, epochNow) {
     let querying = knex(defs.table);
     try {
       querying = parseResult.queryingModifier(context, querying);
-    }
-    catch (dynError) {
-      return Promise.reject(dynError);
-    }
-    // console.log(querying.toString());
-    return querying.select()
+      // console.log(querying.toString());
+      return querying.select()
       .then(results => {
         if (results.length === 0) {
           throw new QueryDynamicError('No result from singleton selector', criteria, context);
@@ -279,9 +276,13 @@ function singleton(request, selector, defs, epochNow) {
         if (results.length > 1) {
           throw new QueryDynamicError('Several results from singleton selector', criteria, context);
         }
-        const result = results[0];
-        return extractorResult.queryingProcessor(result);
-      });
+        return results[0];
+      })
+      .then(extractorResult.queryingProcessor);
+    }
+    catch (dynError) {
+      return Promise.reject(dynError);
+    }
   });
 }
 
@@ -289,15 +290,115 @@ function buildExtractor(extractor, rhs, defs, epochNow) {
   switch (extractor) {
     case 'Include': return include(rhs, defs, epochNow);
     case 'IncludeSwitch': return includeSwitch(rhs, defs, epochNow);
-    // TODO:
-    // case 'IncludeEntitiesRecursively': return QueryingProcessor(_.identity);
+    case 'IncludeEntitiesRecursively': return includeEntitiesRecursively(rhs, defs, epochNow);
     default:
       throw {
         title: 'Internal error',
         problem: `Not handled: ${extractor}`,
-        query: extractor
+        query: {extractor: rhs}
       };
   }
+}
+
+function includeEntitiesRecursively(spec, defs, epochNow) {
+  const extractorObj = {IncludeEntitiesRecursively: spec};
+  if (_.isNil(_.find(defs.keys, pattern => 'entity_ref'.match(pattern)))) {
+    return ParserResultIsError([{
+      problem: 'selected object does not have an entity_ref to follow',
+      query: extractorObj
+    }]);
+  }
+  if (typeof spec !== 'object' || Object.prototype.toString.call(spec) === '[object Array]') {
+    return ParserResultIsError([{
+      problem: `switch must be an object, but found: ${JSON.stringify(spec)}`,
+      query: extractorObj
+    }]);
+  }
+  let errors = [];
+  const cases = _.mapValues(spec, rhs => {
+    if (typeof rhs !== 'object' || Object.prototype.toString.call(rhs) === '[object Array]') {
+      errors.push({
+        problem: `simple extractors not allowed in recursive switch, but found: ${rhs}`,
+        query: extractorObj
+      });
+    }
+    // Accept keys from entities and whatever initiated the recursion.
+    const defsIncludingEntities = {
+      keys: _.concat(defs.keys, constants.entity.keys),
+      timeKeys: _.concat(defs.timeKeys, constants.entity.timeKeys)
+    };
+    const cse = include(rhs, defsIncludingEntities, epochNow);
+    if (!_.isEmpty(cse.errors)) {
+      errors = _.concat(errors, cse.errors);
+    }
+    return cse.queryingProcessor;
+  });
+  if (!_.isEmpty(errors)) {
+    return ParserResultIsError(errors);
+  }
+  return ParserResultIsQueryingProcessor(
+    context => {
+      return new Promise((resolve, reject) => {
+        recursivelyExtractEntityRefs(cases, spec)(context)
+        .then(bottomUpList => {
+          resolve(_.reduce(bottomUpList, (acc, extraction) => {
+            return _.fromPairs([[extraction[0], _.assign(extraction[1], acc)]]);
+          }, {}));
+        })
+        .catch(reject);
+      });
+    }
+  );
+}
+
+function recursivelyExtractEntityRefs(cases, spec) {
+  return context => {
+    return new Promise((resolve, reject) => {
+      // console.log(`context: ${JSON.stringify(context)}`);
+      const extractor = _.get(cases, context.type, ctx => {
+        throw new QueryDynamicError(
+          `entity type unhandled in switch: ${context.type}`,
+          spec,
+          ctx
+        );
+      });
+      if (_.isNil(context.entity_ref)) {
+        return extractor(context)
+          .then(root => {
+            // [type, extraction]]
+            resolve([[context.type, root]]);
+          })
+          .catch(reject);
+      }
+      knex(constants.entity.table).where('id', context.entity_ref).select()
+      .then(results => {
+        if (results.length !== 1) {
+          throw new QueryServerError(
+            'Wrong result from following entity_ref',
+            spec,
+            context
+          );
+        }
+        return results[0];
+      })
+      .then(recursivelyExtractEntityRefs(cases, spec))
+      .then(bottomUp => {
+        // Pass both the list of collected extractions and the next extraction.
+        return Promise.all([
+          bottomUp,
+          extractor(context)
+        ]);
+      })
+      .then(results => {
+        const extraction = results[1];
+        const bottomUp = _.concat([[context.type, extraction]], results[0]);
+        resolve(bottomUp);
+      })
+      .catch(error => {
+        reject(error);
+      });
+    });
+  };
 }
 
 function includeSwitch(spec, defs, epochNow) {
@@ -346,7 +447,7 @@ function include(spec, defs, epochNow) {
       _.isNil(_.find(defs.keys, pattern => spec.match(pattern)))
     ) {
       return ParserResultIsError([{
-        problem: `unknown key ${spec}`,
+        problem: `unknown key: ${spec}`,
         query: extractorObj
       }]);
     }
@@ -378,7 +479,7 @@ function include(spec, defs, epochNow) {
         _.isNil(_.find(defs.keys, pattern => value.match(pattern)))
       ) {
         errors.push({
-          problem: `unknown key ${spec}`,
+          problem: `unknown key: ${value}`,
           query: extractorObj
         });
         return;
@@ -475,7 +576,7 @@ function buildWhereClause(criteria, keys, timeKeys, epochNow) {
     }
     if (_.isNil(_.find(keys, pattern => key.match(pattern)))) {
       errors.push({
-        problem: `unknown key ${key}`,
+        problem: `unknown key: ${key}`,
         query: criteria
       });
     }

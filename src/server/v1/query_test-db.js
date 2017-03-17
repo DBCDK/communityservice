@@ -196,7 +196,7 @@ describe('API v1 query endpoint', () => {
       .expect(res => {
         expectFailure(res.body, errors => {
           expect(errors).to.have.length(1);
-          expectErrorMalformed(errors[0], /unknown key owner_id/, query);
+          expectErrorMalformed(errors[0], /unknown key.*owner_id/, query);
         });
       })
       .expect(400)
@@ -257,7 +257,7 @@ describe('API v1 query endpoint', () => {
       .expect(res => {
         expectFailure(res.body, errors => {
           expect(errors).to.have.length(1);
-          expectErrorMalformedDetail(errors[0], 0, /unknown key foo/i, refCriteria);
+          expectErrorMalformedDetail(errors[0], 0, /unknown key.*foo/i, refCriteria);
           expectErrorMalformedDetail(errors[0], 1, /operator must be one of: newerThan, olderThan/i, timeCriteria);
           expectErrorMalformedDetail(errors[0], 2, /unit must be one of: daysAgo/i, timeCriteria);
         });
@@ -584,7 +584,7 @@ describe('API v1 query endpoint', () => {
         .send(query)
         .expect(res => {
           expectFailure(res.body, errors => {
-            expectErrorMalformed(errors[0], /unknown key/i, query);
+            expectErrorMalformed(errors[0], /unknown key.*not_exist/i, query);
           });
         })
         .expect(400)
@@ -597,7 +597,7 @@ describe('API v1 query endpoint', () => {
         .send(query)
         .expect(res => {
           expectFailure(res.body, errors => {
-            expectErrorMalformed(errors[0], /unknown key/i, query);
+            expectErrorMalformed(errors[0], /unknown key.*not_exist/i, query);
           });
         })
         .expect(400)
@@ -704,7 +704,6 @@ describe('API v1 query endpoint', () => {
         service.post('/v1/community/1/query')
         .send(query)
         .expect(res => {
-          // console.log(JSON.stringify(res.body));
           expectSuccess(res.body, (links, data) => {
             expect(data).to.deep.equal({
               Total: 10,
@@ -726,6 +725,110 @@ describe('API v1 query endpoint', () => {
     });
 
     describe('IncludeEntitiesRecursively', () => {
+
+      it('should reject object not pointing to entities', done => {
+        const query = {Profile: {id: 56}, IncludeEntitiesRecursively: {entity: 'entity_ref'}};
+        service.post('/v1/community/1/query')
+        .send(query)
+        .expect(res => {
+          expectFailure(res.body, errors => {
+            expectErrorMalformed(errors[0], /object does not have an entity_ref to follow/i, query);
+          });
+        })
+        .expect(400)
+        .end(done);
+      });
+
+      it('should reject non-object arguments', done => {
+        const query = {Action: {id: 524}, IncludeEntitiesRecursively: 'entity_ref'};
+        service.post('/v1/community/1/query')
+        .send(query)
+        .expect(res => {
+          expectFailure(res.body, errors => {
+            expectErrorMalformed(errors[0], /switch must be an object/i, query);
+          });
+        })
+        .expect(400)
+        .end(done);
+      });
+
+      it('should reject switch with extractor errors', done => {
+        const extractor = {like: {id: '^entity_ref'}, follow: ['follow_ref']};
+        const query = {Action: {id: 524}, IncludeEntitiesRecursively: extractor};
+        service.post('/v1/community/1/query')
+        .send(query)
+        .expect(res => {
+          expectFailure(res.body, errors => {
+            expectErrorMalformed(errors[0], /references not allowed in extractors/i, query);
+            expectErrorMalformed(errors[0], /complex extractor must be an object/i, query);
+          });
+        })
+        .expect(400)
+        .end(done);
+      });
+
+      it('should reject switch with simple extractor', done => {
+        const extractor = {like: 'owner_id'};
+        const query = {Action: {id: 524}, IncludeEntitiesRecursively: extractor};
+        service.post('/v1/community/1/query')
+        .send(query)
+        .expect(res => {
+          expectFailure(res.body, errors => {
+            expectErrorMalformed(errors[0], /simple extractors not allowed in recursive switch, but found: owner_id/i, query);
+          });
+        })
+        .expect(400)
+        .end(done);
+      });
+
+      it('should reject switch with unhandled type', done => {
+        const extractor = {member: {entity: 'entity_ref'}};
+        const query = {Action: {id: 524}, IncludeEntitiesRecursively: extractor};
+        service.post('/v1/community/1/query')
+        .send(query)
+        .expect(res => {
+          expectFailure(res.body, errors => {
+            expect(errors.length).to.equal(1);
+            expectErrorDynamic(errors[0], /entity type unhandled in switch: group/i, query);
+          });
+        })
+        .expect(400)
+        .end(done);
+      });
+
+      it('should produce embedded structure in reverse order', done => {
+        const extractor = {
+          like: {id: 'id', who: 'owner_id'},
+          post: {id: 'id', text: 'title'},
+          group: {id: 'id', name: 'title'}
+        };
+        const query = {Action: {id: 524}, IncludeEntitiesRecursively: extractor};
+        service.post('/v1/community/1/query')
+        .send(query)
+        .expect(res => {
+          // console.log(JSON.stringify(res.body));
+          expectSuccess(res.body, (links, data) => {
+            expect(data).to.deep.equal({
+              group: {
+                id: 27,
+                name: 'Sed qui iste',
+                post: {
+                  id: 604,
+                  text: 'Nisi cum odit',
+                  post: {
+                    id: 3362,
+                    text: 'Totam illo fuga',
+                    post: {
+                      id: 5413,
+                      text: 'Qui sunt quod',
+                      like: {
+                        id: 524,
+                        who: 79}}}}}});
+          });
+        })
+        .expect(200)
+        .end(done);
+      });
     });
 
   });
@@ -848,7 +951,6 @@ describe('API v1 query endpoint', () => {
       service.post('/v1/community/1/query')
       .send({Entities: {owner_id: 2}, Limit: 5, Offset: 10, Include: 'id'})
       .expect(res => {
-        // console.log(JSON.stringify(res.body));
         expectSuccess(res.body, (links, data) => {
           expect(data).to.deep.equal({
             Total: 37,

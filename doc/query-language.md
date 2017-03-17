@@ -229,7 +229,7 @@ Example query:
 , IncludeEntitiesRecursively:
   { comment: { id: 'id', text: 'contents' }
   , post: { id: 'id', text: 'contents' }
-  , group: { name: title }
+  , group: { name: 'title' }
   }
 }
 ```
