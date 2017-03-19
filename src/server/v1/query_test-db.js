@@ -91,7 +91,7 @@ describe('API v1 query endpoint', () => {
       .send({CountActions: {}})
       .expect(res => {
         expectSuccess(res.body, (links, data) => {
-          expect(data).to.deep.equal(4558);
+          expect(data).to.deep.equal(3882);
         });
       })
       .expect(200)
@@ -104,7 +104,7 @@ describe('API v1 query endpoint', () => {
       .expect(200)
       .expect(res => {
         expectSuccess(res.body, (links, data) => {
-          expect(data).to.deep.equal(6903);
+          expect(data).to.deep.equal(6483);
         });
       })
       .end(done);
@@ -124,10 +124,10 @@ describe('API v1 query endpoint', () => {
 
     it('should accept CountActions selector with some criteria', done => {
       service.post('/v1/community/1/query')
-      .send({CountActions: {type: 'like', owner_id: 147}})
+      .send({CountActions: {type: 'like', owner_id: 211}})
       .expect(res => {
         expectSuccess(res.body, (links, data) => {
-          expect(data).to.deep.equal(16);
+          expect(data).to.deep.equal(35);
         });
       })
       .expect(200)
@@ -138,7 +138,7 @@ describe('API v1 query endpoint', () => {
       service.post('/v1/community/1/query')
       .send({CountActions: {
         type: 'like',
-        owner_id: 147,
+        owner_id: 211,
         deleted_by: null,
         id: 234,
         modified_by: 147,
@@ -159,7 +159,7 @@ describe('API v1 query endpoint', () => {
       .send({CountProfiles: {
         deleted_by: null,
         id: 234,
-        modified_by: 147,
+        modified_by: 211,
         name: 'Goofy'
       }})
       .expect(res => {
@@ -274,7 +274,7 @@ describe('API v1 query endpoint', () => {
       }})
       .expect(res => {
         expectSuccess(res.body, (links, data) => {
-          expect(data).to.deep.equal(42);
+          expect(data).to.deep.equal(37);
         });
       })
       .expect(200)
@@ -289,7 +289,7 @@ describe('API v1 query endpoint', () => {
       }})
       .expect(res => {
         expectSuccess(res.body, (links, data) => {
-          expect(data).to.deep.equal(42);
+          expect(data).to.deep.equal(37);
         });
       })
       .expect(200)
@@ -316,7 +316,7 @@ describe('API v1 query endpoint', () => {
       .send(query)
       .expect(res => {
         expectSuccess(res.body, (links, data) => {
-          expect(data).to.deep.equal(1);
+          expect(data).to.deep.equal(10);
         });
       })
       .expect(200)
@@ -324,7 +324,7 @@ describe('API v1 query endpoint', () => {
     });
 
     it('should accept string attribute criteria', done => {
-      const query = {CountProfiles: {'attributes.email': 'Lila48@hotmail.com'}};
+      const query = {CountProfiles: {'attributes.email': 'Dorthy4@hotmail.com'}};
       service.post('/v1/community/1/query')
       .send(query)
       .expect(res => {
@@ -455,7 +455,7 @@ describe('API v1 query endpoint', () => {
       .send({Profile: {id: 1}, Include: 'name'})
       .expect(res => {
         expectSuccess(res.body, (links, data) => {
-          expect(data).to.deep.equal('Conor');
+          expect(data).to.deep.equal('Marjolaine');
         });
       })
       .expect(200)
@@ -496,7 +496,7 @@ describe('API v1 query endpoint', () => {
         .send({Profile: {id: 2}, Include: 'name'})
         .expect(res => {
           expectSuccess(res.body, (links, data) => {
-            expect(data).to.deep.equal('Lora');
+            expect(data).to.deep.equal('Destinee');
           });
         })
         .expect(200)
@@ -508,7 +508,7 @@ describe('API v1 query endpoint', () => {
         .send({Profile: {id: 2}, Include: 'attributes.email'})
         .expect(res => {
           expectSuccess(res.body, (links, data) => {
-            expect(data).to.deep.equal('Lila48@hotmail.com');
+            expect(data).to.deep.equal('Jessie.Langworth@gmail.com');
           });
         })
         .expect(200)
@@ -517,10 +517,10 @@ describe('API v1 query endpoint', () => {
 
       it('should accept complex direct extractor', done => {
         service.post('/v1/community/1/query')
-        .send({Profile: {id: 2}, Include: {number: 'id', who: 'name', email: 'attributes.email'}})
+        .send({Profile: {id: 32}, Include: {number: 'id', who: 'name', email: 'attributes.email'}})
         .expect(res => {
           expectSuccess(res.body, (links, data) => {
-            expect(data).to.deep.equal({number: 2, who: 'Lora', email: 'Lila48@hotmail.com'});
+            expect(data).to.deep.equal({number: 32, who: 'Estrella', email: 'Dorthy4@hotmail.com'});
           });
         })
         .expect(200)
@@ -529,10 +529,10 @@ describe('API v1 query endpoint', () => {
 
       it('should accept extractor with subquery', done => {
         service.post('/v1/community/1/query')
-        .send({Profile: {id: 2}, Include: {followers: {CountActions: {profile_ref: '^id'}}}})
+        .send({Profile: {id: 32}, Include: {followers: {CountActions: {profile_ref: '^id'}}}})
         .expect(res => {
           expectSuccess(res.body, (links, data) => {
-            expect(data).to.deep.equal({followers: 3});
+            expect(data).to.deep.equal({followers: 2});
           });
         })
         .expect(200)
@@ -664,7 +664,7 @@ describe('API v1 query endpoint', () => {
 
       it('should reject switch with unhandled type', done => {
         const extractor = {like: 'entity_ref'};
-        const query = {Actions: {owner_id: 68}, Limit: 5, IncludeSwitch: extractor};
+        const query = {Actions: {owner_id: 211}, Limit: 5, IncludeSwitch: extractor};
         service.post('/v1/community/1/query')
         .send(query)
         .expect(res => {
@@ -679,15 +679,15 @@ describe('API v1 query endpoint', () => {
 
       it('should accept simple switch', done => {
         const extractor = {like: 'entity_ref', follow: 'profile_ref'};
-        const query = {Actions: {owner_id: 68}, Limit: 5, IncludeSwitch: extractor};
+        const query = {Actions: {owner_id: 211}, Limit: 5, IncludeSwitch: extractor};
         service.post('/v1/community/1/query')
         .send(query)
         .expect(res => {
           expectSuccess(res.body, (links, data) => {
             expect(data).to.deep.equal({
-              Total: 10,
+              Total: 41,
               NextOffset: 5,
-              List: [362, 68, 344, 730, 5611]
+              List: [191, 575, 927, 211, 2547]
             });
           });
         })
@@ -700,20 +700,20 @@ describe('API v1 query endpoint', () => {
           like: {what: {Entity: {id: '^entity_ref'}, Include: 'title'}},
           follow: {who: {Profile: {id: '^profile_ref'}, Include: 'name'}}
         };
-        const query = {Actions: {owner_id: 68}, Limit: 5, IncludeSwitch: extractor};
+        const query = {Actions: {owner_id: 211}, Limit: 5, IncludeSwitch: extractor};
         service.post('/v1/community/1/query')
         .send(query)
         .expect(res => {
           expectSuccess(res.body, (links, data) => {
             expect(data).to.deep.equal({
-              Total: 10,
+              Total: 41,
               NextOffset: 5,
               List: [
-                {who: 'Candace'},
-                {who: 'Derek'},
-                {who: 'Tamara'},
-                {who: 'Hollie'},
-                {what: 'Aut dignissimos minima'}
+                {who: 'Jamaal'},
+                {who: 'Irving'},
+                {who: 'Karianne'},
+                {who: 'Barton'},
+                {what: 'Velit rerum est'}
               ]
             });
           });
@@ -727,7 +727,7 @@ describe('API v1 query endpoint', () => {
     describe('IncludeEntitiesRecursively', () => {
 
       it('should reject object not pointing to entities', done => {
-        const query = {Profile: {id: 56}, IncludeEntitiesRecursively: {entity: 'entity_ref'}};
+        const query = {Profile: {id: 211}, IncludeEntitiesRecursively: {entity: 'entity_ref'}};
         service.post('/v1/community/1/query')
         .send(query)
         .expect(res => {
@@ -810,20 +810,20 @@ describe('API v1 query endpoint', () => {
           expectSuccess(res.body, (links, data) => {
             expect(data).to.deep.equal({
               group: {
-                id: 27,
-                name: 'Sed qui iste',
+                id: 62,
+                name: 'Dolorum qui omnis',
                 post: {
-                  id: 604,
-                  text: 'Nisi cum odit',
+                  id: 246,
+                  text: 'Iusto sapiente eum',
                   post: {
-                    id: 3362,
-                    text: 'Totam illo fuga',
+                    id: 2722,
+                    text: 'Voluptas et vel',
                     post: {
-                      id: 5413,
-                      text: 'Qui sunt quod',
+                      id: 4128,
+                      text: 'Asperiores eligendi rerum',
                       like: {
                         id: 524,
-                        who: 79}}}}}});
+                        who: 61}}}}}});
           });
         })
         .expect(200)
@@ -921,9 +921,9 @@ describe('API v1 query endpoint', () => {
       .expect(res => {
         expectSuccess(res.body, (links, data) => {
           expect(data).to.deep.equal({
-            Total: 1,
+            Total: 10,
             NextOffset: null,
-            List: [601]
+            List: [156, 968, 775, 601, 594, 534, 510, 476, 38, 55]
           });
         });
       })
@@ -933,13 +933,13 @@ describe('API v1 query endpoint', () => {
 
     it('should limit the list', done => {
       service.post('/v1/community/1/query')
-      .send({Entities: {owner_id: 2}, Limit: 10, Include: 'id'})
+      .send({Entities: {owner_id: 32}, Limit: 10, Include: 'id'})
       .expect(res => {
         expectSuccess(res.body, (links, data) => {
           expect(data).to.deep.equal({
-            Total: 37,
+            Total: 27,
             NextOffset: 10,
-            List: [6125, 6124, 6126, 6127, 6123, 6122, 6120, 6119, 6121, 5367]
+            List: [5731, 5732, 4967, 4262, 4259, 4261, 4260, 3470, 2692, 2690]
           });
         });
       })
@@ -949,13 +949,13 @@ describe('API v1 query endpoint', () => {
 
     it('should offset the list', done => {
       service.post('/v1/community/1/query')
-      .send({Entities: {owner_id: 2}, Limit: 5, Offset: 10, Include: 'id'})
+      .send({Entities: {owner_id: 32}, Limit: 5, Offset: 10, Include: 'id'})
       .expect(res => {
         expectSuccess(res.body, (links, data) => {
           expect(data).to.deep.equal({
-            Total: 37,
+            Total: 27,
             NextOffset: 15,
-            List: [5365, 5368, 5367, 5363, 5364]
+            List: [2692, 737, 733, 735, 734]
           });
         });
       })
@@ -965,13 +965,13 @@ describe('API v1 query endpoint', () => {
 
     it('should sort the list ascending', done => {
       service.post('/v1/community/1/query')
-      .send({Actions: {owner_id: 2}, Limit: 5, Order: 'ascending', Include: 'id'})
+      .send({Actions: {owner_id: 32}, Limit: 5, Order: 'ascending', Include: 'id'})
       .expect(res => {
         expectSuccess(res.body, (links, data) => {
           expect(data).to.deep.equal({
-            Total: 53,
+            Total: 21,
             NextOffset: 5,
-            List: [171, 323, 356, 357, 355]
+            List: [96, 262, 464, 466, 462]
           });
         });
       })

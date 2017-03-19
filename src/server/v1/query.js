@@ -16,7 +16,8 @@ router.route('/').post((req, res, next) => {
   .then(epochNow => {
     if (config.fixedTime === '1') {
       // Override the current time because the tests need a fixed time.
-      return 1489397775;
+      // return 1489397775;
+      return 1489959747;
     }
     return epochNow;
   })
