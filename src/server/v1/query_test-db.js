@@ -230,7 +230,7 @@ describe('API v1 query endpoint', () => {
     });
 
     it('should reject time criteria with unknown keys', done => {
-      const query = {CountEntities: {end_epoch: {operator: 'newerThan', days: 0}}};
+      const query = {CountEntities: {end_epoch: {operator: 'newerThan', daysAgo: 0}}};
       service.post('/v1/community/1/query')
       .send(query)
       .expect(res => {

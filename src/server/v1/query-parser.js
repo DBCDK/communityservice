@@ -154,6 +154,17 @@ function list(request, selector, defs, settings) {
             query: request
           });
         }
+        if (sortBy.match('^attributes\\.')) {
+          const path = _.split(sortBy, '.');
+          if (path.length > 2) {
+            errors.push({
+              problem: `deep attribute paths are not supported, but found: ${sortBy}`,
+              query: request
+            });
+            return;
+          }
+          sortBy = `${path[0]}->'${path[1]}'`;
+        }
         return;
       default:
     }
@@ -187,7 +198,7 @@ function list(request, selector, defs, settings) {
       counting = modifyQueryAccordingToOptions(settings.options, counting);
       // console.log(counting.toString());
       const knexOrder = (order === 'ascending') ? 'asc' : 'desc';
-      let querying = knex(defs.table).orderBy(sortBy, knexOrder).limit(limit).offset(offset);
+      let querying = knex(defs.table).orderByRaw(`${sortBy} ${knexOrder}`).limit(limit).offset(offset);
       querying = parseResult.queryingModifier(context, querying);
       querying = modifyQueryAccordingToOptions(settings.options, querying);
       // console.log(querying.toString());
