@@ -91,7 +91,7 @@ describe('API v1 query endpoint', () => {
       .send({CountActions: {}})
       .expect(res => {
         expectSuccess(res.body, (links, data) => {
-          expect(data).to.deep.equal(3882);
+          expect(data).to.deep.equal(3844);
         });
       })
       .expect(200)
@@ -104,7 +104,7 @@ describe('API v1 query endpoint', () => {
       .expect(200)
       .expect(res => {
         expectSuccess(res.body, (links, data) => {
-          expect(data).to.deep.equal(6483);
+          expect(data).to.deep.equal(6436);
         });
       })
       .end(done);
@@ -116,7 +116,7 @@ describe('API v1 query endpoint', () => {
       .expect(200)
       .expect(res => {
         expectSuccess(res.body, (links, data) => {
-          expect(data).to.deep.equal(1000);
+          expect(data).to.deep.equal(994);
         });
       })
       .end(done);
@@ -165,6 +165,18 @@ describe('API v1 query endpoint', () => {
       .expect(res => {
         expectSuccess(res.body, (links, data) => {
           expect(data).to.deep.equal(0);
+        });
+      })
+      .expect(200)
+      .end(done);
+    });
+
+    it('should not count deleted objects', done => {
+      service.post('/v1/community/1/query')
+      .send({CountEntities: {owner_id: 575}})
+      .expect(res => {
+        expectSuccess(res.body, (links, data) => {
+          expect(data).to.deep.equal(24);
         });
       })
       .expect(200)
@@ -485,6 +497,20 @@ describe('API v1 query endpoint', () => {
       .expect(200)
       .end(done);
     });
+
+    it('should reject deleted entries', done => {
+      const query = {Entity: {id: 475}, Include: 'title'};
+      service.post('/v1/community/1/query')
+      .send(query)
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expectErrorDynamic(errors[0], /No result from singleton selector/i, query);
+        });
+      })
+      .expect(400)
+      .end(done);
+    });
+
   });
 
   describe('extractor', () => {
@@ -806,7 +832,6 @@ describe('API v1 query endpoint', () => {
         service.post('/v1/community/1/query')
         .send(query)
         .expect(res => {
-          // console.log(JSON.stringify(res.body));
           expectSuccess(res.body, (links, data) => {
             expect(data).to.deep.equal({
               group: {
@@ -829,8 +854,43 @@ describe('API v1 query endpoint', () => {
         .expect(200)
         .end(done);
       });
-    });
 
+      it('should blank out deleted entries', done => {
+        const extractor = {
+          post: {id: 'id', summary: 'title'},
+          group: {id: 'id', name: 'title'}
+        };
+        service.post('/v1/community/1/query')
+        .send({Entity: {id: 6177}, IncludeEntitiesRecursively: extractor})
+        .expect(res => {
+          expectSuccess(res.body, (links, data) => {
+            expect(data).to.deep.equal({
+              group: {
+                id: 28,
+                name: 'Dolorem accusantium deserunt',
+                post: {
+                  id: null,
+                  summary: null,
+                  deleted_by: 575,
+                  deleted_epoch: 1489959016,
+                  post: {
+                    id: 5104,
+                    summary: 'Aliquid nisi quae',
+                    post: {
+                      id: 6177,
+                      summary: 'Enim beatae fugit'
+                    }
+                  }
+                }
+              }
+            });
+          });
+        })
+        .expect(200)
+        .end(done);
+      });
+
+    });
   });
 
   describe('list selector', () => {
@@ -979,6 +1039,113 @@ describe('API v1 query endpoint', () => {
       .end(done);
     });
 
+    it('should leave out deleted entries', done => {
+      service.post('/v1/community/1/query')
+      .send({Entities: {owner_id: 575}, Limit: 5, SortBy: 'id', Order: 'ascending', Include: 'id'})
+      .expect(res => {
+        expectSuccess(res.body, (links, data) => {
+          expect(data).to.deep.equal({
+            Total: 24,
+            NextOffset: 5,
+            List: [173, 476, 477, 478, 1863]
+          });
+        });
+      })
+      .expect(200)
+      .end(done);
+    });
+
+  });
+
+  describe('options', () => {
+
+    it('should reject unknown options', done => {
+      service.post('/v1/community/1/query/include-unicorns')
+      .send({CountEntities: {owner_id: 575}})
+      .expect(res => {
+        expectFailure(res.body, errors => {
+          expectErrorOptions(errors[0], /expected one of: include-deleted/i);
+        });
+      })
+      .expect(400)
+      .end(done);
+    });
+
+    it('should count deleted objects', done => {
+      service.post('/v1/community/1/query/include-deleted')
+      .send({CountEntities: {owner_id: 575}})
+      .expect(res => {
+        expectSuccess(res.body, (links, data) => {
+          expect(data).to.deep.equal(25);
+        });
+      })
+      .expect(200)
+      .end(done);
+    });
+
+    it('should not blank out deleted entries', done => {
+      service.post('/v1/community/1/query/include-deleted')
+      .send({Entity: {id: 475}, Include: 'title'})
+      .expect(res => {
+        expectSuccess(res.body, (links, data) => {
+          expect(data).to.equal('Dicta aut rerum');
+        });
+      })
+      .expect(200)
+      .end(done);
+    });
+
+    it('should not blank out deleted entries in recursive queries', done => {
+      const extractor = {
+        post: {id: 'id', summary: 'title'},
+        group: {id: 'id', name: 'title'}
+      };
+      service.post('/v1/community/1/query/include-deleted')
+      .send({Entity: {id: 6177}, IncludeEntitiesRecursively: extractor})
+      .expect(res => {
+        expectSuccess(res.body, (links, data) => {
+          expect(data).to.deep.equal({
+            group: {
+              id: 28,
+              name: 'Dolorem accusantium deserunt',
+              post: {
+                id: 475,
+                summary: 'Dicta aut rerum',
+                deleted_by: 575,
+                deleted_epoch: 1489959016,
+                post: {
+                  id: 5104,
+                  summary: 'Aliquid nisi quae',
+                  post: {
+                    id: 6177,
+                    summary: 'Enim beatae fugit'
+                  }
+                }
+              }
+            }
+          });
+        });
+      })
+      .expect(200)
+      .end(done);
+    });
+
+    it('should include deleted entries', done => {
+      service.post('/v1/community/1/query/include-deleted')
+      .send({Entities: {owner_id: 575}, Limit: 5, SortBy: 'id', Order: 'ascending', Include: 'id'})
+      .expect(res => {
+        expectSuccess(res.body, (links, data) => {
+          expect(data).to.deep.equal({
+            Total: 25,
+            NextOffset: 5,
+            List: [173, 475, 476, 477, 478]
+          });
+        });
+      })
+      .expect(200)
+      .end(done);
+    });
+
   });
 
   describe('dynamic errors', () => {
@@ -995,6 +1162,13 @@ function expectErrorMalformed(error, pattern, query) {
   expect(error).to.have.property('meta');
   expect(error.meta).to.have.property('query');
   expect(error.meta.query).to.deep.equal(query);
+}
+
+function expectErrorOptions(error, pattern) {
+  expect(error).to.have.property('title');
+  expect(error.title).to.match(/unknown option/i);
+  expect(error).to.have.property('detail');
+  expect(JSON.stringify(error.detail)).to.match(pattern);
 }
 
 function expectErrorMalformedDetail(error, index, pattern, query) {

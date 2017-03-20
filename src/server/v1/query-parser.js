@@ -17,11 +17,12 @@ const constants = require('server/constants')();
 /**
  * The parser function recursively parses a request and constructs a promise
  * of result (performed by database query).
- * @param  {object} request Object as described in doc/query-language.md.
+ * @param  {request}  request Object as described in doc/query-language.md.
+ * @param  {settings} parameters {options: [...], epochNow: 148...} controlling the search.
  * @return {ParserResult}   Error or Promise of a function that takes a context and returns a promise of a database result.
  */
 
-function builder(request, epochNow) {
+function builder(request, settings) {
   const selectors = [
     'CountProfiles', 'CountActions', 'CountEntities',
     'Profiles', 'Actions', 'Entities',
@@ -36,15 +37,15 @@ function builder(request, epochNow) {
     }]);
   }
   switch (commonKeys[0]) {
-    case 'CountProfiles': return count(request, 'CountProfiles', constants.profile, epochNow);
-    case 'CountActions': return count(request, 'CountActions', constants.action, epochNow);
-    case 'CountEntities': return count(request, 'CountEntities', constants.entity, epochNow);
-    case 'Profiles': return list(request, 'Profiles', constants.profile, epochNow);
-    case 'Actions': return list(request, 'Actions', constants.action, epochNow);
-    case 'Entities': return list(request, 'Entities', constants.entity, epochNow);
-    case 'Profile': return singleton(request, 'Profile', constants.profile, epochNow);
-    case 'Action': return singleton(request, 'Action', constants.action, epochNow);
-    case 'Entity': return singleton(request, 'Entity', constants.entity, epochNow);
+    case 'CountProfiles': return count(request, 'CountProfiles', constants.profile, settings);
+    case 'CountActions': return count(request, 'CountActions', constants.action, settings);
+    case 'CountEntities': return count(request, 'CountEntities', constants.entity, settings);
+    case 'Profiles': return list(request, 'Profiles', constants.profile, settings);
+    case 'Actions': return list(request, 'Actions', constants.action, settings);
+    case 'Entities': return list(request, 'Entities', constants.entity, settings);
+    case 'Profile': return singleton(request, 'Profile', constants.profile, settings);
+    case 'Action': return singleton(request, 'Action', constants.action, settings);
+    case 'Entity': return singleton(request, 'Entity', constants.entity, settings);
     default: return ParserResultIsError([{
       problem: `Not handled: ${commonKeys[0]}`,
       query: request
@@ -52,7 +53,7 @@ function builder(request, epochNow) {
   }
 }
 
-function count(request, selector, defs, epochNow) {
+function count(request, selector, defs, settings) {
   const keys = _.pull(_.keys(request), selector);
   if (keys.length > 0) {
     return ParserResultIsError([{
@@ -61,7 +62,7 @@ function count(request, selector, defs, epochNow) {
     }]);
   }
   const criteria = request[selector];
-  const parseResult = buildWhereClause(criteria, defs.keys, defs.timeKeys, epochNow);
+  const parseResult = buildWhereClause(criteria, defs.keys, defs.timeKeys, settings);
   if (!_.isEmpty(parseResult.errors)) {
     return parseResult;
   }
@@ -73,7 +74,7 @@ function count(request, selector, defs, epochNow) {
     catch (dynError) {
       return Promise.reject(dynError);
     }
-    // console.log(querying.toString());
+    querying = modifyQueryAccordingToOptions(settings.options, querying);
     return querying.select()
       .then(results => {
         if (results.length !== 1) {
@@ -93,7 +94,7 @@ function count(request, selector, defs, epochNow) {
   });
 }
 
-function list(request, selector, defs, epochNow) {
+function list(request, selector, defs, settings) {
   const keys = _.pull(_.keys(request), selector);
   const extractor = _.intersection(keys, constants.extractors);
   let errors = [];
@@ -168,8 +169,8 @@ function list(request, selector, defs, epochNow) {
     return ParserResultIsError(errors);
   }
   const criteria = request[selector];
-  const parseResult = buildWhereClause(criteria, defs.keys, defs.timeKeys, epochNow);
-  const extractorResult = buildExtractor(extractor[0], request[extractor[0]], defs, epochNow);
+  const parseResult = buildWhereClause(criteria, defs.keys, defs.timeKeys, settings);
+  const extractorResult = buildExtractor(extractor[0], request[extractor[0]], defs, settings);
   if (!_.isEmpty(parseResult.errors) || !_.isEmpty(extractorResult.errors)) {
     if (!_.isEmpty(parseResult.errors)) {
       errors = _.concat(errors, parseResult.errors);
@@ -183,10 +184,12 @@ function list(request, selector, defs, epochNow) {
     try {
       let counting = knex(defs.table).count();
       counting = parseResult.queryingModifier(context, counting);
+      counting = modifyQueryAccordingToOptions(settings.options, counting);
       // console.log(counting.toString());
       const knexOrder = (order === 'ascending') ? 'asc' : 'desc';
       let querying = knex(defs.table).orderBy(sortBy, knexOrder).limit(limit).offset(offset);
       querying = parseResult.queryingModifier(context, querying);
+      querying = modifyQueryAccordingToOptions(settings.options, querying);
       // console.log(querying.toString());
       return querying.select()
         .then(contexts => {
@@ -231,7 +234,7 @@ function list(request, selector, defs, epochNow) {
   });
 }
 
-function singleton(request, selector, defs, epochNow) {
+function singleton(request, selector, defs, settings) {
   const keys = _.pull(_.keys(request), selector);
   const extractor = _.intersection(keys, constants.extractors);
   let errors = [];
@@ -252,8 +255,8 @@ function singleton(request, selector, defs, epochNow) {
     return ParserResultIsError(errors);
   }
   const criteria = request[selector];
-  const parseResult = buildWhereClause(criteria, defs.keys, defs.timeKeys, epochNow);
-  const extractorResult = buildExtractor(extractor[0], request[extractor[0]], defs, epochNow);
+  const parseResult = buildWhereClause(criteria, defs.keys, defs.timeKeys, settings);
+  const extractorResult = buildExtractor(extractor[0], request[extractor[0]], defs, settings);
   if (!_.isEmpty(parseResult.errors) || !_.isEmpty(extractorResult.errors)) {
     if (!_.isEmpty(parseResult.errors)) {
       errors = _.concat(errors, parseResult.errors);
@@ -267,6 +270,7 @@ function singleton(request, selector, defs, epochNow) {
     let querying = knex(defs.table);
     try {
       querying = parseResult.queryingModifier(context, querying);
+      querying = modifyQueryAccordingToOptions(settings.options, querying);
       // console.log(querying.toString());
       return querying.select()
       .then(results => {
@@ -286,11 +290,11 @@ function singleton(request, selector, defs, epochNow) {
   });
 }
 
-function buildExtractor(extractor, rhs, defs, epochNow) {
+function buildExtractor(extractor, rhs, defs, settings) {
   switch (extractor) {
-    case 'Include': return include(rhs, defs, epochNow);
-    case 'IncludeSwitch': return includeSwitch(rhs, defs, epochNow);
-    case 'IncludeEntitiesRecursively': return includeEntitiesRecursively(rhs, defs, epochNow);
+    case 'Include': return include(rhs, defs, settings);
+    case 'IncludeSwitch': return includeSwitch(rhs, defs, settings);
+    case 'IncludeEntitiesRecursively': return includeEntitiesRecursively(rhs, defs, settings);
     default:
       throw {
         title: 'Internal error',
@@ -300,7 +304,7 @@ function buildExtractor(extractor, rhs, defs, epochNow) {
   }
 }
 
-function includeEntitiesRecursively(spec, defs, epochNow) {
+function includeEntitiesRecursively(spec, defs, settings) {
   const extractorObj = {IncludeEntitiesRecursively: spec};
   if (_.isNil(_.find(defs.keys, pattern => 'entity_ref'.match(pattern)))) {
     return ParserResultIsError([{
@@ -327,7 +331,7 @@ function includeEntitiesRecursively(spec, defs, epochNow) {
       keys: _.concat(defs.keys, constants.entity.keys),
       timeKeys: _.concat(defs.timeKeys, constants.entity.timeKeys)
     };
-    const cse = include(rhs, defsIncludingEntities, epochNow);
+    const cse = include(rhs, defsIncludingEntities, settings);
     if (!_.isEmpty(cse.errors)) {
       errors = _.concat(errors, cse.errors);
     }
@@ -401,7 +405,7 @@ function recursivelyExtractEntityRefs(cases, spec) {
   };
 }
 
-function includeSwitch(spec, defs, epochNow) {
+function includeSwitch(spec, defs, settings) {
   const extractorObj = {IncludeSwitch: spec};
   if (typeof spec !== 'object' || Object.prototype.toString.call(spec) === '[object Array]') {
     return ParserResultIsError([{
@@ -411,7 +415,7 @@ function includeSwitch(spec, defs, epochNow) {
   }
   let errors = [];
   const cases = _.mapValues(spec, rhs => {
-    const cse = include(rhs, defs, epochNow);
+    const cse = include(rhs, defs, settings);
     if (!_.isEmpty(cse.errors)) {
       errors = _.concat(errors, cse.errors);
     }
@@ -432,7 +436,7 @@ function includeSwitch(spec, defs, epochNow) {
   });
 }
 
-function include(spec, defs, epochNow) {
+function include(spec, defs, settings) {
   const extractorObj = {Include: spec};
   if (typeof spec === 'string') {
     if (_.startsWith(spec, '^')) {
@@ -452,7 +456,10 @@ function include(spec, defs, epochNow) {
       }]);
     }
     return ParserResultIsQueryingProcessor(context => {
-      return _.get(context, spec);
+      if (_.isNil(context.deleted_epoch) || settings.options.includes('include-deleted')) {
+        return _.get(context, spec);
+      }
+      return null;
     });
   }
   if (typeof spec !== 'object' || Object.prototype.toString.call(spec) === '[object Array]') {
@@ -484,8 +491,12 @@ function include(spec, defs, epochNow) {
         });
         return;
       }
-      // Promise needed?
-      formular[key] = context => Promise.resolve(_.get(context, value));
+      formular[key] = context => {
+        if (_.isNil(context.deleted_epoch) || settings.options.includes('include-deleted')) {
+          return _.get(context, value);
+        }
+        return null;
+      };
       return;
     }
     if (typeof value !== 'object' || Object.prototype.toString.call(value) === '[object Array]') {
@@ -495,7 +506,7 @@ function include(spec, defs, epochNow) {
       });
       return;
     }
-    const subquery = builder(value, epochNow);
+    const subquery = builder(value, settings);
     if (!_.isEmpty(subquery.errors)) {
       errors = _.concat(errors, subquery.errors);
       return;
@@ -517,12 +528,17 @@ function include(spec, defs, epochNow) {
     }, []);
     return Promise.all(extractings)
     .then(extractors => {
-      return _.fromPairs(_.zip(keys, extractors));
+      const extract = _.fromPairs(_.zip(keys, extractors));
+      if (!_.isNil(context.deleted_epoch)) {
+        extract.deleted_epoch = context.deleted_epoch;
+        extract.deleted_by = context.deleted_by;
+      }
+      return extract;
     });
   });
 }
 
-function buildWhereClause(criteria, keys, timeKeys, epochNow) {
+function buildWhereClause(criteria, keys, timeKeys, settings) {
   if (_.isEmpty(criteria)) {
     return ParserResultIsQueryingModifier((context, querying) => querying);
   }
@@ -564,7 +580,7 @@ function buildWhereClause(criteria, keys, timeKeys, epochNow) {
       if (!_.isEmpty(errors)) {
         return (context, querying) => querying;
       }
-      const pointInTimeEpoch = epochNow - (daysAgo * 3600 * 24);
+      const pointInTimeEpoch = settings.epochNow - (daysAgo * 3600 * 24);
       if (value.operator === 'olderThan') {
         return (context, querying) => {
           return mod(context, querying).where('modified_epoch', '<', pointInTimeEpoch);
@@ -621,6 +637,13 @@ function buildWhereClause(criteria, keys, timeKeys, epochNow) {
     return ParserResultIsQueryingModifier(modifier);
   }
   return ParserResultIsError(errors);
+}
+
+function modifyQueryAccordingToOptions(options, querying) {
+  if (!options.includes('include-deleted')) {
+    querying = querying.andWhere('deleted_epoch', null);
+  }
+  return querying;
 }
 
 function ParserResultIsError(errors) {
@@ -691,6 +714,6 @@ class QueryServerError extends Error {
   }
 }
 
-module.exports = exports = (request, epochNow) => {
-  return builder(request, epochNow);
+module.exports = exports = (request, settings) => {
+  return builder(request, settings);
 };

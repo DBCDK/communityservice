@@ -25,7 +25,8 @@ const constants = {
   },
 
   extractors: ['Include', 'IncludeSwitch', 'IncludeEntitiesRecursively'],
-  limitors: ['Limit', 'Offset', 'SortBy', 'Order']
+  limitors: ['Limit', 'Offset', 'SortBy', 'Order'],
+  options: ['include-deleted']
 
 };
 
