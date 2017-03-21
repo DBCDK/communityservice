@@ -91,87 +91,106 @@ Because Actions can point to Entities and/or Profiles, the community has to keep
 To show a profile, Biblo needs data form Elvis like:
 
 ```json
-{ "id": 83531
-, "stickers":
-  [ "https://biblo.dk/billede/3652"
-  , "https://biblo.dk/billede/3831"
-  ]
-, "groups": 34
-, "avatar": "https://biblo.dk/billede/83531"
-, "name": "Anders Friis"
-, "description": "Jeg arbejder for Biblo..."
-, "reviews":
-  { "total": 4
-  , "next-offset": 3
-  , "list":
-    [ { "id": 368431
-      , "review": "En af de bedste film jeg har set længe..."
-      , "likes": 1
-      , "rating": 5
-      , "image": "..."
-      , "name": "A Film Noir"
-      , "sticker": "https://biblo.dk/billede/3652"
+{
+  "Profile": {
+    "id": "15"
+  },
+  "Include": {
+    "stickers": "attributes.stickers",
+    "group": {
+      "CountActions": {
+        "type": "member",
+        "owner_id": "^id"
       }
-    , { "id": 368432
-      , "review": "Den er rigtig god..."
-      , "likes": 0
-      , "rating": 4
-      , "image": "..."
-      , "name": "Magisterium"
+    },
+    "avatar": "attributes.avatar",
+    "name": "name",
+    "description": "attributes.description",
+    "reviews": {
+      "Entities": {
+        "type": "review",
+        "owner_id": "^id"
+      },
+      "Limit": 2,
+      "Include": {
+        "id": "id",
+        "review": "contents",
+        "rating": "attributes.rating",
+        "image": "attributes.image",
+        "name": "title",
+        "sticker": "attributes.sticker"
       }
-    ]
-  }
-, "activity":
-  { "total": 64
-  , "next-offset": 3
-  , "list":
-    [ { "group":
-        { "id": 4
-        , "name": "Bogklubben"
-        , "post":
-          { "id": 319093
-          , "name": "Navle"
-          , "avatar": "..."
-          , "created": 1485219736
-          , "post": "hej mit navn er Caroline ... rigtig god"
-          , "comment":
-            { "id": 137362
-            , "name": "Anders Friis"
-            , "avatar": "...."
-            , "created": 1485219799
-            , "comment": "Man kan se dem lige her..."
-            , "likes": 3
+    },
+    "activity": {
+      "Entities": {
+        "owner_id": "^id"
+      },
+      "Limit": 2,
+      "IncludeEntitiesRecursively": {
+        "comment": {
+          "id": "id",
+          "name": {
+            "Profile": {
+              "id": "^id"
+            },
+            "Include": "name"
+          },
+          "avatar": {
+            "Profile": {
+              "id": "^id"
+            },
+            "Include": "attributes.avatar"
+          },
+          "created": "created_epoch",
+          "comment": "contents",
+          "likes": {
+            "CountActions": {
+              "entity_ref": "id"
             }
           }
-        }
-      }
-    , { "group":
-        { "id": 4
-        , "name": "yahya hassan fangruppen"
-        , "post":
-          { "id": 883319
-          , "name": "Anders Friis"
-          , "avatar": "..."
-          , "created": 14852024112
-          , "post": "Er der kampagne her?"
-          , "sticker": "https://biblo.dk/billede/3831"
-          , "likes": 0
+        },
+        "post": {
+          "id": "id",
+          "name": {
+            "Profile": {
+              "id": "^owner_id"
+            },
+            "Include": "name"
+          },
+          "avatar": {
+            "Profile": {
+              "id": "^owner_id"
+            },
+            "Include": "attributes.avatar"
+          },
+          "created": "created_epoch",
+          "post": "contents",
+          "likes": {
+            "CountActions": {
+              "entity_ref": "^id"
+            }
           }
+        },
+        "group": {
+          "id": "id",
+          "name": "title"
         }
       }
-    ]
-  }
-, "messages":
-  { "total": 1
-  , "next-offset": 2
-  , "list":
-    [ { "id": "836463"
-      , "modified": 14852025533
-      , "type": "fine"
-      , "returnDate": 14852016385
-      , "title": "Nausicaä fra vindenes dal"
+    },
+    "messages": {
+      "Actions": {
+        "type": "fine",
+        "profile_ref": "^id"
+      },
+      "Limit": 3,
+      "Include": {
+        "id": "id",
+        "modifed": "modified_epoch",
+        "type": "type",
+        "returnDate": "attributes.returnDate",
+        "title": "attributes.workTitle"
       }
-    ]
+    }
   }
 }
 ```

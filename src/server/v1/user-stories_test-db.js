@@ -28,7 +28,7 @@ describe('API v1 user story queries', () => {
     });
   });
 
-  it('to display the best books As a community developer I want to find the most recent reviews that give the highest rating', done => {
+  it('to display the best books as a community developer I want to find the most recent reviews that give the highest rating', done => {
     service.post('/v1/community/1/query')
     .send({
       Entities: {
@@ -116,7 +116,7 @@ describe('API v1 user story queries', () => {
     .end(done);
   });
 
-  it('to approve new reviews As admin I want to search for reviews that need approval', done => {
+  it('to approve new reviews as admin I want to search for reviews that need approval', done => {
     service.post('/v1/community/1/query')
     .send({
       Entities: {type: 'review', 'attributes.approvedBy': null},
@@ -133,7 +133,6 @@ describe('API v1 user story queries', () => {
       }
     })
     .expect(res => {
-      // console.log(JSON.stringify(res.body));
       expectSuccess(res.body, (links, data) => {
         expect(data).to.deep.equal({
           Total: 0,
@@ -146,4 +145,124 @@ describe('API v1 user story queries', () => {
     .end(done);
   });
 
+  it('To show a Biblo-like profile page as developer I want to find all recent user activity', done => {
+    service.post('/v1/community/1/query')
+    .send({
+      Profile: {
+        id: '15'
+      },
+      Include: {
+        stickers: 'attributes.stickers',
+        group: {
+          CountActions: {
+            type: 'member',
+            owner_id: '^id'
+          }
+        },
+        avatar: 'attributes.avatar',
+        name: 'name',
+        description: 'attributes.description',
+        reviews: {
+          Entities: {
+            type: 'review',
+            owner_id: '^id'
+          },
+          Limit: 2,
+          Include: {
+            id: 'id',
+            review: 'contents',
+            rating: 'attributes.rating',
+            image: 'attributes.image',
+            name: 'title',
+            sticker: 'attributes.sticker'
+          }
+        },
+        activity: {
+          Entities: {
+            owner_id: '^id'
+          },
+          Limit: 2,
+          IncludeEntitiesRecursively: {
+            comment: {
+              id: 'id',
+              name: {
+                Profile: {
+                  id: '^id'
+                },
+                Include: 'name'
+              },
+              avatar: {
+                Profile: {
+                  id: '^id'
+                },
+                Include: 'attributes.avatar'
+              },
+              created: 'created_epoch',
+              comment: 'contents',
+              likes: {
+                CountActions: {
+                  entity_ref: 'id'
+                }
+              }
+            },
+            post: {
+              id: 'id',
+              name: {
+                Profile: {
+                  id: '^owner_id'
+                },
+                Include: 'name'
+              },
+              avatar: {
+                Profile: {
+                  id: '^owner_id'
+                },
+                Include: 'attributes.avatar'
+              },
+              created: 'created_epoch',
+              post: 'contents',
+              likes: {
+                CountActions: {
+                  entity_ref: '^id'
+                }
+              }
+            },
+            group: {
+              id: 'id',
+              name: 'title'
+            }
+          }
+        },
+        messages: {
+          Actions: {
+            type: 'fine',
+            profile_ref: '^id'
+          },
+          Limit: 3,
+          Include: {
+            id: 'id',
+            modifed: 'modified_epoch',
+            type: 'type',
+            returnDate: 'attributes.returnDate',
+            title: 'attributes.workTitle'
+          }
+        }
+      }
+    })
+    .expect(res => {
+      expectSuccess(res.body, (links, data) => {
+        expect(data.group).to.equal(1);
+        expect(data.avatar).to.deep.equal('https://s3.amazonaws.com/uifaces/faces/twitter/iqbalperkasa/128.jpg');
+        expect(data.name).to.equal('Shaylee');
+        expect(data.reviews.Total).to.equal(10);
+        expect(data.reviews.NextOffset).to.equal(2);
+        expect(data.reviews.List.length).to.equal(2);
+        expect(data.activity.Total).to.equal(29);
+        expect(data.activity.NextOffset).to.equal(2);
+        expect(data.activity.List.length).to.equal(2);
+      });
+    })
+    .expect(200)
+    .end(done);
+  });
 });
