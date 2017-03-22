@@ -542,7 +542,9 @@ function include(spec, defs, settings) {
       const extract = _.fromPairs(_.zip(keys, extractors));
       if (!_.isNil(context.deleted_epoch)) {
         extract.deleted_epoch = context.deleted_epoch;
-        extract.deleted_by = context.deleted_by;
+        if (context.deleted_by !== context.owner_id) {
+          extract.deleted_by = context.deleted_by;
+        }
       }
       return extract;
     });

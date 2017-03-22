@@ -871,7 +871,6 @@ describe('API v1 query endpoint', () => {
                 post: {
                   id: null,
                   summary: null,
-                  deleted_by: 575,
                   deleted_epoch: 1489959016,
                   post: {
                     id: 5104,
@@ -1111,7 +1110,6 @@ describe('API v1 query endpoint', () => {
               post: {
                 id: 475,
                 summary: 'Dicta aut rerum',
-                deleted_by: 575,
                 deleted_epoch: 1489959016,
                 post: {
                   id: 5104,

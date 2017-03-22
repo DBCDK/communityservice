@@ -149,3 +149,45 @@ service.post('/v1/community/1/query')
   }
 }
 ```
+
+## Deleted objects
+
+
+```json
+{
+  "Entity": {"id": 6177},
+  "IncludeEntitiesRecursively": {
+    "post": {"id": "id", "summary": "title", "owner": "owner_id"},
+    "group": {"id": "id", "name": "title"}
+  }
+}
+```
+
+results in
+
+```json
+{
+  "data": {
+    "group": {
+      "id": 28,
+      "name": "Dolorem accusantium deserunt",
+      "post": {
+        "id": null,
+        "summary": null,
+        "owner": null,
+        "deleted_epoch": 1489959016,
+        "post": {
+          "id": 5104,
+          "summary": "Aliquid nisi quae",
+          "owner": 211,
+          "post": {
+            "id": 6177,
+            "summary": "Enim beatae fugit",
+            "owner": 575
+          }
+        }
+      }
+    }
+  }
+}
+```
