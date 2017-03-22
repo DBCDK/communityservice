@@ -1,5 +1,7 @@
 #!/bin/sh
 
+## Used for testing the service.
+
 PSQL=psql
 SEED=fixtures/big.sql
 
