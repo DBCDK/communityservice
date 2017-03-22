@@ -39,7 +39,7 @@ and reinstated by
 
 which is exactly what is done to test the complex queries in
 
-    $ npm run querytest
+    $ npm run dbtest
 
 ## Lint
 
@@ -55,7 +55,7 @@ All files matching the pattern `*_test-db.js` are unit tests that need a running
 
 To run only a part of the unit tests, use the `--grep` parameter of mocha, for example
 
-  $ npm run dbtest --silent -- --grep 'community endpoints'
+    $ npm run dbtest --silent -- --grep 'community endpoints'
 
 To debug the service during test, make sure you set `LOG_SERVICE_ERRORS=1` in your `current.env`.
 

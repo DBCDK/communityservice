@@ -29,7 +29,11 @@ describe('API v1 profile endpoints', () => {
     })
     .then(() => {
       done();
+    })
+    .catch(errors => {
+      done(errors);
     });
+
   });
 
   describe('GET /community/:id/profile', () => {
@@ -365,6 +369,45 @@ describe('API v1 profile endpoints', () => {
         });
       })
       .end(done);
+    });
+
+    it('should undeleted on update', done => {
+      service.put(url)
+      .send({modified_by: id})
+      .expect(200)
+      .then(() => {
+        service.put(url)
+        .send({modified_by: id, name: 'Change'})
+        .expect(res => {
+          expectSuccess(res.body, (links, data) => {
+            expect(links).to.have.property('self');
+            expect(links.self).to.equal(url);
+            expectValidate(data, 'v1/schemas/profile-out.json');
+            expect(data).to.have.property('id');
+            expect(data.id).to.equal(id);
+            expect(data).to.have.property('name');
+            expect(data.name).to.equal('Change');
+            expect(data).to.have.property('attributes');
+            expect(data).to.have.property('created_epoch');
+            expect(data.created_epoch).to.match(/^[0-9]+$/);
+            expect(data).to.have.property('modified_epoch');
+            expect(data.modified_epoch).to.match(/^[0-9]+$/);
+            expect(data).to.have.property('modified_by');
+            expect(data.modified_by).to.equal(id);
+            expect(data).to.have.property('deleted_epoch');
+            expect(data.deleted_epoch).to.be.null;
+            expect(data).to.have.property('deleted_by');
+            expect(data.deleted_by).to.be.null;
+            expect(data).to.have.property('log');
+            expect(data.log.length).to.equal(1);
+          });
+        })
+        .expect(200)
+        .end(done);
+      })
+      .catch(error => {
+        done(error);
+      });
     });
 
     it('should mark as deleted when a log exists', done => {

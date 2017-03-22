@@ -8,6 +8,7 @@ if ! hash $PSQL 2>/dev/null; then
 	exit 1
 fi
 
+echo Cleaning database $DB_NAME...
 if ! $PSQL $DB_NAME < fixtures/clean-db.sql > /dev/null; then
 	echo Could not clean database, aborting.
 	exit 2
@@ -20,4 +21,3 @@ if ! $PSQL $DB_NAME < $SEED > /dev/null; then
 fi
 
 exit 0
-

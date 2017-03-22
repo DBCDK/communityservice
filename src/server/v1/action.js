@@ -15,7 +15,7 @@ const validatingInput = require('server/v1/verifiers').validatingInput;
 const gettingCurrentTimeAsEpoch = require('server/v1/modifiers').gettingCurrentTimeAsEpoch;
 const setCommunityId = require('server/v1/modifiers').setCommunityId;
 const constants = require('server/constants')();
-const actionTable = constants.actionTable;
+const actionTable = constants.action.table;
 const updateOrDelete = require('server/v1/modifiers').updateOrDelete;
 
 // Make sure the {community} parameter is passed through the preceeding router.

@@ -29,6 +29,9 @@ describe('API v1 action endpoints', () => {
     })
     .then(() => {
       done();
+    })
+    .catch(errors => {
+      done(errors);
     });
   });
 
@@ -590,6 +593,47 @@ describe('API v1 action endpoints', () => {
         });
       })
       .end(done);
+    });
+
+    it('should undelete on update', done => {
+      service.put(url)
+      .send({modified_by: user_id})
+      .expect(200)
+      .then(() => {
+        service.put(url)
+        .send({modified_by: user_id, type: 'dislike'})
+        .expect(res => {
+          expectSuccess(res.body, (links, data) => {
+            expect(links).to.have.property('self');
+            expect(links.self).to.equal(url);
+            expectValidate(data, 'v1/schemas/action-out.json');
+            expect(data).to.have.property('id');
+            expect(data.id).to.equal(2);
+            expect(data).to.have.property('type');
+            expect(data.type).to.equal('dislike');
+            expect(data).to.have.property('entity_ref');
+            expect(data.entity_ref).to.match(/^[0-9]+$/);
+            expect(data).to.have.property('attributes');
+            expect(data).to.have.property('created_epoch');
+            expect(data.created_epoch).to.match(/^[0-9]+$/);
+            expect(data).to.have.property('modified_epoch');
+            expect(data.modified_epoch).to.match(/^[0-9]+$/);
+            expect(data).to.have.property('modified_by');
+            expect(data.modified_by).to.equal(user_id);
+            expect(data).to.have.property('deleted_epoch');
+            expect(data.deleted_epoch).to.be.null;
+            expect(data).to.have.property('deleted_by');
+            expect(data.deleted_by).to.be.null;
+            expect(data).to.have.property('log');
+            expect(data.log.length).to.equal(1);
+          });
+        })
+        .expect(200)
+        .end(done);
+      })
+      .catch(error => {
+        done(error);
+      });
     });
 
     it('should update log with no attributes when attributes not changed', done => {

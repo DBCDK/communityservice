@@ -1,0 +1,90 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "oneOf": [
+    {"$ref": "#/definitions/singleton-unconditional"},
+    {"$ref": "#/definitions/singleton-conditional"},
+    {"$ref": "#/definitions/count"},
+    {"$ref": "#/definitions/list-unconditional"},
+    {"$ref": "#/definitions/list-conditional"}
+  ],
+  "definitions": {
+    "singleton-unconditional": {
+      "description": "Single object matching the criteria.",
+      "type": "object",
+      "properties": {
+        "Singleton": {"$ref": "#/definitions/criteria"},
+        "Include": {"$ref": "#/definitions/include"}
+      },
+      "required": ["Singleton", "Include"],
+      "additionalProperties": false
+    },
+    "singleton-conditional": {
+      "description": "Single object matching the criteria.",
+      "type": "object",
+      "properties": {
+        "Singleton": {"$ref": "#/definitions/criteria"},
+        "Case": {"$ref": "#/definitions/case"}
+      },
+      "required": ["Singleton", "Case"],
+      "additionalProperties": false
+    },
+    "list-unconditional": {
+      "description": "List of objects matching the criteria.",
+      "type": "object",
+      "properties": {
+        "List": {"$ref": "#/definitions/criteria"},
+        "SortBy": {"$ref": "#/definitions/sort"},
+        "Order": {"$ref": "#/definitions/order"},
+        "Limit": "integer",
+        "Offset": "integer",
+        "Include": {"$ref": "#/definitions/include"}
+      },
+      "required": ["List", "Include", "Limit"],
+      "additionalProperties": false
+    },
+    "list-conditional": {
+      "description": "List of objects matching the criteria.",
+      "type": "object",
+      "properties": {
+        "List": {"$ref": "#/definitions/criteria"},
+        "SortBy": {"$ref": "#/definitions/sort"},
+        "Order": {"$ref": "#/definitions/order"},
+        "Limit": "integer",
+        "Offset": "integer",
+        "Case": {"$ref": "#/definitions/case"}
+      },
+      "additionalProperties": {"$ref": "#/definitions/limitor"},
+      "required": ["List", "Case", "Limit"],
+      "additionalProperties": false
+    },
+    "count": {
+      "description": "Number of items matching the criteria.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["Count"],
+      "properties": {
+        "Count": {"$ref": "#/definitions/criteria"}
+      }
+    },
+    "include": {
+      "description": "What should be included in the result.",
+      "oneOf": [
+        {"$ref": "#/definitions/reference"},
+        {"$ref": "#/definitions/map"}
+      ]
+    },
+    "sort": {"enum": ["created", "modified"]},
+    "order": {"enum": ["descending", "ascending"]},
+    "case": {},
+    "criteria": {},
+    "reference": {
+      "description": "A variable in the current scope, in dot notation.",
+      "type": "string",
+      "pattern": ".*"
+    },
+    "map": {
+      "description": "Map from keys in the result to values from current scope.",
+      "type": "boolean"
+    }
+  }
+}

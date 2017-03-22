@@ -6,6 +6,7 @@ const server = require('server');
 const request = require('supertest');
 const faker = require('faker');
 const _ = require('lodash');
+const expectSuccess = require('server/test-verifiers').expectSuccess;
 
 /* eslint-disable no-console */
 
@@ -29,15 +30,11 @@ Eventually we need
 1 percent of groups should be deleted.
 1 percent of posts should be deleted.
 
-NodeJS memory limit = 1GB (?)
+Link to random images in 10% of entities.
 
-group->profiles: < 500 * 100 = 50000
-profile->groups: < 50000
-group->reviews: < 500 * 500 = 250000
-group->post: < 500 * 200 = 10000
-post->replies: < 10000 * 100 = 100000
+Set flags attributes on 1% of posts.
 
-total: < 370000 entires
+Modify 10% of entities.
 */
 
 
@@ -45,7 +42,7 @@ const msDbQueryGracePeriod = 30;
 
 const groups = 100;
 const profiles = 10 * groups;
-const admins = 1;
+const admins = 10;
 const membersPerGroupMax = 5;
 const campaigns = 2 * groups;
 const reviewsPerProfileMax = 10;
@@ -63,6 +60,9 @@ exports.seed = () => {
   let groupToCampaigns = [];
   let profileToCampaigns = [];
   let groupToPosts = [];
+
+  let totalEntries = 0;
+  let totalActions = 0;
 
   faker.seed(2);
 
@@ -82,7 +82,7 @@ exports.seed = () => {
   .then(profileTable => {
     // Profiles
     return sequenceWithDelay(profileTable, msDbQueryGracePeriod, profile => {
-      return createProfile(profile);
+      return creatingProfile(profile);
     }, index => {
       if (index % 10 === 0) {
         console.log(`Processed ${index} profiles`);
@@ -95,7 +95,7 @@ exports.seed = () => {
   .then(groupTable => {
     // Groups
     return sequenceWithDelay(groupTable, msDbQueryGracePeriod, group => {
-      return createEntity(group);
+      return creatingEntity(group);
     }, index => {
       if (index % 10 === 0) {
         console.log(`Processed ${index} groups`);
@@ -108,7 +108,7 @@ exports.seed = () => {
   .then(memberTable => {
     // Members of groups
     return sequenceWithDelay(memberTable, msDbQueryGracePeriod, member => {
-      return createAction(member);
+      return creatingAction(member);
     }, index => {
       if (index % 10 === 0) {
         console.log(`Processed ${index} members`);
@@ -121,7 +121,7 @@ exports.seed = () => {
   .then(campaignTable => {
     // Campaigns
     return sequenceWithDelay(campaignTable, msDbQueryGracePeriod, campaign => {
-      return createEntity(campaign)
+      return creatingEntity(campaign)
       .then(id => {
         safePush(groupToCampaigns, campaign.entity_ref, Number(id));
       });
@@ -137,7 +137,7 @@ exports.seed = () => {
   })
   .then(participantTable => {
     return sequenceWithDelay(participantTable, msDbQueryGracePeriod, participant => {
-      return createAction(participant);
+      return creatingAction(participant);
     }, index => {
       if (index % 10 === 0) {
         console.log(`Processed ${index} participants`);
@@ -150,7 +150,7 @@ exports.seed = () => {
   .then(submissionTable => {
     // Submissions to campaigns
     return sequenceWithDelay(submissionTable, msDbQueryGracePeriod, submission => {
-      return createEntity(submission);
+      return creatingEntity(submission);
     }, index => {
       if (index % 10 === 0) {
         console.log(`Processed ${index} submissions`);
@@ -163,7 +163,7 @@ exports.seed = () => {
   .then(postTable => {
     // Posts to groups
     return sequenceWithDelay(postTable, msDbQueryGracePeriod, post => {
-      return createEntity(post)
+      return creatingEntity(post)
       .then(id => {
         safePush(groupToPosts, post.entity_ref, Number(id));
       });
@@ -179,7 +179,7 @@ exports.seed = () => {
   .then(reviewTable => {
     // Reviews
     return sequenceWithDelay(reviewTable, msDbQueryGracePeriod, review => {
-      return createEntity(review)
+      return creatingEntity(review)
       .then(id => {
         safePush(groupToReviews, review.entity_ref, Number(id));
       });
@@ -195,7 +195,7 @@ exports.seed = () => {
   .then(replyTable => {
     // Replies to posts.
     return sequenceWithDelay(replyTable, msDbQueryGracePeriod, post => {
-      return createEntity(post)
+      return creatingEntity(post)
       .then(id => {
         safePush(groupToPosts, post.attributes.group, Number(id));
       });
@@ -211,7 +211,7 @@ exports.seed = () => {
   .then(replyTable => {
     // More replies to posts.
     return sequenceWithDelay(replyTable, msDbQueryGracePeriod, post => {
-      return createEntity(post)
+      return creatingEntity(post)
       .then(id => {
         safePush(groupToPosts, post.attributes.group, Number(id));
       });
@@ -227,7 +227,7 @@ exports.seed = () => {
   .then(replyTable => {
     // Even more replies.
     return sequenceWithDelay(replyTable, msDbQueryGracePeriod, post => {
-      return createEntity(post)
+      return creatingEntity(post)
       .then(id => {
         safePush(groupToPosts, post.attributes.group, Number(id));
       });
@@ -243,7 +243,7 @@ exports.seed = () => {
   .then(replyTable => {
     // More, more, more replies.
     return sequenceWithDelay(replyTable, msDbQueryGracePeriod, post => {
-      return createEntity(post)
+      return creatingEntity(post)
       .then(id => {
         safePush(groupToPosts, post.attributes.group, Number(id));
       });
@@ -259,9 +259,11 @@ exports.seed = () => {
   .then(replyTable => {
     // More, more, more, more more more replies.
     return sequenceWithDelay(replyTable, msDbQueryGracePeriod, post => {
-      return createEntity(post)
+      return creatingEntity(post)
       .then(id => {
         safePush(groupToPosts, post.attributes.group, Number(id));
+        // Remember the largerst entity number.
+        totalEntries = id;
       });
     }, index => {
       if (index % 10 === 0) {
@@ -274,7 +276,7 @@ exports.seed = () => {
   })
   .then(likesTable => {
     return sequenceWithDelay(likesTable, msDbQueryGracePeriod, like => {
-      return createAction(like);
+      return creatingAction(like);
     }, index => {
       if (index % 10 === 0) {
         console.log(`Processed ${index} likes`);
@@ -286,7 +288,11 @@ exports.seed = () => {
   })
   .then(followsTable => {
     return sequenceWithDelay(followsTable, msDbQueryGracePeriod, follow => {
-      return createAction(follow);
+      return creatingAction(follow)
+      .then(id => {
+        // Remember the largerst action number.
+        totalActions = id;
+      });
     }, index => {
       if (index % 10 === 0) {
         console.log(`Processed ${index} follows`);
@@ -294,6 +300,34 @@ exports.seed = () => {
     });
   })
   .then(() => {
+    const toDelete = uniqueRandomListOfNumbersFromOneTo(totalActions, totalActions / 100);
+    console.log(`Will delete actions ${toDelete}`);
+    return sequenceWithDelay(toDelete, msDbQueryGracePeriod, deletingAction, index => {
+      if (index % 10 === 0) {
+        console.log(`Deleted ${index} actions`);
+      }
+    });
+  })
+  .then(() => {
+    const toModify = uniqueRandomListOfNumbersFromOneTo(totalEntries, totalEntries / 50);
+    console.log(`Will modify entities ${toModify}`);
+    return sequenceWithDelay(toModify, msDbQueryGracePeriod, modifyingEntry, index => {
+      if (index % 10 === 0) {
+        console.log(`Modified ${index} entries`);
+      }
+    });
+  })
+  .then(() => {
+    const toModify = uniqueRandomListOfNumbersFromOneTo(profiles, profiles / 50);
+    console.log(`Will modify profiles ${toModify}`);
+    return sequenceWithDelay(toModify, msDbQueryGracePeriod, modifyingProfile, index => {
+      if (index % 10 === 0) {
+        console.log(`Modified ${index} profiles`);
+      }
+    });
+  })
+  .then(() => {
+    /*
     console.log('groupToProfiles');
     console.log(groupToProfiles);
 
@@ -311,7 +345,7 @@ exports.seed = () => {
 
     console.log('groupToPosts');
     console.log(groupToPosts);
-
+    */
     console.log('success');
   })
   .catch(error => {
@@ -320,7 +354,106 @@ exports.seed = () => {
   })
   ;
 
-  function createEntity(value, debug) {
+  function deletingAction(id) {
+    console.log(`action ${id}`);
+    return new Promise((resolve, reject) => {
+      service.get(`/v1/community/1/action/${id}`)
+      .expect(200)
+      .expect(res => {
+        expectSuccess(res.body, (links, action) => {
+          service.put(`/v1/community/1/action/${id}`)
+            .send({modified_by: action.owner_id})
+            .expect(200)
+            .end(error => {
+              if (_.isNil(error)) {
+                resolve();
+              }
+              else {
+                reject(error);
+              }
+            });
+        });
+      })
+      .end(error => {
+        if (!_.isNil(error)) {
+          reject(error);
+        }
+      });
+    });
+  }
+
+  function modifyingEntry(id) {
+    console.log(`entity ${id}`);
+    return new Promise((resolve, reject) => {
+      service.get(`/v1/community/1/entity/${id}`)
+      .expect(200)
+      .expect(res => {
+        expectSuccess(res.body, (links, entity) => {
+          // console.log(entity);
+          let update = {modified_by: entity.owner_id};
+          let attributes = {};
+          if (id % 2 === 0) {
+            attributes.picture = faker.image.animals();
+          }
+          if (id % 3 === 0) {
+            attributes.flag = faker.hacker.abbreviation();
+          }
+          if (!_.isEmpty(attributes)) {
+            update.attributes = attributes;
+          }
+          console.log(id);
+          console.log(update);
+          service.put(`/v1/community/1/entity/${id}`)
+            .send(update)
+            .expect(200)
+            .end(error => {
+              if (_.isNil(error)) {
+                resolve();
+              }
+              else {
+                reject(error);
+              }
+            });
+        });
+      })
+      .end(error => {
+        if (!_.isNil(error)) {
+          reject(error);
+        }
+      });
+    });
+  }
+
+  function modifyingProfile(id) {
+    console.log(`profile ${id}`);
+    return new Promise((resolve, reject) => {
+      let update = {modified_by: id};
+      let attributes = {};
+      if (id % 2 === 0) {
+        attributes.favourite = [faker.commerce.color(), faker.commerce.color()];
+      }
+      if (id % 3 === 0) {
+        update.name = faker.name.firstName();
+      }
+      if (!_.isEmpty(attributes)) {
+        update.attributes = attributes;
+      }
+      console.log(update);
+      service.put(`/v1/community/1/profile/${id}`)
+        .send(update)
+        .expect(200)
+        .end(error => {
+          if (_.isNil(error)) {
+            resolve();
+          }
+          else {
+            reject(error);
+          }
+        });
+    });
+  }
+
+  function creatingEntity(value, debug) {
     return new Promise((resolve, reject) => {
       if (debug) {
         console.log(`Creating ${JSON.stringify(value)}`);
@@ -340,7 +473,7 @@ exports.seed = () => {
     });
   }
 
-  function createAction(value, debug) {
+  function creatingAction(value, debug) {
     return new Promise((resolve, reject) => {
       if (debug) {
         console.log(`Creating ${JSON.stringify(value)}`);
@@ -363,7 +496,7 @@ exports.seed = () => {
     });
   }
 
-  function createProfile(value) {
+  function creatingProfile(value) {
     return new Promise((resolve, reject) => {
       service.post('/v1/community/1/profile').send(value)
       .end((error, result) => {
@@ -378,6 +511,7 @@ exports.seed = () => {
     });
   }
 
+  // TODO: rename
   function createCommunity(value) {
     return new Promise((resolve, reject) => {
       service.post('/v1/community').send(value)
@@ -417,7 +551,8 @@ exports.seed = () => {
     for (let i = 0; i < profiles; ++i) {
       let attributes = {
         email: faker.internet.email(),
-        avatar: faker.internet.avatar()
+        avatar: faker.internet.avatar(),
+        favourite: [faker.commerce.color()]
       };
       if (_.includes(adminTable, i)) {
         attributes.admin = true;
@@ -438,7 +573,8 @@ exports.seed = () => {
         owner_id,
         type: 'group',
         title: _.capitalize(faker.lorem.words()),
-        contents: faker.lorem.paragraphs(2, '\n')
+        contents: faker.lorem.paragraphs(2, '\n'),
+        attributes: {subject: faker.hacker.noun()}
       });
     }
     return result;
@@ -473,12 +609,17 @@ exports.seed = () => {
       if (!memberIn || memberIn.length === 0) {
         continue;
       }
+      let picture = null;
+      if (faker.random.number() % 10 === 0) {
+        picture = faker.image.nature();
+      }
       result.push({
         owner_id,
         type: 'campaign',
         entity_ref: selectRandomlyFrom(memberIn),
         title: _.capitalize(faker.lorem.words()),
         contents: faker.lorem.paragraphs(2, '\n'),
+        attributes: {picture},
         start_epoch: past,
         end_epoch: future
       });
@@ -527,7 +668,8 @@ exports.seed = () => {
           entity_ref: campaign,
           type: 'submission',
           title: _.capitalize(faker.lorem.words()),
-          contents: faker.lorem.paragraphs(2, '\n')
+          contents: faker.lorem.paragraphs(2, '\n'),
+          attributes: {picture: faker.image.animals()}
         });
       });
     }
@@ -544,6 +686,10 @@ exports.seed = () => {
       }
       for (let i = 0; i < reviewsPerProfileMax; ++i) {
         const group = selectRandomlyFrom(memberIn);
+        let picture = null;
+        if (faker.random.number() % 10 === 0) {
+          picture = faker.image.sports();
+        }
         result.push({
           type: 'review',
           owner_id: profile,
@@ -551,6 +697,7 @@ exports.seed = () => {
           title: _.capitalize(faker.lorem.words()),
           contents: faker.lorem.paragraphs(2, '\n'),
           attributes: {
+            picture,
             rating: faker.random.number() % 6
           }
         });
@@ -570,12 +717,19 @@ exports.seed = () => {
       const random = logDistributedRandom(postsPerProfileForEachIterationMax);
       for (let i = 0; i < random; ++i) {
         const group = selectRandomlyFrom(memberIn);
+        let picture = null;
+        if (faker.random.number() % 10 === 0) {
+          picture = faker.image.city();
+        }
         result.push({
           type: 'post',
           owner_id: profile,
           entity_ref: group,
           title: _.capitalize(faker.lorem.words()),
-          contents: faker.lorem.paragraphs(2, '\n')
+          contents: faker.lorem.paragraphs(2, '\n'),
+          attributes: {
+            picture
+          }
         });
       }
     }
@@ -599,6 +753,10 @@ exports.seed = () => {
           continue;
         }
         const post = selectRandomlyFrom(postsIn);
+        let flagged = null;
+        if (faker.random.number() % 10 === 0) {
+          flagged = faker.hacker.abbreviation();
+        }
         result.push({
           type: 'post',
           owner_id: profile,
@@ -606,7 +764,7 @@ exports.seed = () => {
           title: _.capitalize(faker.lorem.words()),
           contents: faker.lorem.paragraph(),
           // Hack to easily find the group when making threads.
-          attributes: {group}
+          attributes: {group, flag: flagged}
         });
       }
     }
@@ -700,7 +858,7 @@ exports.seed = () => {
   }
 
   /**
-   * [sequenceWithDelay description]
+   * Asynchronously process a list of items in sequence.
    * @param  {Array(α)}           list             Items to process.
    * @param  {int}                msDelay          Delay in ms between each processing.
    * @param  {α -> Promise(void)} processing       Processer of one item.

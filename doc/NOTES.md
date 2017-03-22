@@ -1,92 +1,195 @@
 # Data formats
 
+## (Scribbles)
+
+To approve new reviews
+As admin
+I want to search for reviews that need approval.
+
+```js
+{ Entities: { type: 'review', 'attributes.approvedBy': null }
+, Limit: 100
+, Sort: 'created_epoch'
+, Order: 'ascending'
+, Include:
+  { id: 'id'
+  , review: 'contents'
+  , image: 'attributes.picture'
+  , profile:
+    { Profile: { id: '^owner_id' }
+    , Include: { id: 'id', name: 'name' }
+    }
+  }
+}
+```
+
+To display the best books
+As a community developer
+I want to find the most recent reviews that give the highest rating.
+
+```js
+{ Entities: { type: 'review', created_epoch: {operator: 'newer', value: 14, unit: 'days'} }
+, Limit: 8
+, Sort: 'attributes.rating'
+, Order: 'descending'
+, Include:
+  { id: 'id'
+  , review: 'contents'
+  , image: 'attributes.picture'
+  , profile:
+    { Profile: { id: '^owner_id' }
+    , Include: { id: 'id', name: 'name' }
+    }
+  }
+}
+```
+
+## Extractors
+
+```
+Include:
+  string => return extracted property.
+  object =>
+    left-hand side => the property that will be present in the resulting object.
+    right-hand sides:
+      string ==> assign extracted property.
+      object ==> perform subquery and assing result.
+
+Type:
+  object =>
+    left-hand side => matched against the type of the context object.
+```
+
+
+## Embedding / Follow
+
+IncludeEntitiesRecursively is always on entity_ref and always a Switch.
+
+```js
+{ Entity: { id: 15532 }
+, IncludeEntitiesRecursively:
+  { group: { Include: 'attributes.name' }
+  , post: { Include: 'attributes.text' }
+  , comment: { Include: { id: 'id', answer: 'attributes.comment' } }
+  }
+}
+```
+
+## Conventions
+
+Because Actions can point to Entities and/or Profiles, the community has to keep Actions strictly separated by their `type` based on whether the Action points to a Profile, an Entity, or both.
+
+*Possible improvement (v2)*: Split Actions into three separate tables.
+
+{ What to do about objects marked as deleted?  The community should decide how to deal with them, but then the community needs to know when something is deleted. }
+
+*Possible improvement (v2)*: Never use id numbers directly, always use the URL.
+
+
 ## Profile page
 
 To show a profile, Biblo needs data form Elvis like:
 
 ```json
-{ "profile":
-  { "id": 83531
-  , "stickers":
-    [ "https://biblo.dk/billede/3652"
-    , "https://biblo.dk/billede/3831"
-    ]
-  , "groups": 34
-  , "avatar": "https://biblo.dk/billede/83531"
-  , "name": "Anders Friis"
-  , "description": "Jeg arbejder for Biblo..."
-  , "reviews":
-    { "total": 4
-    , "next-offset": 2
-    , "list":
-      [ { "id": 368431
-        , "review": "En af de bedste film jeg har set længe..."
-        , "likes": 1
-        , "rating": 5
-        , "image": "..."
-        , "name": "A Film Noir"
-        , "sticker": "https://biblo.dk/billede/3652"
-        }
-      , { "id": 368432
-        , "review": "Den er rigtig god..."
-        , "likes": 0
-        , "rating": 4
-        , "image": "..."
-        , "name": "Magisterium"
-        }
-      ]
-    }
-  , "activity":
-    { "total": 64
-    , "next-offset": 2
-    , "list":
-      [ { "group":
-          { "id": 4
-          , "name": "Bogklubben"
-          , "post":
-            { "id": 319093
-            , "name": "Navle"
-            , "avatar": "..."
-            , "created": 1485219736
-            , "post": "hej mit navn er Caroline ... rigtig god"
-            , "comment":
-              { "id": 137362
-              , "name": "Anders Friis"
-              , "avatar": "...."
-              , "created": 1485219799
-              , "comment": "Man kan se dem lige her..."
-              , "likes": 3
-              }
+{
+  "Profile": {
+    "id": "15"
+  },
+  "Include": {
+    "stickers": "attributes.stickers",
+    "group": {
+      "CountActions": {
+        "type": "member",
+        "owner_id": "^id"
+      }
+    },
+    "avatar": "attributes.avatar",
+    "name": "name",
+    "description": "attributes.description",
+    "reviews": {
+      "Entities": {
+        "type": "review",
+        "owner_id": "^id"
+      },
+      "Limit": 2,
+      "Include": {
+        "id": "id",
+        "review": "contents",
+        "rating": "attributes.rating",
+        "image": "attributes.image",
+        "name": "title",
+        "sticker": "attributes.sticker"
+      }
+    },
+    "activity": {
+      "Entities": {
+        "owner_id": "^id"
+      },
+      "Limit": 2,
+      "IncludeEntitiesRecursively": {
+        "comment": {
+          "id": "id",
+          "name": {
+            "Profile": {
+              "id": "^id"
+            },
+            "Include": "name"
+          },
+          "avatar": {
+            "Profile": {
+              "id": "^id"
+            },
+            "Include": "attributes.avatar"
+          },
+          "created": "created_epoch",
+          "comment": "contents",
+          "likes": {
+            "CountActions": {
+              "entity_ref": "id"
             }
           }
-        }
-      , { "group":
-          { "id": 4
-          , "name": "yahya hassan fangruppen"
-          , "post":
-            { "id": 883319
-            , "name": "Anders Friis"
-            , "avatar": "..."
-            , "created": 14852024112
-            , "post": "Er der kampagne her?"
-            , "sticker": "https://biblo.dk/billede/3831"
-            , "likes": 0
+        },
+        "post": {
+          "id": "id",
+          "name": {
+            "Profile": {
+              "id": "^owner_id"
+            },
+            "Include": "name"
+          },
+          "avatar": {
+            "Profile": {
+              "id": "^owner_id"
+            },
+            "Include": "attributes.avatar"
+          },
+          "created": "created_epoch",
+          "post": "contents",
+          "likes": {
+            "CountActions": {
+              "entity_ref": "^id"
             }
           }
+        },
+        "group": {
+          "id": "id",
+          "name": "title"
         }
-      ]
-    }
-  , "messages":
-    { "total": 1
-    , "next-offset": 1
-    , "list":
-      [ { "id": "836463"
-        , "created": 14852025533
-        , "type": "fine"
-        , "return-date": 14852016385
-        , "title": "Nausicaä fra vindenes dal"
-        }
-      ]
+      }
+    },
+    "messages": {
+      "Actions": {
+        "type": "fine",
+        "profile_ref": "^id"
+      },
+      "Limit": 3,
+      "Include": {
+        "id": "id",
+        "modifed": "modified_epoch",
+        "type": "type",
+        "returnDate": "attributes.returnDate",
+        "title": "attributes.workTitle"
+      }
     }
   }
 }
@@ -95,8 +198,65 @@ To show a profile, Biblo needs data form Elvis like:
 The query to Elvis would be like:
 
 
-```json
-
+```js
+{ Profile: { id: 83531 }
+, Include:
+  { stickers: 'attributes.stickers'
+  , group: { CountActions: { type: 'member', owner_id: '^id' } }
+  , avatar: 'attributes.avatar'
+  , name: 'name'
+  , description: 'attributes.description'
+  , reviews:
+    { Entities: { type: 'review', owner_id: '^id' }
+    , Limit: 2
+    , SortBy: 'modified_epoch'
+    , Include:
+      { id: 'id'
+      , review: 'contents'
+      , rating: 'attributes.rating'
+      , image: 'attributes.image'
+      , name: 'title'
+      , sticker: 'attributes.sticker'
+      }
+    }
+  , activity:
+    { Entities: { owner_id: '^id' }
+    , Limit: 2
+    , SortBy: 'modified_epoch'
+    , IncludeEntitiesRecursively:
+      { comment:
+        { id: 'id'
+        , name: { Profile: { owner_id: '^owner_id' }, Include: 'name' }
+        , avatar: { Profile: { owner_id: '^owner_id' }, Include: 'attributes.avatar' }
+        , created: 'created_epoch'
+        , comment: 'contents'
+        , likes: { CountActions: { entity_ref: '^id' } }
+        }
+      , post:
+        { id: 'id'
+        , name: { Profile: { owner_id: '^owner_id' }, Include: 'name' }
+        , avatar: { Profile: { owner_id: '^owner_id' }, Include: 'attributes.avatar' }
+        , created: 'created_epoch'
+        , post: 'contents'
+        , likes: { CountActions: { entity_ref: '^id' } }
+        }
+      , group: { id: 'id', name: 'title' }
+      }
+    }
+  , messages:
+    { Actions: { type: 'fine', profile_ref: '^id' }
+    , Limit: 3
+    , SortBy: 'modified_epoch'
+    , Include:
+      { id: 'id'
+      , modifed: 'modified_epoch'
+      , type: 'type'
+      , returnDate: 'attributes.returnDate'
+      , title: 'attributes.workTitle'
+      }
+    }
+  }
+}
 
 ```
 
@@ -107,67 +267,55 @@ The query to Elvis would be like:
 To show the three newest reviews, Biblo needs data from Elvis like:
 
 ```json
-{ "reviews":
-  { "total": 321
-  , "next-offset": 3
-  , "list":
-    [ { "id": 79346
-      , "profile":
-        { "id": 50708
-        , "name": "Pokemon Gamer"
-        }
-      , "review": "jeg syndes den er god for små børn så de lærer om modsætninger men den er ikke noget for store børn"
-      , "rating": 5
-      , "image": "http://book-cover...png"
+{ "total": 321
+, "next-offset": 4
+, "list":
+  [ { "id": 79346
+    , "profile":
+      { "id": 50708
+      , "name": "Pokemon Gamer"
       }
-    , { "id": 87453
-      , "profile":
-        { "id": 55321
-        , "name": "Alberte2701"
-        }
-      , "review": "Isabella Swan flytter fra den solrige by Phoenix, til den kedelige by ..."
-      , "rating": 3
-      , "image": "http://book-cover...png"
+    , "review": "jeg syndes den er god for små børn så de lærer om modsætninger men den er ikke noget for store børn"
+    , "rating": 5
+    , "image": "http://book-cover...png"
+    }
+  , { "id": 87453
+    , "profile":
+      { "id": 55321
+      , "name": "Alberte2701"
       }
-    , { "id": 79321
-      , "profile":
-        { "id": 65231
-        , "name": "maiken og celton"
-        }
-      , "review": "den er sjov vikelig god syntes i skal læse den"
-      , "rating": 4
-      , "image": "http://book-cover...png"
+    , "review": "Isabella Swan flytter fra den solrige by Phoenix, til den kedelige by ..."
+    , "rating": 3
+    , "image": "http://book-cover...png"
+    }
+  , { "id": 79321
+    , "profile":
+      { "id": 65231
+      , "name": "maiken og celton"
       }
-    ]
-  }
+    , "review": "den er sjov vikelig god syntes i skal læse den"
+    , "rating": 4
+    , "image": "http://book-cover...png"
+    }
+  ]
 }
 ```
 
 The query to Elvis would be like:
 
-```json
-{ "reviews":
-  { "List":
-    { "Entity": { "type": "review" }
-    , "sort-by": "createdDate"
-    , "order": "descending"
-    , "offset": 0
-    , "limit": 3
-    , "include":
-      { "id": "id"
-      , "review": "content"
-      , "rating": "attribute.rating"
-      , "image": "attribute.?"
-      , "profile":
-        { "Object":
-          { "Profile": { "id": "reviews.profileId" }
-          , "include":
-            { "id": "id"
-            , "name": "attribute.name"
-            }
-          }
-        }
-      }
+```js
+{ Entities: { type: 'review' }
+, SortBy: 'modified_epoch'
+, Order: 'descending'
+, Limit: 3
+, Include:
+  { id: 'id'
+  , review: 'contents'
+  , rating: 'attributes.rating'
+  , image: 'attributes.image'
+  , profile:
+    { Profile: { id: '^owner_id' }
+    , Include: { id: 'id', name: 'attributes.name' }
     }
   }
 }
@@ -193,7 +341,7 @@ To display a view of a group with id 1, including 3 posts with 2 comments each, 
   , "description": "Denne gruppe er til alle jer der spiller Minecraft, eller..."
   , "posts":
     { "total": 632
-    , "next-offset": 3
+    , "next-offset": 4
     , "list":
       [ { "id": 8464133
         , "created": 1485218242
@@ -298,90 +446,55 @@ To display a view of a group with id 1, including 3 posts with 2 comments each, 
 
 The query to Elvis would be like:
 
-```json
-{ "group":
-  { "Object":
-    { "Entity": { "type": "group", "id": 1 }
-    , "include":
-      { "id": "id"
-      , "name": "attribute.name"
-      , "description": "content"
-      , "posts":
-        { "List":
-          { "Entity": { "type": "post", "parentId": "group.id" }
-          , "sort-by": "createdDate"
-          , "order": "descending"
-          , "offset": 0
-          , "limit": 3
-          , "include":
-            { "id": "id"
-            , "created": "created"
-            , "post": "content"
-            , "image": "attribute.attachment"
-            , "likes": { "Count": { "Action": { "type": "like", "relationId": "posts.id" } } }
-            , "profile":
-              { "Object":
-                { "Profile": { "id": "posts.profileId" }
-                , "include":
-                  { "id": "id"
-                  , "name": "attribute.name"
-                  , "avatar": "attribute.avatar"
-                  }
-                }
-              }
-            , "comments":
-              { "List":
-                { "Entity": { "type": "post", "topId": "posts.id" }
-                , "sort-by": "createdDate"
-                , "order": "descending"
-                , "offset": 0
-                , "limit": 2
-                , "include":
-                  { "comment": "content"
-                  , "created": "created"
-                  , "likes": { "Count": { "Action": { "type": "like", "relationId": "posts.id" } } }
-                  , "profile":
-                    { "Object":
-                      { "Profile": { "id": "posts.profileId" }
-                      , "include":
-                        { "id": "id"
-                        , "name": "attribute.name"
-                        , "avatar": "attribute.avatar"
-                        }
-                      }
-                    }
-                  }
-                }
-              }
+```js
+{ Entity: { type: 'group', id: 1 }
+, Include:
+  { id: 'id'
+  , name: 'title'
+  , description: 'contents'
+  , posts:
+    { Entities: { type: 'post', entity_ref: '^id' }
+    , SortBy: 'created_epoch'
+    , Limit: 3
+    , Include:
+      { id: 'id'
+      , created: 'created_epoch'
+      , post: 'contents'
+      , image: 'attributes.attachment'
+      , likes: { CountActions: { type: 'like', entity_ref: '^id' } } }
+      , profile:
+        { Profile: { id: '^owner_id' }
+        , Include: { id: 'id', name: 'name', avatar: 'attributes.avatar' }
+        }
+      , comments:
+        { Entities: { type: post, entity_id: '^id' }
+        , SortBy: 'created_epoch'
+        , Limit: 2
+        , Include:
+          { comment: 'contents'
+          , created: 'created_epoch'
+          , likes: { CountActions: { type: 'like', entity_ref: '^id' } } }
+          , profile:
+            { Profile: { id: '^owner_id' }
+            , Include: { id: 'id', name: 'name', avatar: 'attributes.avatar' }
             }
           }
         }
-      , "host":
-        { "Object":
-          { "Profile": { "id": "group.attribute.host" }
-          , "include":
-            { "id": "profileId"
-            , "avatar": "attribute.avatar"
-            }
-          }
-        }
-      , "followers":
-        { "List":
-          { "Action": { "type": "follow", "entityId": "group.id" }
-          , "offset": 0
-          , "limit": 4
-          , "sort-by": "createDate"
-          , "order": "descending"
-          , "include":
-            { "id": "profileId"
-            , "avatar":
-              { "Object":
-                { "Profile": { "id": "followers.profileId" }
-                , "yield": "attribute.avatar"
-                }
-              }
-            }
-          }
+      }
+    }
+  , host:
+    { Profiles: { id: '^attributes.host' }
+    , Include: { id: 'id', avatar: 'attributes.avatar' }
+    }
+  , followers:
+    { Actions: { type: 'member', entity_ref: '^id' }
+    , Limit: 4
+    , SortBy: 'created_epoch'
+    , Include:
+      { id: 'profile_ref'
+      , avatar:
+        { Profile: { id: '^profile_ref' }
+        , Include: 'attributes.avatar'
         }
       }
     }

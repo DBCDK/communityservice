@@ -14,7 +14,7 @@ const gettingCurrentTimeAsEpoch = require('server/v1/modifiers').gettingCurrentT
 const setCommunityId = require('server/v1/modifiers').setCommunityId;
 const updateOrDelete = require('server/v1/modifiers').updateOrDelete;
 const constants = require('server/constants')();
-const profileTable = constants.profileTable;
+const profileTable = constants.profile.table;
 
 // const logger = require('__/logging')(config.logger);
 
