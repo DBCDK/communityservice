@@ -7,7 +7,7 @@ For a bird eye's view, see the [product vision](doc/product-vision.md) and the s
 
 ## Usage
 
-See the [cookbook](doc/community-developers-cookbook.md) for toplevel examples of how to use the API this service provides.  For a detiailed description of the API, see the [endpoints](doc/endpoints.md), [query language](doc/query-language.md), and the underlying [database model](doc/db-model.md).
+See the [community developer's guide](doc/community-developer-guide.md) for toplevel examples of how to use the API this service provides.  For a detiailed description of the API, see the [endpoints](doc/endpoints.md), [query language](doc/query-language.md), and the underlying [database model](doc/db-model.md).
 
 ## Releases
 

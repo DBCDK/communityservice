@@ -28,7 +28,7 @@ describe('API v1 user story queries', () => {
     });
   });
 
-  it('to display the best books as a community developer I want to find the most recent reviews that give the highest rating', done => {
+  it('to display the best books as a community developer I want to find the 8 most recent reviews with the highest rating', done => {
     service.post('/v1/community/1/query')
     .send({
       Entities: {

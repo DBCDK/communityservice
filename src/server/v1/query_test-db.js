@@ -1056,7 +1056,7 @@ describe('API v1 query endpoint', () => {
 
   });
 
-  describe('options', () => {
+  describe('option include-deleted', () => {
 
     it('should reject unknown options', done => {
       service.post('/v1/community/1/query/include-unicorns')
