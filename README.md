@@ -5,6 +5,10 @@
 
 For a bird eye's view, see the [product vision](doc/product-vision.md) and the software architecture [context](doc/dbc-community-service-context.pdf) and [containers](doc/dbc-community-service-containers.pdf).
 
+## Usage
+
+See the [cookbook](doc/community-developers-cookbook.md) for toplevel examples of how to use the API this service provides.  For a detiailed description of the API, see the [endpoints](doc/endpoints.md), [query language](doc/query-language.md), and the underlying [database model](doc/db-model.md).
+
 ## Releases
 
 Releases are found at GitHub [/releases](https://github.com/DBCDK/communityservice/releases).
@@ -62,14 +66,6 @@ The web service has the following administrative endpoints:
 | `/status` | Returns the service status as JSON |
 | `/pid`    | Returns the service's process id   |
 
-
-## Project management
-
-See [Trello board](https://trello.com/b/cwxvuEYY/elvis).
-
-## Data formats
-
-See the [endpoints](doc/endpoints.md), [query language](doc/query-language.md), [database model](doc/db-model.md) and various [notes](doc/NOTES.md).
 
 ## Development
 

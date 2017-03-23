@@ -269,7 +269,7 @@ If the reference is prefixed with a carret `^`, the next-to-inner context is use
 
 ## Errors
 
-Inspired by [JSON-API](http://jsonapi.org/), the community service returns either a `data` or an `error` value:
+Inspired by [JSON-API](http://jsonapi.org/), the community service returns either a `data` or an `errors` value:
 
 Satisfied query:
 ```json

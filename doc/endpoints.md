@@ -1,4 +1,4 @@
-# Simple API endpoints
+# Service endpoints
 
 The simple endpoints mainly operate on a single database object.  Consult the [schemas for the database](db-model.md) for the exact contents of each type of object.
 
