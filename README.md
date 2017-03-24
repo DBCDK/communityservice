@@ -1,5 +1,6 @@
 [![Build Status](https://travis-ci.org/DBCDK/communityservice.svg?branch=master)](https://travis-ci.org/DBCDK/communityservice)
 [![Coverage Status](https://coveralls.io/repos/github/DBCDK/communityservice/badge.svg?branch=master)](https://coveralls.io/github/DBCDK/communityservice?branch=master)
+[![bitHound Overall Score](https://www.bithound.io/github/DBCDK/communityservice/badges/score.svg)](https://www.bithound.io/github/DBCDK/communityservice)
 
 # DBC Community Service
 
