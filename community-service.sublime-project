@@ -34,6 +34,7 @@
       , "src/nvm.sh"
       , "src/server/config.js"
       , "src/fixtures/big.sql"
+      , "src/fixtures/old.sql"
       ]
     }
   ]

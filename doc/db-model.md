@@ -1,12 +1,14 @@
 # Community Service database model
 
-The database is created from scratch by [`src/server/v1/current-db.js`](../src/server/v1/current-db.js).
+The database is created from scratch by running
+
+    $ cd src
+    $ ./node_modules/.bin/knex migrate:latest
 
 Migrations are located in [`src/migrations`](../src/migrations/).  To create a new migration layer, run
 
     $ cd src
     $ ./node_modules/.bin/knex migrate:make migration_name
-
 
 Here are the current raw schemas as seen by PostgreSQL.
 

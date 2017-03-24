@@ -1,5 +1,9 @@
 'use strict';
 
+/**
+ * The initial database setup.
+ */
+
 const constants = require('server/constants')();
 const communityTable = constants.community.table;
 const profileTable = constants.profile.table;
@@ -13,7 +17,7 @@ function addCreatedDeletedTimestamp(knex, table) {
 }
 
 function addModifyByDeletedByCommunityRef(knex, table) {
-  addCreatedDeletedTimestamp(table);
+  addCreatedDeletedTimestamp(knex, table);
   table.integer('modified_epoch').notNullable().defaultTo(knex.raw('extract(\'epoch\' from now())'));
   table.integer('modified_by');
   table.foreign('modified_by').references(`${profileTable}.id`);
@@ -35,7 +39,7 @@ function addActivePeriod(table) {
 
 function createcommunityTable(knex) {
   return knex.schema.createTable(communityTable, table => {
-    addCreatedDeletedTimestamp(table);
+    addCreatedDeletedTimestamp(knex, table);
     table.string('name').unique();
     table.jsonb('attributes').notNullable().defaultTo('{}');
     table.jsonb('log').nullable();
@@ -44,7 +48,7 @@ function createcommunityTable(knex) {
 
 function createProfileTable(knex) {
   return knex.schema.createTable(profileTable, table => {
-    addModifyByDeletedByCommunityRef(table);
+    addModifyByDeletedByCommunityRef(knex, table);
     table.string('name').notNullable();
     table.jsonb('attributes').notNullable().defaultTo('{}');
     table.jsonb('log').nullable();
@@ -53,7 +57,7 @@ function createProfileTable(knex) {
 
 function createEntityTable(knex) {
   return knex.schema.createTable(entityTable, table => {
-    addModifyByDeletedByCommunityRef(table);
+    addModifyByDeletedByCommunityRef(knex, table);
     addOwner(table);
     addActivePeriod(table);
     table.integer('entity_ref').nullable();
@@ -68,7 +72,7 @@ function createEntityTable(knex) {
 
 function createActionTable(knex) {
   return knex.schema.createTable(actionTable, table => {
-    addModifyByDeletedByCommunityRef(table);
+    addModifyByDeletedByCommunityRef(knex, table);
     addOwner(table);
     addActivePeriod(table);
     table.integer('entity_ref').nullable();
@@ -107,10 +111,10 @@ function destroy(knex) {
   });
 }
 
-exports.up = function(knex, Promise) {
+exports.up = function(knex) {
   return setup(knex);
 };
 
-exports.down = function(knex, Promise) {
+exports.down = function(knex) {
   return destroy(knex);
 };
