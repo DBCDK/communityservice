@@ -87,7 +87,6 @@ describe('API v1 community endpoints', () => {
       .end(done);
     });
 
-    // TODO: test with spaces and non-ascii characters.
     it('should locate community by name', done => {
       service.get('/v1/community/Biblo')
       .expect(200)

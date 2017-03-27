@@ -480,3 +480,41 @@ Result:
   }
 }
 ```
+
+## Logs
+
+Each profile, entity, and action has a built-in log that gets updated on each change.  To retrieve the log, request the object directly, eg.
+
+    GET /v1/community/1/entity/388
+
+will produce something like
+
+```json
+{ "links": { "self": "/v1/community/1/entity/388" }
+, "data":
+  { "id": 388
+  , "created_epoch": 1490363217
+  , "deleted_epoch": null
+  , "modified_epoch": 1490363614
+  , "modified_by": 417
+  , "deleted_by": null
+  , "community_id": 1
+  , "owner_id": 417
+  , "start_epoch": null
+  , "end_epoch": null
+  , "entity_ref": 92
+  , "type": "post"
+  , "title": "Exercitationem est maxime"
+  , "contents": "Rerum ullam odit dolores ..."
+  , "attributes": { "picture": "http://lorempixel.com/640/480/animals" }
+  , "log":
+    [ { "attributes": { "picture": null }
+      , "modified_by": 417
+      , "modified_epoch": 1490363614
+      }
+    ]
+  }
+}
+```
+
+The log entry records when the change was made, who made the change, and what changed.

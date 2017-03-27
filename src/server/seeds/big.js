@@ -73,7 +73,7 @@ exports.seed = () => {
   // Communities
   return Promise.resolve(generateCommunities())
   .then(communityTable => {
-    return Promise.all(communityTable.map(createCommunity));
+    return Promise.all(communityTable.map(creatingCommunity));
   })
   .then(results => {
     console.log(`Created ${results.length} communities`);
@@ -511,8 +511,7 @@ exports.seed = () => {
     });
   }
 
-  // TODO: rename
-  function createCommunity(value) {
+  function creatingCommunity(value) {
     return new Promise((resolve, reject) => {
       service.post('/v1/community').send(value)
       .end((error, result) => {
