@@ -16,6 +16,8 @@ Releases are found at GitHub [/releases](https://github.com/DBCDK/communityservi
 
 ## Deployment
 
+The service's test database requires at least PostgreSQL 9.6, but the schemas only require support for JSONB.
+
 To run the unit tests against the server:
 
     $ cd src
@@ -42,6 +44,10 @@ To start the server in staging or production mode:
     $ npm install --production
     $ cp environments/production.env current.env
     $ npm run serve
+
+To completely clear the database and its migration information, run
+
+    $ npm run dropall
 
 You can edit `current.env` after the above steps to further control the settings.  The web service obeys the following environment variables.
 
