@@ -6,7 +6,7 @@ const server = require('server');
 const config = require('server/config');
 const dbconfig = config.db;
 const knex = require('knex')(dbconfig);
-const db = require('server/v1/current-db')(knex);
+const db = require('server/test-db')(knex);
 const seedSmallDb = require('server/seeds/small').seed;
 const expectSuccess = require('server/test-verifiers').expectSuccess;
 const expectFailure = require('server/test-verifiers').expectFailure;
@@ -16,8 +16,10 @@ const expectValidate = require('server/test-verifiers').expectValidate;
 describe('API v1 profile endpoints', () => {
   const service = request(server);
   before(done => {
-    db.destroy()
-    .then(db.setup)
+    db.dropAll()
+    .then(() => {
+      return knex.migrate.latest();
+    })
     .then(() => {
       done();
     });

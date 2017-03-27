@@ -8,15 +8,14 @@ const expectFailure = require('server/test-verifiers').expectFailure;
 const config = require('server/config');
 const dbconfig = config.db;
 const knex = require('knex')(dbconfig);
-const db = require('server/v1/current-db')(knex);
+const db = require('server/test-db')(knex);
 const exec = require('child-process-promise').exec;
 
 /* eslint-disable no-unused-expressions */
 describe('API v1 query endpoint', () => {
   const service = request(server);
   before(done => {
-    db.destroy()
-    .then(db.setup)
+    db.dropAll()
     .then(() => {
       return exec('./seed-db.sh');
     })
@@ -713,7 +712,7 @@ describe('API v1 query endpoint', () => {
             expect(data).to.deep.equal({
               Total: 41,
               NextOffset: 5,
-              List: [191, 575, 927, 211, 2547]
+              List: [211, 927, 575, 191, 6176]
             });
           });
         })
@@ -735,11 +734,11 @@ describe('API v1 query endpoint', () => {
               Total: 41,
               NextOffset: 5,
               List: [
-                {who: 'Jamaal'},
-                {who: 'Irving'},
-                {who: 'Karianne'},
                 {who: 'Barton'},
-                {what: 'Velit rerum est'}
+                {who: 'Karianne'},
+                {who: 'Irving'},
+                {who: 'Jamaal'},
+                {what: 'Similique quae totam'}
               ]
             });
           });
@@ -871,7 +870,7 @@ describe('API v1 query endpoint', () => {
                 post: {
                   id: null,
                   summary: null,
-                  deleted_epoch: 1489959016,
+                  deleted_epoch: 1490363615,
                   post: {
                     id: 5104,
                     summary: 'Aliquid nisi quae',
@@ -982,7 +981,7 @@ describe('API v1 query endpoint', () => {
           expect(data).to.deep.equal({
             Total: 10,
             NextOffset: null,
-            List: [156, 968, 775, 601, 594, 534, 510, 476, 38, 55]
+            List: [156, 968, 775, 601, 594, 534, 510, 476, 55, 38]
           });
         });
       })
@@ -998,7 +997,7 @@ describe('API v1 query endpoint', () => {
           expect(data).to.deep.equal({
             Total: 27,
             NextOffset: 10,
-            List: [5731, 5732, 4967, 4262, 4259, 4261, 4260, 3470, 2692, 2690]
+            List: [5731, 5732, 4967, 4262, 4261, 4260, 4259, 3470, 2692, 2690]
           });
         });
       })
@@ -1014,7 +1013,7 @@ describe('API v1 query endpoint', () => {
           expect(data).to.deep.equal({
             Total: 27,
             NextOffset: 15,
-            List: [2692, 737, 733, 735, 734]
+            List: [2692, 737, 733, 734, 736]
           });
         });
       })
@@ -1110,7 +1109,7 @@ describe('API v1 query endpoint', () => {
               post: {
                 id: 475,
                 summary: 'Dicta aut rerum',
-                deleted_epoch: 1489959016,
+                deleted_epoch: 1490363615,
                 post: {
                   id: 5104,
                   summary: 'Aliquid nisi quae',

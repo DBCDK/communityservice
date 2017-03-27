@@ -30,7 +30,6 @@
     "express": "^4.14.0",
     "helmet": "^3.4.0",
     "is-my-json-valid": "^2.15.0",
-    "jsurl": "^0.1.5",
     "knex": "^0.12.6",
     "lodash": "^4.17.4",
     "nodemon": "^1.11.0",

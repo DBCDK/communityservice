@@ -11,7 +11,6 @@ const constants = require('server/constants')();
 const communityTable = constants.community.table;
 const profileTable = constants.profile.table;
 const entityTable = constants.entity.table;
-// const actionTable = constants.action.table;
 
 function validatingInput(req, schema) {
   return new Promise((resolve, reject) => {

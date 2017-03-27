@@ -31,7 +31,7 @@ when the service is up and running, but beware that this will drop all existing 
 
 The generated test database can be stored for later use by
 
-    $ pg_dump elvis > fixtures/big.sql
+    $ pg_dump --no-owner --exclude-table='knex_migrations*' elvis > fixtures/big.sql
 
 and reinstated by
 
@@ -40,6 +40,8 @@ and reinstated by
 which is exactly what is done to test the complex queries in
 
     $ npm run dbtest
+
+After a new test database has been generated, you will need to update the hard-coded epoch in [query.js](server/v1/query.js) to approximately the [current epoch](https://www.epochconverter.com/).
 
 ## Lint
 

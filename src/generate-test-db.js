@@ -4,12 +4,13 @@ const config = require('server/config');
 const logger = require('__/logging')(config.logger);
 const dbconfig = config.db;
 const knex = require('knex')(dbconfig);
-const db = require('server/v1/current-db')(knex);
+const db = require('server/test-db')(knex);
 const seedBigDb = require('server/seeds/big').seed;
 
-db.destroy()
-.then(db.setup)
-.then(db.clear)
+db.dropAll()
+.then(() => {
+  return knex.migrate.latest();
+})
 .then(seedBigDb)
 .then(() => {
   process.exit(0);

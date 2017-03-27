@@ -34,7 +34,7 @@ function handleQuery(options, req, res, next) {
   .then(epochNow => {
     if (config.fixedTime === '1') {
       // Override the current time because the tests need a fixed time.
-      return 1489959747;
+      return 1490363949;
     }
     return epochNow;
   })

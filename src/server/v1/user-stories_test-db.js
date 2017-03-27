@@ -7,15 +7,14 @@ const expectSuccess = require('server/test-verifiers').expectSuccess;
 const config = require('server/config');
 const dbconfig = config.db;
 const knex = require('knex')(dbconfig);
-const db = require('server/v1/current-db')(knex);
+const db = require('server/test-db')(knex);
 const exec = require('child-process-promise').exec;
 
 /* eslint-disable no-unused-expressions */
 describe('API v1 user story queries', () => {
   const service = request(server);
   before(done => {
-    db.destroy()
-    .then(db.setup)
+    db.dropAll()
     .then(() => {
       return exec('./seed-db.sh');
     })
@@ -53,17 +52,10 @@ describe('API v1 user story queries', () => {
           NextOffset: 8,
           List: [
             {
-              id: 693,
+              id: 680,
               profile: {
-                id: 16,
-                name: 'Tiffany'
-              }
-            },
-            {
-              id: 705,
-              profile: {
-                id: 23,
-                name: 'Nella'
+                id: 6,
+                name: 'Janae'
               }
             },
             {
@@ -81,6 +73,13 @@ describe('API v1 user story queries', () => {
               }
             },
             {
+              id: 693,
+              profile: {
+                id: 16,
+                name: 'Tiffany'
+              }
+            },
+            {
               id: 679,
               profile: {
                 id: 6,
@@ -88,10 +87,10 @@ describe('API v1 user story queries', () => {
               }
             },
             {
-              id: 680,
+              id: 705,
               profile: {
-                id: 6,
-                name: 'Janae'
+                id: 23,
+                name: 'Nella'
               }
             },
             {
