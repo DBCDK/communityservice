@@ -1,11 +1,14 @@
 #!/bin/bash -e
 
+echo "--> Adding package repositories"
+add-apt-repository "deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main"
+curl -sL https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
+
 echo "--> Cleaning up package status"
 apt-get update
 
 echo "--> Installing packages"
-apt-get install -y \
-  postgresql
+apt-get install -y postgresql-9.6
 
 echo "--> Installing node 6.x"
 curl -sL https://deb.nodesource.com/setup_6.x | bash -

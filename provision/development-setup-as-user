@@ -17,6 +17,7 @@ sudo -u postgres psql -c "drop database $DB_NAME;" >/dev/null 2>&1 && true
 sudo -u postgres psql -c "drop user $DB_USER;" >/dev/null 2>&1 && true
 sudo -u postgres psql -c "create user $DB_USER with CREATEDB password '$DB_USER_PASSWORD';"
 psql postgres -c "create database $DB_NAME;"
+sudo -u postgres psql -c "alter role $DB_USER Superuser;"
 
 echo "--> Setting up machine for development"
 cd /vagrant
