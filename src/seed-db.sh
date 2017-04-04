@@ -11,7 +11,7 @@ if ! hash $PSQL 2>/dev/null; then
 fi
 
 echo Seeding $DB_NAME with $SEED...
-if ! $PSQL $DB_NAME -U $DB_USER -v ON_ERROR_STOP=1 < $SEED > /dev/null; then
+if ! $PSQL $DB_NAME -U $DB_USER -h $DB_HOST -v ON_ERROR_STOP=1 < $SEED > /dev/null; then
 	echo Could not seed database, aborting.
 	exit 3
 fi
