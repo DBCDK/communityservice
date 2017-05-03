@@ -59,4 +59,4 @@ HTTP PUT either works as a selective update or as a delete.  More specifically,
 
 ## Complex queries
 
-The endpoint `/query` accepts complex [queries](query-language.md) as a POST request with the body contining the unencoded JSON query.
+The endpoint `/query` accepts complex [queries](query-language.md) as a POST request with the body containing the unencoded JSON query.
