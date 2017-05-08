@@ -18,7 +18,7 @@ There are three kinds of operators: *selectors*, *limitors*, and *extractors*.  
 
 ### Selectors
 
-They selectors correspond to the basic objects in the database.  They come in three versions, one for selecting a single object, and one for selecting a list of objects, and one for counting objects.
+The selectors correspond to the basic objects in the database.  They come in three versions, one for selecting a single object, and one for selecting a list of objects, and one for counting objects.
 
 Thus, the following selectors exist: `Profile`, `Profiles`, `CountProfiles`, `Entity`, `Entities`, `CountEntities`, `Action`, `Actions`, `CountActions`.
 
