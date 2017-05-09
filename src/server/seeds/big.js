@@ -12,31 +12,30 @@ const expectSuccess = require('server/test-verifiers').expectSuccess;
 
 /*
 
-Eventually we need
+ Eventually we need
 
-- 1 community
-- 5000 users
-- 500 groups
-- 0 to 100 members per group.
-- 20 campaigns
-- 0 to 1000 participants in each campaign.
-- 0 to 500 reviews with 1-5 rating per user.
-- 0 to 200 initial posts per group.
-- 0 to 100 replies to each post (recursively).
-- 0 to 100 likes per user
-- 0 to 50 follows per user
+ - 1 community
+ - 5000 users
+ - 500 groups
+ - 0 to 100 members per group.
+ - 20 campaigns
+ - 0 to 1000 participants in each campaign.
+ - 0 to 500 reviews with 1-5 rating per user.
+ - 0 to 200 initial posts per group.
+ - 0 to 100 replies to each post (recursively).
+ - 0 to 100 likes per user
+ - 0 to 50 follows per user
 
-1 percent of users should be deleted.
-1 percent of groups should be deleted.
-1 percent of posts should be deleted.
+ 1 percent of users should be deleted.
+ 1 percent of groups should be deleted.
+ 1 percent of posts should be deleted.
 
-Link to random images in 10% of entities.
+ Link to random images in 10% of entities.
 
-Set flags attributes on 1% of posts.
+ Set flags attributes on 1% of posts.
 
-Modify 10% of entities.
-*/
-
+ Modify 10% of entities.
+ */
 
 const msDbQueryGracePeriod = 1;
 
@@ -73,313 +72,313 @@ exports.seed = () => {
 
   // Communities
   return Promise.resolve(generateCommunities())
-  .then(communityTable => {
-    return Promise.all(communityTable.map(creatingCommunity));
-  })
-  .then(results => {
-    console.log(`Created ${results.length} communities`);
-    return generateProfiles();
-  })
-  .then(profileTable => {
-    // Profiles
-    return sequenceWithDelay(profileTable, msDbQueryGracePeriod, profile => {
-      return creatingProfile(profile);
-    }, index => {
-      if (index % logFactor === 0) {
-        console.log(`Processed ${index} profiles`);
-      }
-    });
-  })
-  .then(() => {
-    return generateGroups();
-  })
-  .then(groupTable => {
-    // Groups
-    return sequenceWithDelay(groupTable, msDbQueryGracePeriod, group => {
-      return creatingEntity(group);
-    }, index => {
-      if (index % logFactor === 0) {
-        console.log(`Processed ${index} groups`);
-      }
-    });
-  })
-  .then(() => {
-    return generateMembersOfGroups();
-  })
-  .then(memberTable => {
-    // Members of groups
-    return sequenceWithDelay(memberTable, msDbQueryGracePeriod, member => {
-      return creatingAction(member);
-    }, index => {
-      if (index % logFactor === 0) {
-        console.log(`Processed ${index} members`);
-      }
-    });
-  })
-  .then(() => {
-    return generateCampaigns();
-  })
-  .then(campaignTable => {
-    // Campaigns
-    return sequenceWithDelay(campaignTable, msDbQueryGracePeriod, campaign => {
-      return creatingEntity(campaign)
-      .then(id => {
-        safePush(groupToCampaigns, campaign.entity_ref, Number(id));
+    .then(communityTable => {
+      return Promise.all(communityTable.map(creatingCommunity));
+    })
+    .then(results => {
+      console.log(`Created ${results.length} communities`);
+      return generateProfiles();
+    })
+    .then(profileTable => {
+      // Profiles
+      return sequenceWithDelay(profileTable, msDbQueryGracePeriod, profile => {
+        return creatingProfile(profile);
+      }, index => {
+        if (index % logFactor === 0) {
+          console.log(`Processed ${index} profiles`);
+        }
       });
-    }, index => {
-      if (index % logFactor === 0) {
-        console.log(`Processed ${index} campaigns`);
-      }
-    });
-  })
-  .then(() => {
-    // Participants
-    return generateParticipantsOfCampaigns();
-  })
-  .then(participantTable => {
-    return sequenceWithDelay(participantTable, msDbQueryGracePeriod, participant => {
-      return creatingAction(participant);
-    }, index => {
-      if (index % logFactor === 0) {
-        console.log(`Processed ${index} participants`);
-      }
-    });
-  })
-  .then(() => {
-    return generateCampaignSubmission();
-  })
-  .then(submissionTable => {
-    // Submissions to campaigns
-    return sequenceWithDelay(submissionTable, msDbQueryGracePeriod, submission => {
-      return creatingEntity(submission);
-    }, index => {
-      if (index % logFactor === 0) {
-        console.log(`Processed ${index} submissions`);
-      }
-    });
-  })
-  .then(() => {
-    return generatePosts();
-  })
-  .then(postTable => {
-    // Posts to groups
-    return sequenceWithDelay(postTable, msDbQueryGracePeriod, post => {
-      return creatingEntity(post)
-      .then(id => {
-        safePush(groupToPosts, post.entity_ref, Number(id));
+    })
+    .then(() => {
+      return generateGroups();
+    })
+    .then(groupTable => {
+      // Groups
+      return sequenceWithDelay(groupTable, msDbQueryGracePeriod, group => {
+        return creatingEntity(group);
+      }, index => {
+        if (index % logFactor === 0) {
+          console.log(`Processed ${index} groups`);
+        }
       });
-    }, index => {
-      if (index % logFactor === 0) {
-        console.log(`Processed ${index} posts`);
-      }
-    });
-  })
-  .then(() => {
-    return generateReviews();
-  })
-  .then(reviewTable => {
-    // Reviews
-    return sequenceWithDelay(reviewTable, msDbQueryGracePeriod, review => {
-      return creatingEntity(review)
-      .then(id => {
-        safePush(groupToReviews, review.entity_ref, Number(id));
+    })
+    .then(() => {
+      return generateMembersOfGroups();
+    })
+    .then(memberTable => {
+      // Members of groups
+      return sequenceWithDelay(memberTable, msDbQueryGracePeriod, member => {
+        return creatingAction(member);
+      }, index => {
+        if (index % logFactor === 0) {
+          console.log(`Processed ${index} members`);
+        }
       });
-    }, index => {
-      if (index % logFactor === 0) {
-        console.log(`Processed ${index} reviews`);
-      }
-    });
-  })
-  .then(() => {
-    return generateReplies();
-  })
-  .then(replyTable => {
-    // Replies to posts.
-    return sequenceWithDelay(replyTable, msDbQueryGracePeriod, post => {
-      return creatingEntity(post)
-      .then(id => {
-        safePush(groupToPosts, post.attributes.group, Number(id));
+    })
+    .then(() => {
+      return generateCampaigns();
+    })
+    .then(campaignTable => {
+      // Campaigns
+      return sequenceWithDelay(campaignTable, msDbQueryGracePeriod, campaign => {
+        return creatingEntity(campaign)
+          .then(id => {
+            safePush(groupToCampaigns, campaign.entity_ref, Number(id));
+          });
+      }, index => {
+        if (index % logFactor === 0) {
+          console.log(`Processed ${index} campaigns`);
+        }
       });
-    }, index => {
-      if (index % logFactor === 0) {
-        console.log(`Processed ${index} replies`);
-      }
-    });
-  })
-  .then(() => {
-    return generateReplies();
-  })
-  .then(replyTable => {
-    // More replies to posts.
-    return sequenceWithDelay(replyTable, msDbQueryGracePeriod, post => {
-      return creatingEntity(post)
-      .then(id => {
-        safePush(groupToPosts, post.attributes.group, Number(id));
+    })
+    .then(() => {
+      // Participants
+      return generateParticipantsOfCampaigns();
+    })
+    .then(participantTable => {
+      return sequenceWithDelay(participantTable, msDbQueryGracePeriod, participant => {
+        return creatingAction(participant);
+      }, index => {
+        if (index % logFactor === 0) {
+          console.log(`Processed ${index} participants`);
+        }
       });
-    }, index => {
-      if (index % logFactor === 0) {
-        console.log(`Processed ${index} replies`);
-      }
-    });
-  })
-  .then(() => {
-    return generateReplies();
-  })
-  .then(replyTable => {
-    // Even more replies.
-    return sequenceWithDelay(replyTable, msDbQueryGracePeriod, post => {
-      return creatingEntity(post)
-      .then(id => {
-        safePush(groupToPosts, post.attributes.group, Number(id));
+    })
+    .then(() => {
+      return generateCampaignSubmission();
+    })
+    .then(submissionTable => {
+      // Submissions to campaigns
+      return sequenceWithDelay(submissionTable, msDbQueryGracePeriod, submission => {
+        return creatingEntity(submission);
+      }, index => {
+        if (index % logFactor === 0) {
+          console.log(`Processed ${index} submissions`);
+        }
       });
-    }, index => {
-      if (index % logFactor === 0) {
-        console.log(`Processed ${index} replies`);
-      }
-    });
-  })
-  .then(() => {
-    return generateReplies();
-  })
-  .then(replyTable => {
-    // More, more, more replies.
-    return sequenceWithDelay(replyTable, msDbQueryGracePeriod, post => {
-      return creatingEntity(post)
-      .then(id => {
-        safePush(groupToPosts, post.attributes.group, Number(id));
+    })
+    .then(() => {
+      return generatePosts();
+    })
+    .then(postTable => {
+      // Posts to groups
+      return sequenceWithDelay(postTable, msDbQueryGracePeriod, post => {
+        return creatingEntity(post)
+          .then(id => {
+            safePush(groupToPosts, post.entity_ref, Number(id));
+          });
+      }, index => {
+        if (index % logFactor === 0) {
+          console.log(`Processed ${index} posts`);
+        }
       });
-    }, index => {
-      if (index % logFactor === 0) {
-        console.log(`Processed ${index} replies`);
-      }
-    });
-  })
-  .then(() => {
-    return generateReplies();
-  })
-  .then(replyTable => {
-    // More, more, more, more more more replies.
-    return sequenceWithDelay(replyTable, msDbQueryGracePeriod, post => {
-      return creatingEntity(post)
-      .then(id => {
-        safePush(groupToPosts, post.attributes.group, Number(id));
-        // Remember the largerst entity number.
-        totalEntries = id;
+    })
+    .then(() => {
+      return generateReviews();
+    })
+    .then(reviewTable => {
+      // Reviews
+      return sequenceWithDelay(reviewTable, msDbQueryGracePeriod, review => {
+        return creatingEntity(review)
+          .then(id => {
+            safePush(groupToReviews, review.entity_ref, Number(id));
+          });
+      }, index => {
+        if (index % logFactor === 0) {
+          console.log(`Processed ${index} reviews`);
+        }
       });
-    }, index => {
-      if (index % logFactor === 0) {
-        console.log(`Processed ${index} replies`);
-      }
-    });
-  })
-  .then(() => {
-    return generateLikes();
-  })
-  .then(likesTable => {
-    return sequenceWithDelay(likesTable, msDbQueryGracePeriod, like => {
-      return creatingAction(like);
-    }, index => {
-      if (index % logFactor === 0) {
-        console.log(`Processed ${index} likes`);
-      }
-    });
-  })
-  .then(() => {
-    return generateFollows();
-  })
-  .then(followsTable => {
-    return sequenceWithDelay(followsTable, msDbQueryGracePeriod, follow => {
-      return creatingAction(follow)
-      .then(id => {
-        // Remember the largerst action number.
-        totalActions = id;
+    })
+    .then(() => {
+      return generateReplies();
+    })
+    .then(replyTable => {
+      // Replies to posts.
+      return sequenceWithDelay(replyTable, msDbQueryGracePeriod, post => {
+        return creatingEntity(post)
+          .then(id => {
+            safePush(groupToPosts, post.attributes.group, Number(id));
+          });
+      }, index => {
+        if (index % logFactor === 0) {
+          console.log(`Processed ${index} replies`);
+        }
       });
-    }, index => {
-      if (index % logFactor === 0) {
-        console.log(`Processed ${index} follows`);
-      }
-    });
-  })
-  .then(() => {
-    const toDelete = uniqueRandomListOfNumbersFromOneTo(totalActions, totalActions / 100);
-    console.log(`Will delete actions ${toDelete}`);
-    return sequenceWithDelay(toDelete, msDbQueryGracePeriod, deletingAction, index => {
-      if (index % logFactor === 0) {
-        console.log(`Deleted ${index} actions`);
-      }
-    });
-  })
-  .then(() => {
-    const toModify = uniqueRandomListOfNumbersFromOneTo(totalEntries, totalEntries / 50);
-    console.log(`Will modify entities ${toModify}`);
-    return sequenceWithDelay(toModify, msDbQueryGracePeriod, modifyingEntry, index => {
-      if (index % logFactor === 0) {
-        console.log(`Modified ${index} entries`);
-      }
-    });
-  })
-  .then(() => {
-    const toModify = uniqueRandomListOfNumbersFromOneTo(profiles, profiles / 50);
-    console.log(`Will modify profiles ${toModify}`);
-    return sequenceWithDelay(toModify, msDbQueryGracePeriod, modifyingProfile, index => {
-      if (index % logFactor === 0) {
-        console.log(`Modified ${index} profiles`);
-      }
-    });
-  })
-  .then(() => {
-    /*
-    console.log('groupToProfiles');
-    console.log(groupToProfiles);
+    })
+    .then(() => {
+      return generateReplies();
+    })
+    .then(replyTable => {
+      // More replies to posts.
+      return sequenceWithDelay(replyTable, msDbQueryGracePeriod, post => {
+        return creatingEntity(post)
+          .then(id => {
+            safePush(groupToPosts, post.attributes.group, Number(id));
+          });
+      }, index => {
+        if (index % logFactor === 0) {
+          console.log(`Processed ${index} replies`);
+        }
+      });
+    })
+    .then(() => {
+      return generateReplies();
+    })
+    .then(replyTable => {
+      // Even more replies.
+      return sequenceWithDelay(replyTable, msDbQueryGracePeriod, post => {
+        return creatingEntity(post)
+          .then(id => {
+            safePush(groupToPosts, post.attributes.group, Number(id));
+          });
+      }, index => {
+        if (index % logFactor === 0) {
+          console.log(`Processed ${index} replies`);
+        }
+      });
+    })
+    .then(() => {
+      return generateReplies();
+    })
+    .then(replyTable => {
+      // More, more, more replies.
+      return sequenceWithDelay(replyTable, msDbQueryGracePeriod, post => {
+        return creatingEntity(post)
+          .then(id => {
+            safePush(groupToPosts, post.attributes.group, Number(id));
+          });
+      }, index => {
+        if (index % logFactor === 0) {
+          console.log(`Processed ${index} replies`);
+        }
+      });
+    })
+    .then(() => {
+      return generateReplies();
+    })
+    .then(replyTable => {
+      // More, more, more, more more more replies.
+      return sequenceWithDelay(replyTable, msDbQueryGracePeriod, post => {
+        return creatingEntity(post)
+          .then(id => {
+            safePush(groupToPosts, post.attributes.group, Number(id));
+            // Remember the largerst entity number.
+            totalEntries = id;
+          });
+      }, index => {
+        if (index % logFactor === 0) {
+          console.log(`Processed ${index} replies`);
+        }
+      });
+    })
+    .then(() => {
+      return generateLikes();
+    })
+    .then(likesTable => {
+      return sequenceWithDelay(likesTable, msDbQueryGracePeriod, like => {
+        return creatingAction(like);
+      }, index => {
+        if (index % logFactor === 0) {
+          console.log(`Processed ${index} likes`);
+        }
+      });
+    })
+    .then(() => {
+      return generateFollows();
+    })
+    .then(followsTable => {
+      return sequenceWithDelay(followsTable, msDbQueryGracePeriod, follow => {
+        return creatingAction(follow)
+          .then(id => {
+            // Remember the largerst action number.
+            totalActions = id;
+          });
+      }, index => {
+        if (index % logFactor === 0) {
+          console.log(`Processed ${index} follows`);
+        }
+      });
+    })
+    .then(() => {
+      const toDelete = uniqueRandomListOfNumbersFromOneTo(totalActions, totalActions / 100);
+      console.log(`Will delete actions ${toDelete}`);
+      return sequenceWithDelay(toDelete, msDbQueryGracePeriod, deletingAction, index => {
+        if (index % logFactor === 0) {
+          console.log(`Deleted ${index} actions`);
+        }
+      });
+    })
+    .then(() => {
+      const toModify = uniqueRandomListOfNumbersFromOneTo(totalEntries, totalEntries / 50);
+      console.log(`Will modify entities ${toModify}`);
+      return sequenceWithDelay(toModify, msDbQueryGracePeriod, modifyingEntry, index => {
+        if (index % logFactor === 0) {
+          console.log(`Modified ${index} entries`);
+        }
+      });
+    })
+    .then(() => {
+      const toModify = uniqueRandomListOfNumbersFromOneTo(profiles, profiles / 50);
+      console.log(`Will modify profiles ${toModify}`);
+      return sequenceWithDelay(toModify, msDbQueryGracePeriod, modifyingProfile, index => {
+        if (index % logFactor === 0) {
+          console.log(`Modified ${index} profiles`);
+        }
+      });
+    })
+    .then(() => {
+      /*
+       console.log('groupToProfiles');
+       console.log(groupToProfiles);
 
-    console.log('profileToGroups');
-    console.log(profileToGroups);
+       console.log('profileToGroups');
+       console.log(profileToGroups);
 
-    console.log('groupToReviews');
-    console.log(groupToReviews);
+       console.log('groupToReviews');
+       console.log(groupToReviews);
 
-    console.log('groupToCampaigns');
-    console.log(groupToCampaigns);
+       console.log('groupToCampaigns');
+       console.log(groupToCampaigns);
 
-    console.log('profileToCampaigns');
-    console.log(profileToCampaigns);
+       console.log('profileToCampaigns');
+       console.log(profileToCampaigns);
 
-    console.log('groupToPosts');
-    console.log(groupToPosts);
-    */
-    console.log('success');
-  })
-  .catch(error => {
-    console.error(error);
-    logger.log.error({sequence: error});
-  })
-  ;
+       console.log('groupToPosts');
+       console.log(groupToPosts);
+       */
+      console.log('success');
+    })
+    .catch(error => {
+      console.error(error);
+      logger.log.error({sequence: error});
+    })
+    ;
 
   function deletingAction(id) {
     console.log(`action ${id}`);
     return new Promise((resolve, reject) => {
       service.get(`/v1/community/1/action/${id}`)
-      .expect(200)
-      .expect(res => {
-        expectSuccess(res.body, (links, action) => {
-          service.put(`/v1/community/1/action/${id}`)
-            .send({modified_by: action.owner_id})
-            .expect(200)
-            .end(error => {
-              if (_.isNil(error)) {
-                resolve();
-              }
-              else {
-                reject(error);
-              }
-            });
+        .expect(200)
+        .expect(res => {
+          expectSuccess(res.body, (links, action) => {
+            service.put(`/v1/community/1/action/${id}`)
+              .send({modified_by: action.owner_id})
+              .expect(200)
+              .end(error => {
+                if (_.isNil(error)) {
+                  resolve();
+                }
+                else {
+                  reject(error);
+                }
+              });
+          });
+        })
+        .end(error => {
+          if (!_.isNil(error)) {
+            reject(error);
+          }
         });
-      })
-      .end(error => {
-        if (!_.isNil(error)) {
-          reject(error);
-        }
-      });
     });
   }
 
@@ -387,41 +386,41 @@ exports.seed = () => {
     console.log(`entity ${id}`);
     return new Promise((resolve, reject) => {
       service.get(`/v1/community/1/entity/${id}`)
-      .expect(200)
-      .expect(res => {
-        expectSuccess(res.body, (links, entity) => {
-          // console.log(entity);
-          let update = {modified_by: entity.owner_id};
-          let attributes = {};
-          if (id % 2 === 0) {
-            attributes.picture = faker.image.animals();
+        .expect(200)
+        .expect(res => {
+          expectSuccess(res.body, (links, entity) => {
+            // console.log(entity);
+            let update = {modified_by: entity.owner_id};
+            let attributes = {};
+            if (id % 2 === 0) {
+              attributes.picture = faker.image.animals();
+            }
+            if (id % 3 === 0) {
+              attributes.flag = faker.hacker.abbreviation();
+            }
+            if (!_.isEmpty(attributes)) {
+              update.attributes = attributes;
+            }
+            console.log(id);
+            console.log(update);
+            service.put(`/v1/community/1/entity/${id}`)
+              .send(update)
+              .expect(200)
+              .end(error => {
+                if (_.isNil(error)) {
+                  resolve();
+                }
+                else {
+                  reject(error);
+                }
+              });
+          });
+        })
+        .end(error => {
+          if (!_.isNil(error)) {
+            reject(error);
           }
-          if (id % 3 === 0) {
-            attributes.flag = faker.hacker.abbreviation();
-          }
-          if (!_.isEmpty(attributes)) {
-            update.attributes = attributes;
-          }
-          console.log(id);
-          console.log(update);
-          service.put(`/v1/community/1/entity/${id}`)
-            .send(update)
-            .expect(200)
-            .end(error => {
-              if (_.isNil(error)) {
-                resolve();
-              }
-              else {
-                reject(error);
-              }
-            });
         });
-      })
-      .end(error => {
-        if (!_.isNil(error)) {
-          reject(error);
-        }
-      });
     });
   }
 
@@ -460,17 +459,17 @@ exports.seed = () => {
         console.log(`Creating ${JSON.stringify(value)}`);
       }
       service.post('/v1/community/1/entity').send(value)
-      .end((error, result) => {
-        if (error) {
-          return reject(error);
-        }
-        if (result.status !== 201) {
-          return reject(result.body);
-        }
-        const location = result.header.location;
-        const id = location.match(/entity\/(\d+)/)[1];
-        resolve(id);
-      });
+        .end((error, result) => {
+          if (error) {
+            return reject(error);
+          }
+          if (result.status !== 201) {
+            return reject(result.body);
+          }
+          const location = result.header.location;
+          const id = location.match(/entity\/(\d+)/)[1];
+          resolve(id);
+        });
     });
   }
 
@@ -480,50 +479,50 @@ exports.seed = () => {
         console.log(`Creating ${JSON.stringify(value)}`);
       }
       service.post('/v1/community/1/action').send(value)
-      .end((error, result) => {
-        if (error) {
-          return reject(error);
-        }
-        if (result.status !== 201) {
-          return reject(result.body);
-        }
-        const location = result.header.location;
-        const id = location.match(/action\/(\d+)/)[1];
-        resolve(id);
-        if (debug) {
-          console.log(`Created ${id}`);
-        }
-      });
+        .end((error, result) => {
+          if (error) {
+            return reject(error);
+          }
+          if (result.status !== 201) {
+            return reject(result.body);
+          }
+          const location = result.header.location;
+          const id = location.match(/action\/(\d+)/)[1];
+          resolve(id);
+          if (debug) {
+            console.log(`Created ${id}`);
+          }
+        });
     });
   }
 
   function creatingProfile(value) {
     return new Promise((resolve, reject) => {
       service.post('/v1/community/1/profile').send(value)
-      .end((error, result) => {
-        if (error) {
-          return reject(error);
-        }
-        if (result.status !== 201) {
-          return reject(result.body);
-        }
-        resolve();
-      });
+        .end((error, result) => {
+          if (error) {
+            return reject(error);
+          }
+          if (result.status !== 201) {
+            return reject(result.body);
+          }
+          resolve();
+        });
     });
   }
 
   function creatingCommunity(value) {
     return new Promise((resolve, reject) => {
       service.post('/v1/community').send(value)
-      .end((error, result) => {
-        if (error) {
-          return reject(error);
-        }
-        if (result.status !== 201) {
-          return reject(result.body);
-        }
-        resolve();
-      });
+        .end((error, result) => {
+          if (error) {
+            return reject(error);
+          }
+          if (result.status !== 201) {
+            return reject(result.body);
+          }
+          resolve();
+        });
     });
   }
 
@@ -872,17 +871,17 @@ exports.seed = () => {
           progressReporter(index);
         }
 
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve, reject) => { // eslint-disable-line no-unused-vars
           processing(item)
-          .then(() => {
-            setTimeout(resolve, msDelay);
-          })
-          .catch(error => {
-            resolve();
-            console.error('This is thrown from a .catch in a promise due to some currently unknown error but the loop is not aborted since resolve() is invoked instead of reject. ', {inside: error});
-            // reject(error);
-            // throw Error('inside...');
-          });
+            .then(() => {
+              setTimeout(resolve, msDelay);
+            })
+            .catch(error => {
+              resolve();
+              console.error('This is thrown from a .catch in a promise due to some currently unknown error but the loop is not aborted since resolve() is invoked instead of reject. ', {inside: error}); // eslint-disable-line
+              // reject(error);
+              // throw Error('inside...');
+            });
         });
       });
     }, Promise.resolve());
