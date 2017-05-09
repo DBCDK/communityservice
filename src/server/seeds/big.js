@@ -38,7 +38,7 @@ Modify 10% of entities.
 */
 
 
-const msDbQueryGracePeriod = 30;
+const msDbQueryGracePeriod = 1;
 
 const groups = 100;
 const profiles = 10 * groups;
@@ -51,6 +51,7 @@ const submissionRateToCampaings = 0.5;
 const postsPerProfileForEachIterationMax = 5;
 const likesPerProfileMax = 100;
 const followsPerProfileMax = 50;
+const logFactor = 10;
 
 exports.seed = () => {
   // Indexes: the first index (0) in the array is not used.
@@ -84,7 +85,7 @@ exports.seed = () => {
     return sequenceWithDelay(profileTable, msDbQueryGracePeriod, profile => {
       return creatingProfile(profile);
     }, index => {
-      if (index % 10 === 0) {
+      if (index % logFactor === 0) {
         console.log(`Processed ${index} profiles`);
       }
     });
@@ -97,7 +98,7 @@ exports.seed = () => {
     return sequenceWithDelay(groupTable, msDbQueryGracePeriod, group => {
       return creatingEntity(group);
     }, index => {
-      if (index % 10 === 0) {
+      if (index % logFactor === 0) {
         console.log(`Processed ${index} groups`);
       }
     });
@@ -110,7 +111,7 @@ exports.seed = () => {
     return sequenceWithDelay(memberTable, msDbQueryGracePeriod, member => {
       return creatingAction(member);
     }, index => {
-      if (index % 10 === 0) {
+      if (index % logFactor === 0) {
         console.log(`Processed ${index} members`);
       }
     });
@@ -126,7 +127,7 @@ exports.seed = () => {
         safePush(groupToCampaigns, campaign.entity_ref, Number(id));
       });
     }, index => {
-      if (index % 10 === 0) {
+      if (index % logFactor === 0) {
         console.log(`Processed ${index} campaigns`);
       }
     });
@@ -139,7 +140,7 @@ exports.seed = () => {
     return sequenceWithDelay(participantTable, msDbQueryGracePeriod, participant => {
       return creatingAction(participant);
     }, index => {
-      if (index % 10 === 0) {
+      if (index % logFactor === 0) {
         console.log(`Processed ${index} participants`);
       }
     });
@@ -152,7 +153,7 @@ exports.seed = () => {
     return sequenceWithDelay(submissionTable, msDbQueryGracePeriod, submission => {
       return creatingEntity(submission);
     }, index => {
-      if (index % 10 === 0) {
+      if (index % logFactor === 0) {
         console.log(`Processed ${index} submissions`);
       }
     });
@@ -168,7 +169,7 @@ exports.seed = () => {
         safePush(groupToPosts, post.entity_ref, Number(id));
       });
     }, index => {
-      if (index % 10 === 0) {
+      if (index % logFactor === 0) {
         console.log(`Processed ${index} posts`);
       }
     });
@@ -184,7 +185,7 @@ exports.seed = () => {
         safePush(groupToReviews, review.entity_ref, Number(id));
       });
     }, index => {
-      if (index % 10 === 0) {
+      if (index % logFactor === 0) {
         console.log(`Processed ${index} reviews`);
       }
     });
@@ -200,7 +201,7 @@ exports.seed = () => {
         safePush(groupToPosts, post.attributes.group, Number(id));
       });
     }, index => {
-      if (index % 10 === 0) {
+      if (index % logFactor === 0) {
         console.log(`Processed ${index} replies`);
       }
     });
@@ -216,7 +217,7 @@ exports.seed = () => {
         safePush(groupToPosts, post.attributes.group, Number(id));
       });
     }, index => {
-      if (index % 10 === 0) {
+      if (index % logFactor === 0) {
         console.log(`Processed ${index} replies`);
       }
     });
@@ -232,7 +233,7 @@ exports.seed = () => {
         safePush(groupToPosts, post.attributes.group, Number(id));
       });
     }, index => {
-      if (index % 10 === 0) {
+      if (index % logFactor === 0) {
         console.log(`Processed ${index} replies`);
       }
     });
@@ -248,7 +249,7 @@ exports.seed = () => {
         safePush(groupToPosts, post.attributes.group, Number(id));
       });
     }, index => {
-      if (index % 10 === 0) {
+      if (index % logFactor === 0) {
         console.log(`Processed ${index} replies`);
       }
     });
@@ -266,7 +267,7 @@ exports.seed = () => {
         totalEntries = id;
       });
     }, index => {
-      if (index % 10 === 0) {
+      if (index % logFactor === 0) {
         console.log(`Processed ${index} replies`);
       }
     });
@@ -278,7 +279,7 @@ exports.seed = () => {
     return sequenceWithDelay(likesTable, msDbQueryGracePeriod, like => {
       return creatingAction(like);
     }, index => {
-      if (index % 10 === 0) {
+      if (index % logFactor === 0) {
         console.log(`Processed ${index} likes`);
       }
     });
@@ -294,7 +295,7 @@ exports.seed = () => {
         totalActions = id;
       });
     }, index => {
-      if (index % 10 === 0) {
+      if (index % logFactor === 0) {
         console.log(`Processed ${index} follows`);
       }
     });
@@ -303,7 +304,7 @@ exports.seed = () => {
     const toDelete = uniqueRandomListOfNumbersFromOneTo(totalActions, totalActions / 100);
     console.log(`Will delete actions ${toDelete}`);
     return sequenceWithDelay(toDelete, msDbQueryGracePeriod, deletingAction, index => {
-      if (index % 10 === 0) {
+      if (index % logFactor === 0) {
         console.log(`Deleted ${index} actions`);
       }
     });
@@ -312,7 +313,7 @@ exports.seed = () => {
     const toModify = uniqueRandomListOfNumbersFromOneTo(totalEntries, totalEntries / 50);
     console.log(`Will modify entities ${toModify}`);
     return sequenceWithDelay(toModify, msDbQueryGracePeriod, modifyingEntry, index => {
-      if (index % 10 === 0) {
+      if (index % logFactor === 0) {
         console.log(`Modified ${index} entries`);
       }
     });
@@ -321,7 +322,7 @@ exports.seed = () => {
     const toModify = uniqueRandomListOfNumbersFromOneTo(profiles, profiles / 50);
     console.log(`Will modify profiles ${toModify}`);
     return sequenceWithDelay(toModify, msDbQueryGracePeriod, modifyingProfile, index => {
-      if (index % 10 === 0) {
+      if (index % logFactor === 0) {
         console.log(`Modified ${index} profiles`);
       }
     });
@@ -349,8 +350,8 @@ exports.seed = () => {
     console.log('success');
   })
   .catch(error => {
+    console.error(error);
     logger.log.error({sequence: error});
-    throw error;
   })
   ;
 
@@ -609,7 +610,7 @@ exports.seed = () => {
         continue;
       }
       let picture = null;
-      if (faker.random.number() % 10 === 0) {
+      if (faker.random.number() % logFactor === 0) {
         picture = faker.image.nature();
       }
       result.push({
@@ -686,7 +687,7 @@ exports.seed = () => {
       for (let i = 0; i < reviewsPerProfileMax; ++i) {
         const group = selectRandomlyFrom(memberIn);
         let picture = null;
-        if (faker.random.number() % 10 === 0) {
+        if (faker.random.number() % logFactor === 0) {
           picture = faker.image.sports();
         }
         result.push({
@@ -717,7 +718,7 @@ exports.seed = () => {
       for (let i = 0; i < random; ++i) {
         const group = selectRandomlyFrom(memberIn);
         let picture = null;
-        if (faker.random.number() % 10 === 0) {
+        if (faker.random.number() % logFactor === 0) {
           picture = faker.image.city();
         }
         result.push({
@@ -753,7 +754,7 @@ exports.seed = () => {
         }
         const post = selectRandomlyFrom(postsIn);
         let flagged = null;
-        if (faker.random.number() % 10 === 0) {
+        if (faker.random.number() % logFactor === 0) {
           flagged = faker.hacker.abbreviation();
         }
         result.push({
@@ -870,14 +871,17 @@ exports.seed = () => {
         if (progressReporter) {
           progressReporter(index);
         }
+
         return new Promise((resolve, reject) => {
           processing(item)
           .then(() => {
             setTimeout(resolve, msDelay);
           })
           .catch(error => {
-            console.log({inside: error});
-            reject(error);
+            resolve();
+            console.error('This is thrown from a .catch in a promise due to some currently unknown error but the loop is not aborted since resolve() is invoked instead of reject. ', {inside: error});
+            // reject(error);
+            // throw Error('inside...');
           });
         });
       });
