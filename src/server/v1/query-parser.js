@@ -202,7 +202,7 @@ function list(request, selector, defs, settings) {
       querying = parseResult.queryingModifier(context, querying);
       querying = modifyQueryAccordingToOptions(settings.options, querying);
       // console.log(querying.toString());
-      return querying.select()
+      return querying.where('community_id', settings.community_id).select()
         .then(contexts => {
           return Promise.all(_.map(contexts, extractorResult.queryingProcessor));
         })
