@@ -7,3 +7,10 @@ src/node_modules/
 src/npm-debug.log
 src/server/config.js
 src/versions/
+node_modules
+.idea
+.eslintcache
+env.env
+mmj.env
+reports
+yarn.lock
