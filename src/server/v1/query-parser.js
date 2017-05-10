@@ -280,6 +280,7 @@ function singleton(request, selector, defs, settings) {
   return ParserResultIsQuerying(context => {
     let querying = knex(defs.table);
     try {
+      querying.where('community_id', settings.community_id);
       querying = parseResult.queryingModifier(context, querying);
       querying = modifyQueryAccordingToOptions(settings.options, querying);
       // console.log(querying.toString());
