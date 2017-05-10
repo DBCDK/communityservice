@@ -67,7 +67,7 @@ function count(request, selector, defs, settings) {
     return parseResult;
   }
   return ParserResultIsQuerying(context => {
-    let querying = knex(defs.table).count();
+    let querying = knex(defs.table).where('community_id', settings.community_id).count();
     try {
       querying = parseResult.queryingModifier(context, querying);
     }
