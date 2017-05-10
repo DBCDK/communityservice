@@ -6,7 +6,7 @@
 
 const _ = require('lodash');
 const express = require('express');
-const router = express.Router();
+const router = express.Router({mergeParams: true});
 const build = require('./query-parser');
 const gettingCurrentTimeAsEpoch = require('server/v1/modifiers').gettingCurrentTimeAsEpoch;
 const config = require('server/config').server;
@@ -39,7 +39,8 @@ function handleQuery(options, req, res, next) {
     return epochNow;
   })
   .then(epochNow => {
-    const settings = {options, epochNow};
+    const community_id = req.params.community;
+    const settings = {options, epochNow, community_id};
     const queryingOrError = build(req.body, settings);
     if (!_.isEmpty(queryingOrError.errors)) {
       const errors = queryingOrError.errors;
