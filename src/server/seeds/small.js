@@ -164,5 +164,5 @@ Og laver lerpotter på en drejebænk.`,
     .catch(error => {
       throw error;
     })
-    ;
+  ;
 };

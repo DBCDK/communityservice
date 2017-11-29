@@ -1,30 +1,21 @@
+/* eslint-disable no-unused-expressions */
 'use strict';
 
 const expect = require('chai').expect;
 const request = require('supertest');
 const server = require('server');
-const expectSuccess = require('server/test-verifiers').expectSuccess;
+const {expectSuccess} = require('./output-verifiers');
 const config = require('server/config');
 const dbconfig = config.db;
 const knex = require('knex')(dbconfig);
-const db = require('server/test-db')(knex);
-const exec = require('child-process-promise').exec;
+const db = require('acceptance/cleanup-db')(knex);
+const {exec} = require('child-process-promise');
 
-/* eslint-disable no-unused-expressions */
 describe('API v1 user story queries', () => {
   const service = request(server);
-  before(done => {
-    db.dropAll()
-    .then(() => {
-      return exec('./seed-db.sh');
-    })
-    .then(() => {
-      done();
-    })
-    .catch(errors => {
-      console.log(errors); // eslint-disable-line no-console
-      done(errors);
-    });
+  before(async () => {
+    await db.droppingAll();
+    await exec('./db-seed.sh');
   });
 
   it('to display the best books as a community developer I want to find the 8 most recent reviews with the highest rating', done => {

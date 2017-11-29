@@ -1,47 +1,25 @@
+/* eslint-disable no-unused-expressions */
 'use strict';
 
-const expect = require('chai').expect;
+const {expect} = require('chai');
 const request = require('supertest');
-const server = require('server');
-const config = require('server/config');
-const dbconfig = config.db;
-const knex = require('knex')(dbconfig);
-const db = require('server/test-db')(knex);
-const seedSmallDb = require('server/seeds/small').seed;
-const expectSuccess = require('server/test-verifiers').expectSuccess;
-const expectFailure = require('server/test-verifiers').expectFailure;
-const expectValidate = require('server/test-verifiers').expectValidate;
+const {expectSuccess, expectFailure, expectValidate} = require('./output-verifiers');
+const mock = require('./mock-server');
 
-/* eslint-disable no-unused-expressions */
 describe('API v1 community endpoints', () => {
-  const service = request(server);
-  before(done => {
-    db.dropAll()
-    .then(() => {
-      return knex.migrate.latest();
-    })
-    .then(() => {
-      done();
-    });
+  const service = request(mock.server);
+  beforeEach(async () => {
+    await mock.beforeEach();
   });
-  beforeEach(done => {
-    db.clear()
-    .then(() => {
-      return seedSmallDb(knex);
-    })
-    .then(() => {
-      done();
-    })
-    .catch(errors => {
-      done(errors);
-    });
+  afterEach(() => {
+    mock.afterEach();
   });
 
   describe('GET /community', () => {
 
-    it('should return seeded communities', done => {
+    it('should return seeded communities', () => {
       const url = '/v1/community';
-      service.get(url)
+      return service.get(url)
       .expect(200)
       .expect('Content-Type', /json/)
       .expect(res => {
@@ -50,7 +28,7 @@ describe('API v1 community endpoints', () => {
           expect(links.self).to.equal(url);
           expect(list.length).to.equal(2);
           list.forEach(data => {
-            expectValidate(data, 'v1/schemas/community-out.json');
+            expectValidate(data, 'schemas/community-out.json');
             expect(data).to.have.property('id');
             expect(data).to.have.property('name');
             expect(data).to.have.property('attributes');
@@ -63,16 +41,15 @@ describe('API v1 community endpoints', () => {
           expect(list[1].name).to.equal('LitteraturSiden');
           expect(list[1].attributes).to.deep.equal({production: false});
         });
-      })
-      .end(done);
+      });
     });
   });
 
   describe('GET /community/:name', () => {
 
-    it('should return Not Found on unknown name', done => {
+    it('should return Not Found on unknown name', () => {
       const url = '/v1/community/Osten Feldt';
-      service.get(url)
+      return service.get(url)
       .expect(404)
       .expect(res => {
         expectFailure(res.body, errors => {
@@ -83,12 +60,11 @@ describe('API v1 community endpoints', () => {
           expect(error.meta).to.have.property('resource');
           expect(error.meta.resource).to.equal(url);
         });
-      })
-      .end(done);
+      });
     });
 
-    it('should locate community by name', done => {
-      service.get('/v1/community/Biblo')
+    it('should locate community by name', () => {
+      return service.get('/v1/community/Biblo')
       .expect(200)
       .expect(res => {
         expectSuccess(res.body, (links, data) => {
@@ -105,16 +81,15 @@ describe('API v1 community endpoints', () => {
           expect(data).to.have.property('deleted_epoch');
           expect(data.deleted_epoch).to.be.null;
         });
-      })
-      .end(done);
+      });
     });
   });
 
   describe('GET /community/:id', () => {
 
-    it('should return Not Found on unknown community', done => {
+    it('should return Not Found on unknown community', () => {
       const url = '/v1/community/10';
-      service.get(url)
+      return service.get(url)
       .expect(404)
       .expect(res => {
         expectFailure(res.body, errors => {
@@ -125,16 +100,15 @@ describe('API v1 community endpoints', () => {
           expect(error.meta).to.have.property('resource');
           expect(error.meta.resource).to.equal(url);
         });
-      })
-      .end(done);
+      });
     });
   });
 
   describe('PUT /community/:id', () => {
 
-    it('should return Not Found on any non-existing community', done => {
+    it('should return Not Found on any non-existing community', () => {
       const url = '/v1/community/10';
-      service.put(url)
+      return service.put(url)
       .send({name: 'Name'})
       .expect(404)
       .expect(res => {
@@ -146,15 +120,14 @@ describe('API v1 community endpoints', () => {
           expect(error.meta).to.have.property('resource');
           expect(error.meta.resource).to.equal(url);
         });
-      })
-      .end(done);
+      });
     });
   });
 
   describe('POST /community', () => {
 
-    it('should reject missing data', done => {
-      service.post('/v1/community')
+    it('should reject missing data', () => {
+      return service.post('/v1/community')
       .send('')
       .expect(400)
       .expect(res => {
@@ -163,12 +136,11 @@ describe('API v1 community endpoints', () => {
           const error = JSON.stringify(errors[0]);
           expect(error).to.match(/field.*name.*is required/);
         });
-      })
-      .end(done);
+      });
     });
 
-    it('should reject malformed data', done => {
-      service.post('/v1/community')
+    it('should reject malformed data', () => {
+      return service.post('/v1/community')
       .send('My community')
       .expect(400)
       .expect(res => {
@@ -177,12 +149,11 @@ describe('API v1 community endpoints', () => {
           const error = JSON.stringify(errors[0]);
           expect(error).to.match(/JSON syntax error/);
         });
-      })
-      .end(done);
+      });
     });
 
-    it('should reject JSON with excess fields', done => {
-      service.post('/v1/community')
+    it('should reject JSON with excess fields', () => {
+      return service.post('/v1/community')
       .send({name: 'My community', ost: 'Extra field'})
       .expect(400)
       .expect(res => {
@@ -191,15 +162,14 @@ describe('API v1 community endpoints', () => {
           const error = JSON.stringify(errors[0]);
           expect(error).to.match(/has additional properties/);
         });
-      })
-      .end(done);
+      });
     });
 
-    it('should add a new community with just a name', done => {
+    it('should add a new community with just a name', () => {
       const name = 'Sære Litterater';
       const id = 3;
       const location = `/v1/community/${id}`;
-      service.post('/v1/community')
+      return service.post('/v1/community')
       .send({name})
       .expect('location', location)
       .expect(201)
@@ -207,7 +177,7 @@ describe('API v1 community endpoints', () => {
         expectSuccess(res.body, (links, data) => {
           expect(links).to.have.property('self');
           expect(links.self).to.equal(location);
-          expectValidate(data, 'v1/schemas/community-out.json');
+          expectValidate(data, 'schemas/community-out.json');
           expect(data).to.have.property('id');
           expect(data.id).to.equal(id);
           expect(data).to.have.property('name');
@@ -219,8 +189,7 @@ describe('API v1 community endpoints', () => {
           expect(data).to.have.property('deleted_epoch');
           expect(data.deleted_epoch).to.be.null;
         });
-      })
-      .end(done);
+      });
     });
   });
 
@@ -233,15 +202,15 @@ describe('API v1 community endpoints', () => {
     const id = 2;
     const url = `/v1/community/${id}`;
 
-    it('should update existing community and retrieve the update', done => {
-      service.put(url)
+    it('should update existing community and retrieve the update', () => {
+      return service.put(url)
       .send({name, attributes: newAttributes})
       .expect(200)
       .expect(res => {
         expectSuccess(res.body, (links, data) => {
           expect(links).to.have.property('self');
           expect(links.self).to.equal(url);
-          expectValidate(data, 'v1/schemas/community-out.json');
+          expectValidate(data, 'schemas/community-out.json');
           expect(data).to.have.property('id');
           expect(data.id).to.equal(id);
           expect(data).to.have.property('name');
@@ -261,7 +230,7 @@ describe('API v1 community endpoints', () => {
           expectSuccess(res.body, (links, data) => {
             expect(links).to.have.property('self');
             expect(links.self).to.equal(url);
-            expectValidate(data, 'v1/schemas/community-out.json');
+            expectValidate(data, 'schemas/community-out.json');
             expect(data).to.have.property('id');
             expect(data.id).to.equal(id);
             expect(data).to.have.property('name');
@@ -273,11 +242,7 @@ describe('API v1 community endpoints', () => {
             expect(data).to.have.property('deleted_epoch');
             expect(data.deleted_epoch).to.be.null;
           });
-        })
-        .end(done);
-      })
-      .catch(error => {
-        done(error);
+        });
       });
     });
   });

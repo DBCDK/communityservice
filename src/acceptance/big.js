@@ -6,7 +6,7 @@ const server = require('server');
 const request = require('supertest');
 const faker = require('faker');
 const _ = require('lodash');
-const expectSuccess = require('server/test-verifiers').expectSuccess;
+const expectSuccess = require('./output-verifiers').expectSuccess;
 
 /* eslint-disable no-console */
 
@@ -352,7 +352,7 @@ exports.seed = () => {
       console.error(error);
       logger.log.error({sequence: error});
     })
-    ;
+  ;
 
   function deletingAction(id) {
     console.log(`action ${id}`);

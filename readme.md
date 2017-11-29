@@ -1,7 +1,3 @@
-[![Build Status](https://travis-ci.org/DBCDK/communityservice.svg?branch=master)](https://travis-ci.org/DBCDK/communityservice)
-[![Coverage Status](https://coveralls.io/repos/github/DBCDK/communityservice/badge.svg?branch=master)](https://coveralls.io/github/DBCDK/communityservice?branch=master)
-[![bitHound Overall Score](https://www.bithound.io/github/DBCDK/communityservice/badges/score.svg)](https://www.bithound.io/github/DBCDK/communityservice)
-
 # DBC Community Service
 
 For a bird eye's view, see the [product vision](doc/product-vision.md) and the software architecture [context](doc/dbc-community-service-context.pdf) and [containers](doc/dbc-community-service-containers.pdf).
@@ -34,7 +30,7 @@ To run the database tests against the server (requires postgresql):
     $ nvm install
     $ npm install
     $ cp environments/travis.env current.env
-    $ npm run dbtest --silent
+    $ npm run test-acceptance --silent
 
 To start the server in staging or production mode:
 
@@ -47,7 +43,7 @@ To start the server in staging or production mode:
 
 To completely clear the database and its migration information, run
 
-    $ npm run dropall
+    $ npm run db-drop
 
 You can edit `current.env` after the above steps to further control the settings.  The web service obeys the following environment variables.
 
@@ -56,7 +52,7 @@ You can edit `current.env` after the above steps to further control the settings
 | DB_CONNECTIONS_POOL_MAX | 10          | Maximum connections in DB pool   |
 | DB_CONNECTIONS_POOL_MIN | 2           | Minimum connections in DB pool   |
 | DB_HOST                 | 127.0.0.1   | Database host                    |
-| DB_NAME                 | elvis       | Name of the database             |
+| DB_NAME                 | communityservice | Name of the database        |
 | DB_USER                 |             | Database user                    |
 | DB_USER_PASSWORD        |             | Database password                |
 | FIX_TIME_FOR_TESTING    | 0           | Pretend now is always a fixed value (1), or ask DB what time it is (0) |
@@ -70,9 +66,18 @@ The web service has the following administrative endpoints:
 
 | Endpoint  | Function |
 | --------- | -------- |
-| `/status` | Returns the service status as JSON |
+| `/howru`  | Returns the service status as JSON, with at least a boolean `ok` property |
 | `/pid`    | Returns the service's process id   |
+
+The service status contains more information, see [schema](src/acceptance/schemas/status-out.json).
 
 ## Development
 
-You can run and test the service directly from the `src` directory or you can use a virtual machine to get a controlled environment that resembles the production environment.  Regardless of whether or not you [use the VM](vm.md), the [developer instructions](src/readme.md) are in the `src` directory.
+You can run and test the service directly from the `src` directory, see the [developer instructions](src/readme.md) are in the `src` directory.
+
+----
+
+[![Build Status](https://travis-ci.org/DBCDK/communityservice.svg?branch=master)](https://travis-ci.org/DBCDK/communityservice)
+[![Coverage Status](https://coveralls.io/repos/github/DBCDK/communityservice/badge.svg?branch=master)](https://coveralls.io/github/DBCDK/communityservice?branch=master)
+[![bitHound Overall Score](https://www.bithound.io/github/DBCDK/communityservice/badges/score.svg)](https://www.bithound.io/github/DBCDK/communityservice)
+

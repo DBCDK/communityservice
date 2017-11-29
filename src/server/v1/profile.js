@@ -64,7 +64,7 @@ router.route('/')
       next(error);
     });
   })
-  ;
+;
 
 router.route('/:id')
 
@@ -119,7 +119,7 @@ router.route('/:id')
       next(error);
     });
   })
-  ;
+;
 
 module.exports = router;
 

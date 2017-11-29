@@ -1,40 +1,18 @@
+/* eslint-disable no-unused-expressions */
 'use strict';
 
-const expect = require('chai').expect;
+const {expect} = require('chai');
 const request = require('supertest');
-const server = require('server');
-const config = require('server/config');
-const dbconfig = config.db;
-const knex = require('knex')(dbconfig);
-const db = require('server/test-db')(knex);
-const seedSmallDb = require('server/seeds/small').seed;
-const expectSuccess = require('server/test-verifiers').expectSuccess;
-const expectFailure = require('server/test-verifiers').expectFailure;
-const expectValidate = require('server/test-verifiers').expectValidate;
+const {expectSuccess, expectFailure, expectValidate} = require('./output-verifiers');
+const mock = require('./mock-server');
 
-/* eslint-disable no-unused-expressions */
 describe('API v1 action endpoints', () => {
-  const service = request(server);
-  before(done => {
-    db.dropAll()
-    .then(() => {
-      return knex.migrate.latest();
-    })
-    .then(() => {
-      done();
-    });
+  const service = request(mock.server);
+  beforeEach(async () => {
+    await mock.beforeEach();
   });
-  beforeEach(done => {
-    db.clear()
-    .then(() => {
-      return seedSmallDb(knex);
-    })
-    .then(() => {
-      done();
-    })
-    .catch(errors => {
-      done(errors);
-    });
+  afterEach(() => {
+    mock.afterEach();
   });
 
   describe('GET /community/:id/action', () => {
@@ -50,7 +28,7 @@ describe('API v1 action endpoints', () => {
           expect(links.self).to.equal(url);
           expect(list.length).to.equal(4);
           list.forEach(data => {
-            expectValidate(data, 'v1/schemas/action-out.json');
+            expectValidate(data, 'schemas/action-out.json');
             expect(data).to.have.property('id');
             expect(data).to.have.property('type');
             expect(data).to.have.property('attributes');
@@ -276,7 +254,7 @@ describe('API v1 action endpoints', () => {
         expectSuccess(res.body, (links, data) => {
           expect(links).to.have.property('self');
           expect(links.self).to.equal(location);
-          expectValidate(data, 'v1/schemas/action-out.json');
+          expectValidate(data, 'schemas/action-out.json');
           expect(data).to.have.property('id');
           expect(data.id).to.equal(id);
           expect(data).to.have.property('type');
@@ -357,7 +335,7 @@ describe('API v1 action endpoints', () => {
         expectSuccess(res.body, (links, data) => {
           expect(links).to.have.property('self');
           expect(links.self).to.equal(url);
-          expectValidate(data, 'v1/schemas/action-out.json');
+          expectValidate(data, 'schemas/action-out.json');
           expect(data).to.have.property('id');
           expect(data.id).to.equal(1);
           expect(data).to.have.property('owner_id');
@@ -571,7 +549,7 @@ describe('API v1 action endpoints', () => {
         expectSuccess(res.body, (links, data) => {
           expect(links).to.have.property('self');
           expect(links.self).to.equal(url);
-          expectValidate(data, 'v1/schemas/action-out.json');
+          expectValidate(data, 'schemas/action-out.json');
           expect(data).to.have.property('id');
           expect(data.id).to.equal(2);
           expect(data).to.have.property('type');
@@ -608,7 +586,7 @@ describe('API v1 action endpoints', () => {
           expectSuccess(res.body, (links, data) => {
             expect(links).to.have.property('self');
             expect(links.self).to.equal(url);
-            expectValidate(data, 'v1/schemas/action-out.json');
+            expectValidate(data, 'schemas/action-out.json');
             expect(data).to.have.property('id');
             expect(data.id).to.equal(2);
             expect(data).to.have.property('type');
@@ -653,7 +631,7 @@ describe('API v1 action endpoints', () => {
           .expect(200)
           .expect(res2 => {
             expectSuccess(res2.body, (links2, data2) => {
-              expectValidate(data2, 'v1/schemas/action-out.json');
+              expectValidate(data2, 'schemas/action-out.json');
               expect(data2.log).to.have.length(1);
               const log = data2.log[0];
               expect(log).to.not.have.property('type');
@@ -678,7 +656,7 @@ describe('API v1 action endpoints', () => {
         .expect(200)
         .expect(res => {
           expectSuccess(res.body, (links, data) => {
-            expectValidate(data, 'v1/schemas/action-out.json');
+            expectValidate(data, 'schemas/action-out.json');
             expect(data.type).to.equal('check');
             expect(data.log).to.have.length(1);
             const log = data.log[0];
@@ -713,7 +691,7 @@ describe('API v1 action endpoints', () => {
         expectSuccess(res.body, (links, data) => {
           expect(links).to.have.property('self');
           expect(links.self).to.equal(url);
-          expectValidate(data, 'v1/schemas/action-out.json');
+          expectValidate(data, 'schemas/action-out.json');
         });
       })
       .then(() => {
@@ -723,7 +701,7 @@ describe('API v1 action endpoints', () => {
           expectSuccess(res.body, (links, data) => {
             expect(links).to.have.property('self');
             expect(links.self).to.equal(url);
-            expectValidate(data, 'v1/schemas/action-out.json');
+            expectValidate(data, 'schemas/action-out.json');
             expect(data).to.have.property('id');
             expect(data.id).to.equal(id);
             expect(data).to.have.property('type');

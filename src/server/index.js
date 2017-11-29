@@ -1,26 +1,24 @@
 'use strict';
 
-/*
- * Configuration
- */
+// Configuration
 const config = require('server/config');
+const constants = require('server/constants')();
 const logger = require('__/logging')(config.logger);
+const _ = require('lodash');
 
-/*
- * Web server.
- */
+// Remote services.
+const database = require('server/database');
+const generatingServiceStatus = require('__/service/service-status');
+
+// Web server.
 const express = require('express');
 const app = express();
 
-/*
- * Securing headers.
- */
+// Securing headers.
 const helmet = require('helmet');
 app.use(helmet());
 
-/*
- * All request bodies must be JSON.
- */
+// All request bodies must be JSON.
 const parser = require('body-parser');
 app.use(parser.json({
   // Always assume JSON.
@@ -29,18 +27,22 @@ app.use(parser.json({
   strict: false
 }));
 
-/*
- * Administrative API
- */
+// Administrative API.
 
-app.get('/status', (req, res) => {
-  res.json({
-    siteversion: require('../package').version,
-    apiversion: '1',
+app.get('/howru', async (req, res) => {
+  const configWithoutSecrets = _.omit(config, [
+    'db.connection.user',
+    'db.connection.password'
+  ]);
+  const status = await generatingServiceStatus([database]);
+  Object.assign(status, {
+    version: require('../package').version,
+    'api-version': constants.apiversion,
     hostname: req.hostname,
     address: req.ip,
-    protocol: req.protocol
+    config: configWithoutSecrets
   });
+  res.json(status);
 });
 
 app.get('/pid', (req, res) => {
@@ -55,16 +57,11 @@ app.get('/crash', (req, res, next) => { // eslint-disable-line no-unused-vars
   next();
 });
 
-/*
- * Versioned API routes
- */
-
+// Versioned API routes.
 const routesV1 = require('server/v1/api');
 app.use('/v1', routesV1);
 
-/*
- * Error handlers
- */
+// Error handlers.
 
 app.use((req, res, next) => {
   next({
@@ -121,7 +118,7 @@ app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
       returnedError.stack = err.stack;
     }
   }
-  if (returnedError.status >= 500 && config.server.logServiceErrors === '1') {
+  if (returnedError.status >= 500 && config.server.logServiceErrors === 1) {
     logger.log.error(returnedError);
   }
   res.json({errors: [returnedError]});

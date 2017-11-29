@@ -1,27 +1,51 @@
 # Development
 
-All development and testing takes place here in the `src` directory.  If you want to take advantage of the virtual-environment setup to separate your local machine from the project, follow the [VM instructions](../vm.md).  Otherwise you have to run `npm install` to install the dependencies and [setup Node environment](setup-node-env.sh).
+To setup the system locally, in the `src` directory:
 
-## Setup
+    $ touch current.env     // Use default configuration.
+    $ npm install           // Install dependencies.
 
-You will need a PostgreSQL database server to run the service.
+To run the system locally:
+
+    $ docker-compose up -d  // Start local PostgreSQL database on port 5432.
+    $ npm run dev           // Start the service.
+
+If you want to manually start up a PostgreSQL server, it needs to run on port 5432 and have a database called `communityservice` owned by `communityservice`; see the following section about environments.
+
+To run fast tests on local machine:
+
+    $ npm run lint-js       // Run ESLint on Javascript.
+    $ npm run test-units    // Run unit tests.
+    $ npm test              // Run both lint & unit tests.
+
+To run full integration test:
+
+    $ docker-compose up -d  // Start local PostgreSQL database.
+    $ npm run test-full     // Run all test, including database integration.
+
+See also [service endpoints](../doc/endpoints.md).
+
+## Database
+
+To start up a local database:
+
+    $ docker-compose up -d  // Start local PostgreSQL database.
+
+To connect to the database:
+
+    $ docker exec -it -u postgres communityservice_database_1 psql
+
+To add a new table in the database, add a new table name to [`constants.js`](server/constants.js), add file to [`migrations/`](migrations/) where the new table is created/destroyed, and incorporate the new table table in [`cleanup-db.js`](acceptance/cleanup-db.js) so that the test will know how to clear the database.
+
+To manually migrate the database:
+
+    $ npm run db-migrate
+
+To run the database testsm you will need a PostgreSQL database server to run the service.
 
 On MacOS, install [Postgres.app](http://postgresapp.com/) and put the following in a file `/etc/paths.d/postgresqlapp`:
 
     /Applications/Postgres.app/Contents/Versions/latest/bin
-
-Create a test database:
-
-    $ psql
-    # create database elvis;
-    # \q
-
-Then copy `environments/developer.env` to `current.env` and modify if needed.
-The various settings are [described in the main README](../README.md).
-
-## Service
-
-Use `npm run dev` to start a local server according to the settings in `current.env`.  The server restarts when the source code changes.
 
 You can populate a database with a large test community by running
 
@@ -39,27 +63,9 @@ and reinstated by
 
 which is exactly what is done to test the complex queries in
 
-    $ npm run dbtest
+    $ npm run test-acceptance
 
-After a new test database has been generated, you will need to update the hard-coded epoch in [query.js](server/v1/query.js) to approximately the [current epoch](https://www.epochconverter.com/).
-
-## Lint
-
-Use `npm run lint --silent` to run all code through ESLint.
-
-## Tests
-
-All files matching the pattern `*_test.js` are considered unit tests, and they will be included automatically when you `npm run unittest --silent`.  This means that you can (and should) put your unittest next to the files your are testing.
-
-Use `npm test --silent` to run all tests that do not require a database.
-
-All files matching the pattern `*_test-db.js` are unit tests that need a running database, and they will be included automatically when you `npm run dbtest --silent`.
-
-To run only a part of the unit tests, use the `--grep` parameter of mocha, for example
-
-    $ npm run dbtest --silent -- --grep 'community endpoints'
-
-To debug the service during test, make sure you set `LOG_SERVICE_ERRORS=1` in your `current.env`.
+After a new test database has been generated, you will need to update the hard-coded epoch in [query.js](server/v1/query.js) to approximately the [current epoch](https://www.epochconverter.com/).  Also, you will need your `current.env` to include `export FIX_TIME_FOR_TESTING=1`, otherwise the test *should accept criteria for recent events* will fail.
 
 ## Coverage
 
@@ -69,7 +75,7 @@ On the build server, the [config file](../.travis.yml) uses the `after_script` t
 
 ##  Directory structure
 
-The web service is located in `server` and all other local (but possibly reusable) utilities and libraries are located in `lib`.  The script [setup-node-env.sh`](setup-node-env.sh), which is run as a result of `npm install`, ensures that there are symbolic links `node_modules/server` and `node_modules/__` pointing to `server` and `lib` respectively, so that any part of the server or the local libraries can include any other part by using
+The web service is located in `server` and all other local (but possibly reusable) utilities and libraries are located in `lib`.  The script [`setup-node-env.sh`](setup-node-env.sh), which is run as a result of `npm install`, ensures that there are symbolic links `node_modules/server` and `node_modules/__` pointing to `server` and `lib` respectively, so that any part of the server or the local libraries can include any other part by using
 
 ```javascript
 const mySpiff = require('__/mySpiffyLib');

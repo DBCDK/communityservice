@@ -1,41 +1,19 @@
+/* eslint-disable no-unused-expressions */
 'use strict';
 
-const expect = require('chai').expect;
+const {expect} = require('chai');
 const request = require('supertest');
-const server = require('server');
-const config = require('server/config');
-const dbconfig = config.db;
-const knex = require('knex')(dbconfig);
-const db = require('server/test-db')(knex);
-const seedSmallDb = require('server/seeds/small').seed;
-const expectSuccess = require('server/test-verifiers').expectSuccess;
-const expectFailure = require('server/test-verifiers').expectFailure;
-const expectValidate = require('server/test-verifiers').expectValidate;
+const {expectSuccess, expectFailure, expectValidate} = require('./output-verifiers');
+const mock = require('./mock-server');
 
 /* eslint-disable no-unused-expressions */
 describe('API v1 profile endpoints', () => {
-  const service = request(server);
-  before(done => {
-    db.dropAll()
-    .then(() => {
-      return knex.migrate.latest();
-    })
-    .then(() => {
-      done();
-    });
+  const service = request(mock.server);
+  beforeEach(async () => {
+    await mock.beforeEach();
   });
-  beforeEach(done => {
-    db.clear()
-    .then(() => {
-      return seedSmallDb(knex);
-    })
-    .then(() => {
-      done();
-    })
-    .catch(errors => {
-      done(errors);
-    });
-
+  afterEach(() => {
+    mock.afterEach();
   });
 
   describe('GET /community/:id/profile', () => {
@@ -51,7 +29,7 @@ describe('API v1 profile endpoints', () => {
           expect(links.self).to.equal(url);
           expect(list.length).to.equal(4);
           list.forEach(data => {
-            expectValidate(data, 'v1/schemas/profile-out.json');
+            expectValidate(data, 'schemas/profile-out.json');
             expect(data).to.have.property('id');
             expect(data).to.have.property('name');
             expect(data).to.have.property('attributes');
@@ -178,7 +156,7 @@ describe('API v1 profile endpoints', () => {
         expectSuccess(res.body, (links, data) => {
           expect(links).to.have.property('self');
           expect(links.self).to.equal(location);
-          expectValidate(data, 'v1/schemas/profile-out.json');
+          expectValidate(data, 'schemas/profile-out.json');
           expect(data).to.have.property('id');
           expect(data.id).to.equal(id);
           expect(data).to.have.property('name');
@@ -349,7 +327,7 @@ describe('API v1 profile endpoints', () => {
         expectSuccess(res.body, (links, data) => {
           expect(links).to.have.property('self');
           expect(links.self).to.equal(url);
-          expectValidate(data, 'v1/schemas/profile-out.json');
+          expectValidate(data, 'schemas/profile-out.json');
           expect(data).to.have.property('id');
           expect(data.id).to.equal(id);
           expect(data).to.have.property('name');
@@ -384,7 +362,7 @@ describe('API v1 profile endpoints', () => {
           expectSuccess(res.body, (links, data) => {
             expect(links).to.have.property('self');
             expect(links.self).to.equal(url);
-            expectValidate(data, 'v1/schemas/profile-out.json');
+            expectValidate(data, 'schemas/profile-out.json');
             expect(data).to.have.property('id');
             expect(data.id).to.equal(id);
             expect(data).to.have.property('name');
@@ -424,7 +402,7 @@ describe('API v1 profile endpoints', () => {
           expectSuccess(res.body, (links, data) => {
             expect(links).to.have.property('self');
             expect(links.self).to.equal(url);
-            expectValidate(data, 'v1/schemas/profile-out.json');
+            expectValidate(data, 'schemas/profile-out.json');
             expect(data).to.have.property('id');
             expect(data.id).to.equal(id);
             expect(data).to.have.property('name');
@@ -490,7 +468,7 @@ describe('API v1 profile endpoints', () => {
         expectSuccess(res.body, (links, data) => {
           expect(links).to.have.property('self');
           expect(links.self).to.equal(url);
-          expectValidate(data, 'v1/schemas/profile-out.json');
+          expectValidate(data, 'schemas/profile-out.json');
           expect(data).to.have.property('id');
           expect(data.id).to.equal(id);
           expect(data).to.have.property('name');
@@ -525,7 +503,7 @@ describe('API v1 profile endpoints', () => {
           expectSuccess(res.body, (links, data) => {
             expect(links).to.have.property('self');
             expect(links.self).to.equal(url);
-            expectValidate(data, 'v1/schemas/profile-out.json');
+            expectValidate(data, 'schemas/profile-out.json');
             expect(data).to.have.property('id');
             expect(data.id).to.equal(id);
             expect(data).to.have.property('name');

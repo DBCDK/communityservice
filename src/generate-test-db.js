@@ -4,10 +4,10 @@ const config = require('server/config');
 const logger = require('__/logging')(config.logger);
 const dbconfig = config.db;
 const knex = require('knex')(dbconfig);
-const db = require('server/test-db')(knex);
-const seedBigDb = require('server/seeds/big').seed;
+const db = require('acceptance/cleanup-db')(knex);
+const seedBigDb = require('acceptance/big').seed;
 
-db.dropAll()
+db.dropingAll()
 .then(() => {
   return knex.migrate.latest();
 })

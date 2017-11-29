@@ -1,10 +1,11 @@
 #!/bin/bash -e
 
-log_() { echo "[elvis] $@"; }
+ME=$(basename $0)
 
-log_ "--> Setting up symlinks"
+log_() { echo "[$ME] $@"; }
+
+log_ "--> Setting up symbolic links"
 cd node_modules
 [ -L __ ] || ln -s ../lib __
+[ -L acceptance ] || ln -s ../acceptance acceptance
 [ -L server ] || ln -s ../server server
-cd ../server
-[ -L config.js ] || ln -s ../config.js config.js

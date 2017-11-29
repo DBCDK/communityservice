@@ -1,0 +1,52 @@
+{
+  "type": "object",
+  "properties": {
+    "ok": {
+      "required": true,
+      "type": "boolean"
+    },
+    "services": {
+      "required": false,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "service": {
+            "required": true,
+            "type": "string"
+          },
+          "ok": {
+            "required": true,
+            "type": "boolean"
+          },
+          "problem": {
+            "required": false,
+            "type": "string"
+          }
+        }
+      }
+    },
+    "version": {
+      "required": true,
+      "type": "string",
+      "format": "semver"
+    },
+    "api-version": {
+      "required": true,
+      "type": "string",
+      "format": "semver"
+    },
+    "errorText": {
+      "required": false,
+      "type": "string"
+    },
+    "errorLog": {
+      "required": false,
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": true
+}

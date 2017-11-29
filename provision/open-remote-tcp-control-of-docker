@@ -1,6 +1,0 @@
-#!/bin/bash -e
-
-echo "--> Allow remote, unencrypted TCP connections to Docker"
-cat > /etc/default/docker <<END_CONF
-DOCKER_OPTS="-H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock"
-END_CONF

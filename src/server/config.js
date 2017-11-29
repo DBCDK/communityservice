@@ -19,22 +19,14 @@ const knexfile = require('./knexfile');
 //     const port = require('server/config').server.port
 //     mymodule(port)
 
-function Defaults() {
+function Defaults () {
   const environment = process.env.NODE_ENV || 'development';
-  const port = tcp.normalizePort(process.env.PORT) || 3000;
-  const prettyLog = process.env.PRETTY_LOG || 1;
-  const logLevel = process.env.LOG_LEVEL || 'INFO';
-  const logServiceErrors = process.env.LOG_SERVICE_ERRORS || 1;
   const niceHostName = hostname().replace('.domain_not_set.invalid', '');
   const fixedTime = process.env.FIX_TIME_FOR_TESTING || 0;
   return {
     environment,
     hostname: niceHostName,
-    port,
-    logServiceErrors,
-    fixedTime,
-    prettyLog,
-    logLevel
+    fixedTime
   };
 }
 
@@ -46,17 +38,17 @@ const defaults = new Defaults();
 
 exports.server = {
   environment: defaults.environment,
-  logServiceErrors: defaults.logServiceErrors,
-  port: defaults.port,
-  hostname: 'elvis.com',
+  logServiceErrors: parseInt(process.env.LOG_SERVICE_ERRORS || 1, 10),
+  port: tcp.normalizePort(process.env.PORT) || 3000,
+  hostname: 'elvis.dbc.dk',
   fixedTime: defaults.fixedTime,
   testTimeoutMs: 20*1000
 };
 
 exports.logger = {
   environment: defaults.environment,
-  level: defaults.logLevel,
-  pretty: defaults.prettyLog,
+  level: process.env.LOG_LEVEL || 'INFO',
+  pretty: parseInt(process.env.PRETTY_LOG || 1, 10),
   hostname: defaults.hostname
 };
 
