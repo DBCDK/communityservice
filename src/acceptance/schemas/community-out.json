@@ -1,10 +1,6 @@
 {
   "type": "object",
   "properties": {
-    "id": {
-      "required": true,
-      "type": "integer"
-    },
     "created_epoch": {
       "required": true,
       "type": "integer"

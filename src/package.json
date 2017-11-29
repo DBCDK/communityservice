@@ -50,6 +50,6 @@
     "test-acceptance": ". ./current.env && mocha --exit acceptance/*_test.js",
     "test-full": "run-s test test-no-db test-acceptance",
     "test-no-db": ". ./current.env && mocha --exit acceptance/*_no-db.js",
-    "test-units": ". ./current.env && mocha --exit lib/*_test.js"
+    "test-units": ". ./current.env && mocha --exit server/v2/*_test.js lib/*_test.js"
   }
 }

@@ -6,7 +6,7 @@ const request = require('supertest');
 const {expectSuccess, expectFailure, expectValidate} = require('./output-verifiers');
 const mock = require('./mock-server');
 
-describe('API v1 community endpoints', () => {
+describe('API v2 community endpoints', () => {
   const service = request(mock.server);
   beforeEach(async () => {
     await mock.beforeEach();
@@ -18,7 +18,7 @@ describe('API v1 community endpoints', () => {
   describe('GET /community', () => {
 
     it('should return seeded communities', () => {
-      const url = '/v1/community';
+      const url = '/v2/community';
       return service.get(url)
       .expect(200)
       .expect('Content-Type', /json/)
@@ -48,7 +48,7 @@ describe('API v1 community endpoints', () => {
   describe('GET /community/:name', () => {
 
     it('should return Not Found on unknown name', () => {
-      const url = '/v1/community/Osten Feldt';
+      const url = '/v2/community/Osten Feldt';
       return service.get(url)
       .expect(404)
       .expect(res => {
@@ -64,12 +64,12 @@ describe('API v1 community endpoints', () => {
     });
 
     it('should locate community by name', () => {
-      return service.get('/v1/community/Biblo')
+      return service.get('/v2/community/Biblo')
       .expect(200)
       .expect(res => {
         expectSuccess(res.body, (links, data) => {
           expect(links).to.have.property('self');
-          expect(links.self).to.equal('/v1/community/1');
+          expect(links.self).to.equal('/v2/community/1');
           expect(data).to.have.property('id');
           expect(data.id).to.equal(1);
           expect(data).to.have.property('name');
@@ -88,7 +88,7 @@ describe('API v1 community endpoints', () => {
   describe('GET /community/:id', () => {
 
     it('should return Not Found on unknown community', () => {
-      const url = '/v1/community/10';
+      const url = '/v2/community/10';
       return service.get(url)
       .expect(404)
       .expect(res => {
@@ -107,7 +107,7 @@ describe('API v1 community endpoints', () => {
   describe('PUT /community/:id', () => {
 
     it('should return Not Found on any non-existing community', () => {
-      const url = '/v1/community/10';
+      const url = '/v2/community/10';
       return service.put(url)
       .send({name: 'Name'})
       .expect(404)
@@ -127,7 +127,7 @@ describe('API v1 community endpoints', () => {
   describe('POST /community', () => {
 
     it('should reject missing data', () => {
-      return service.post('/v1/community')
+      return service.post('/v2/community')
       .send('')
       .expect(400)
       .expect(res => {
@@ -140,7 +140,7 @@ describe('API v1 community endpoints', () => {
     });
 
     it('should reject malformed data', () => {
-      return service.post('/v1/community')
+      return service.post('/v2/community')
       .send('My community')
       .expect(400)
       .expect(res => {
@@ -153,7 +153,7 @@ describe('API v1 community endpoints', () => {
     });
 
     it('should reject JSON with excess fields', () => {
-      return service.post('/v1/community')
+      return service.post('/v2/community')
       .send({name: 'My community', ost: 'Extra field'})
       .expect(400)
       .expect(res => {
@@ -168,8 +168,8 @@ describe('API v1 community endpoints', () => {
     it('should add a new community with just a name', () => {
       const name = 'Sære Litterater';
       const id = 3;
-      const location = `/v1/community/${id}`;
-      return service.post('/v1/community')
+      const location = `/v2/community/${id}`;
+      return service.post('/v2/community')
       .send({name})
       .expect('location', location)
       .expect(201)
@@ -200,7 +200,7 @@ describe('API v1 community endpoints', () => {
     const oldAttributes = {production: false};
     const totalAttributes = Object.assign({}, oldAttributes, newAttributes);
     const id = 2;
-    const url = `/v1/community/${id}`;
+    const url = `/v2/community/${id}`;
 
     it('should update existing community and retrieve the update', () => {
       return service.put(url)

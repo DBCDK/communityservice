@@ -8,7 +8,7 @@ const _ = require('lodash');
 const express = require('express');
 const router = express.Router({mergeParams: true});
 const build = require('./query-parser');
-const gettingCurrentTimeAsEpoch = require('server/v1/modifiers').gettingCurrentTimeAsEpoch;
+const {gettingCurrentTimeAsEpoch} = require('server/v2/modifiers');
 const config = require('server/config').server;
 const constants = require('server/constants')();
 

@@ -1,10 +1,6 @@
 {
   "type": "object",
   "properties": {
-    "id": {
-      "required": true,
-      "type": "integer"
-    },
     "created_epoch": {
       "required": true,
       "type": "integer"
@@ -15,7 +11,7 @@
     },
     "modified_by": {
       "required": true,
-      "type": ["null", "integer"]
+      "type": ["null", "string"]
     },
     "deleted_epoch": {
       "required": true,
@@ -23,15 +19,15 @@
     },
     "deleted_by": {
       "required": true,
-      "type": ["null", "integer"]
+      "type": ["null", "string"]
     },
-    "community_id": {
+    "community": {
       "required": true,
-      "type": "integer"
+      "type": "string"
     },
-    "owner_id": {
+    "owner": {
       "required": true,
-      "type": "integer"
+      "type": "string"
     },
     "title": {
       "required": true,
@@ -47,7 +43,7 @@
     },
     "entity_ref": {
       "required": true,
-      "type": ["null", "integer"]
+      "type": ["null", "string"]
     },
     "start_epoch": {
       "required": true,

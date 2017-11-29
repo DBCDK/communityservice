@@ -58,8 +58,8 @@ app.get('/crash', (req, res, next) => { // eslint-disable-line no-unused-vars
 });
 
 // Versioned API routes.
-const routesV1 = require('server/v1/api');
-app.use('/v1', routesV1);
+const routesV2 = require('server/v2/api');
+app.use('/v2', routesV2);
 
 // Error handlers.
 

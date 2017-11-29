@@ -11,7 +11,7 @@ const knex = require('knex')(dbconfig);
 const db = require('acceptance/cleanup-db')(knex);
 const {exec} = require('child-process-promise');
 
-describe('API v1 user story queries', () => {
+describe('API v2 user story queries', () => {
   const service = request(server);
   before(async () => {
     await db.droppingAll();
@@ -19,7 +19,7 @@ describe('API v1 user story queries', () => {
   });
 
   it('to display the best books as a community developer I want to find the 8 most recent reviews with the highest rating', done => {
-    service.post('/v1/community/1/query')
+    service.post('/v2/community/1/query')
     .send({
       Entities: {
         type: 'review',
@@ -107,7 +107,7 @@ describe('API v1 user story queries', () => {
   });
 
   it('to approve new reviews as admin I want to search for reviews that need approval', done => {
-    service.post('/v1/community/1/query')
+    service.post('/v2/community/1/query')
     .send({
       Entities: {type: 'review', 'attributes.approvedBy': null},
       Limit: 100,
@@ -136,7 +136,7 @@ describe('API v1 user story queries', () => {
   });
 
   it('To show a Biblo-like profile page as developer I want to find all recent user activity', done => {
-    service.post('/v1/community/1/query')
+    service.post('/v2/community/1/query')
     .send({
       Profile: {
         id: '15'

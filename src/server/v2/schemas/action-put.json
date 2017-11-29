@@ -1,20 +1,20 @@
 {
   "type": "object",
   "properties": {
-    "owner_id": {
+    "modified_by": {
       "required": true,
-      "type": "integer"
+      "type": "string"
     },
     "type": {
-      "required": true,
+      "required": false,
       "type": "string"
     },
-    "title": {
-      "required": true,
+    "entity_ref": {
+      "required": false,
       "type": "string"
     },
-    "contents": {
-      "required": true,
+    "profile_ref": {
+      "required": false,
       "type": "string"
     },
     "start_epoch": {
@@ -28,10 +28,6 @@
     "attributes": {
       "required": false,
       "type": "object"
-    },
-    "entity_ref": {
-      "required": false,
-      "type": "integer"
     }
   },
   "additionalProperties": false

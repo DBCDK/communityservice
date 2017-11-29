@@ -5,71 +5,58 @@
 'use strict';
 
 const express = require('express');
+const {asyncMiddleware} = require('__/async-express');
 const config = require('server/config');
 const knex = require('knex')(config.db);
-const verifyingCommunityExists = require('server/v1/verifiers').verifyingCommunityExists;
-const verifyingProfileExists = require('server/v1/verifiers').verifyingProfileExists;
-const verifyingProfileExistsIfSet = require('server/v1/verifiers').verifyingProfileExistsIfSet;
-const verifyingEntityExistsIfSet = require('server/v1/verifiers').verifyingEntityExistsIfSet;
-const validatingInput = require('server/v1/verifiers').validatingInput;
-const gettingCurrentTimeAsEpoch = require('server/v1/modifiers').gettingCurrentTimeAsEpoch;
-const setCommunityId = require('server/v1/modifiers').setCommunityId;
+const {verifyingCommunityExists, verifyingProfileExists, verifyingProfileUrlExistsIfSet, verifyingEntityUrlExistsIfSet} = require('server/v2/verifiers');
+const {validatingInput} = require('server/v2/verifiers');
+const {gettingCurrentTimeAsEpoch} = require('server/v2/modifiers');
+const {setCommunityId} = require('server/v2/modifiers');
 const constants = require('server/constants')();
 const actionTable = constants.action.table;
-const updateOrDelete = require('server/v1/modifiers').updateOrDelete;
+const {updateOrDelete} = require('server/v2/modifiers');
+const {actionFromDb} = require('server/v2/to-from-db-format');
 
 // Make sure the {community} parameter is passed through the preceeding router.
 const router = express.Router({mergeParams: true});
 
 router.route('/')
 
-  .get((req, res, next) => {
+  .get(asyncMiddleware(async (req, res, next) => {
     const community = req.params.community;
-    verifyingCommunityExists(community, req.baseUrl)
-    .then(() => {
-      return knex(actionTable).where('community_id', community).select();
-    })
-    .then(actions => {
-      res.status(200).json({
+    try {
+      await verifyingCommunityExists(community, req.baseUrl);
+      const actions = await knex(actionTable).where('community_id', community).select();
+      return res.status(200).json({
         links: {self: req.baseUrl},
-        data: actions
+        data: actions.map(actionFromDb)
       });
-    })
-    .catch(error => {
+    }
+    catch (error) {
       next(error);
-    });
-  })
+    }
+  }))
 
-  .post((req, res, next) => {
+  .post(asyncMiddleware(async (req, res, next) => {
     const community = req.params.community;
-    validatingInput(req, 'schemas/action-post.json')
-    .then(() => {
-      return verifyingCommunityExists(community, req.baseUrl);
-    })
-    .then(() => {
-      return verifyingProfileExistsIfSet(req.body.profile_ref, community, req.baseUrl, req.body);
-    })
-    .then(() => {
-      return verifyingEntityExistsIfSet(req.body.entity_ref, community, req.baseUrl, req.body);
-    })
-    .then(() => {
-      return setCommunityId(req.body, community);
-    })
-    .then(action => {
-      return knex(actionTable).insert(action, '*');
-    })
-    .then(actions => {
-      const action = actions[0];
-      const location = `${req.baseUrl}/${action.id}`;
-      res.status(201).location(location).json({
+    try {
+      await validatingInput(req, 'schemas/action-post.json');
+      await verifyingCommunityExists(community, req.baseUrl);
+      await verifyingProfileUrlExistsIfSet(req.body.profile_ref, community, req.baseUrl, req.body);
+      await verifyingEntityUrlExistsIfSet(req.body.entity_ref, community, req.baseUrl, req.body);
+      const action = await setCommunityId(req.body, community);
+      const actions = knex(actionTable).insert(action, '*');
+      const theAction = actions[0];
+      const location = `${req.baseUrl}/${theAction.id}`;
+      return res.status(201).location(location).json({
         links: {self: location},
         data: action
       });
-    })
-    .catch(error => {
+    }
+    catch (error) {
       next(error);
-    });
-  })
+    }
+  }))
 ;
 
 router.route('/:id')

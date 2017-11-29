@@ -65,7 +65,7 @@ which is exactly what is done to test the complex queries in
 
     $ npm run test-acceptance
 
-After a new test database has been generated, you will need to update the hard-coded epoch in [query.js](server/v1/query.js) to approximately the [current epoch](https://www.epochconverter.com/).  Also, you will need your `current.env` to include `export FIX_TIME_FOR_TESTING=1`, otherwise the test *should accept criteria for recent events* will fail.
+After a new test database has been generated, you will need to update the hard-coded epoch in [query.js](server/v2/query.js) to approximately the [current epoch](https://www.epochconverter.com/).  Also, you will need your `current.env` to include `export FIX_TIME_FOR_TESTING=1`, otherwise the test *should accept criteria for recent events* will fail.
 
 ## Coverage
 

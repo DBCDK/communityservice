@@ -2,7 +2,7 @@
 
 const constants = {
 
-  apiversion: '1',
+  apiversion: '2',
 
   community: {
     table: 'communities'

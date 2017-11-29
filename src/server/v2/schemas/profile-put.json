@@ -3,7 +3,7 @@
   "properties": {
     "modified_by": {
       "required": true,
-      "type": "number"
+      "type": "string"
     },
     "name": {
       "required": false,

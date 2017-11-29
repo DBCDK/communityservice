@@ -7,7 +7,7 @@ const {expectSuccess, expectFailure, expectValidate} = require('./output-verifie
 const mock = require('./mock-server');
 
 /* eslint-disable no-unused-expressions */
-describe('API v1 profile endpoints', () => {
+describe('API v2 profile endpoints', () => {
   const service = request(mock.server);
   beforeEach(async () => {
     await mock.beforeEach();
@@ -19,7 +19,7 @@ describe('API v1 profile endpoints', () => {
   describe('GET /community/:id/profile', () => {
 
     it('should return seeded profiles', done => {
-      const url = '/v1/community/1/profile';
+      const url = '/v2/community/1/profile';
       service.get(url)
       .expect(200)
       .expect('Content-Type', /json/)
@@ -67,7 +67,7 @@ describe('API v1 profile endpoints', () => {
     });
 
     it('should return Not Found for non-existent community', done => {
-      service.get('/v1/community/99/profile')
+      service.get('/v2/community/99/profile')
       .expect(404)
       .expect(res => {
         expectFailure(res.body, errors => {
@@ -86,7 +86,7 @@ describe('API v1 profile endpoints', () => {
   describe('POST /community/:id/profile', () => {
 
     it('should return Not Found for non-existent community', done => {
-      service.post('/v1/community/99/profile')
+      service.post('/v2/community/99/profile')
       .send({name: 'Låtte Østergærde'})
       .expect(404)
       .expect(res => {
@@ -103,7 +103,7 @@ describe('API v1 profile endpoints', () => {
     });
 
     it('should reject missing data', done => {
-      service.post('/v1/community/1/profile')
+      service.post('/v2/community/1/profile')
       .send({})
       .expect(400)
       .expect(res => {
@@ -117,7 +117,7 @@ describe('API v1 profile endpoints', () => {
     });
 
     it('should reject malformed data', done => {
-      service.post('/v1/community/1/profile')
+      service.post('/v2/community/1/profile')
       .send('My profile')
       .expect(400)
       .expect(res => {
@@ -131,7 +131,7 @@ describe('API v1 profile endpoints', () => {
     });
 
     it('should reject non-conformant JSON', done => {
-      service.post('/v1/community/1/profile')
+      service.post('/v2/community/1/profile')
       .send({name: 'My profile', piggyback: 'I just wanna be in'})
       .expect(400)
       .expect(res => {
@@ -147,8 +147,8 @@ describe('API v1 profile endpoints', () => {
     it('should add a new profile with just a name', done => {
       const name = 'Miss Mia';
       const id = 6;
-      const location = `/v1/community/1/profile/${id}`;
-      service.post('/v1/community/1/profile')
+      const location = `/v2/community/1/profile/${id}`;
+      service.post('/v2/community/1/profile')
       .send({name})
       .expect(201)
       .expect('location', location)
@@ -180,7 +180,7 @@ describe('API v1 profile endpoints', () => {
   describe('GET /community/:id/profile/:id', () => {
 
     it('should return Not Found on unknown profile', done => {
-      service.get('/v1/community/1/profile/100')
+      service.get('/v2/community/1/profile/100')
       .expect(404)
       .expect(res => {
         expectFailure(res.body, errors => {
@@ -196,7 +196,7 @@ describe('API v1 profile endpoints', () => {
     });
 
     it('should return Not Found for non-existent community', done => {
-      service.get('/v1/community/99/profile/1')
+      service.get('/v2/community/99/profile/1')
       .expect(404)
       .expect(res => {
         expectFailure(res.body, errors => {
@@ -212,7 +212,7 @@ describe('API v1 profile endpoints', () => {
     });
 
     it('should return Not Found when profile does not belong to community', done => {
-      service.get('/v1/community/2/profile/1')
+      service.get('/v2/community/2/profile/1')
       .expect(400)
       .expect(res => {
         expectFailure(res.body, errors => {
@@ -236,7 +236,7 @@ describe('API v1 profile endpoints', () => {
   describe('PUT /community/:id/profile/:id', () => {
 
     it('should reject non-conformant JSON', done => {
-      service.put('/v1/community/1/profile/1')
+      service.put('/v2/community/1/profile/1')
       .send({})
       .expect(400)
       .expect(res => {
@@ -251,7 +251,7 @@ describe('API v1 profile endpoints', () => {
     });
 
     it('should return Not Found when profile does not belong to community', done => {
-      service.put('/v1/community/99/profile/1')
+      service.put('/v2/community/99/profile/1')
       .send({name: 'Name', modified_by: 1})
       .expect(404)
       .expect(res => {
@@ -268,7 +268,7 @@ describe('API v1 profile endpoints', () => {
     });
 
     it('should return Not Found on any non-existing profile', done => {
-      service.put('/v1/community/1/profile/100')
+      service.put('/v2/community/1/profile/100')
       .send({name: 'Name', modified_by: 1})
       .expect(404)
       .expect(res => {
@@ -282,7 +282,7 @@ describe('API v1 profile endpoints', () => {
     });
 
     it('should return Not Found on any non-existing profile for modifier', done => {
-      service.put('/v1/community/1/profile/1')
+      service.put('/v2/community/1/profile/1')
       .send({name: 'Name', modified_by: 98})
       .expect(404)
       .expect(res => {
@@ -296,7 +296,7 @@ describe('API v1 profile endpoints', () => {
     });
 
     it('should return Bad Request on modifier profile belonging to another community', done => {
-      service.put('/v1/community/1/profile/1')
+      service.put('/v2/community/1/profile/1')
       .send({name: 'Name', modified_by: 5})
       .expect(400)
       .expect(res => {
@@ -317,7 +317,7 @@ describe('API v1 profile endpoints', () => {
     });
 
     const id = 3;
-    const url = `/v1/community/1/profile/${id}`;
+    const url = `/v2/community/1/profile/${id}`;
 
     it('should mark as deleted when modified_by is only field', done => {
       service.put(url)
@@ -431,7 +431,7 @@ describe('API v1 profile endpoints', () => {
     });
 
     it('should update log with minimal attributes', done => {
-      const url2 = '/v1/community/1/profile/2';
+      const url2 = '/v2/community/1/profile/2';
       // Get original profile.
       service.get(url2)
       .expect(200)

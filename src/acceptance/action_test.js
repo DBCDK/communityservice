@@ -6,7 +6,7 @@ const request = require('supertest');
 const {expectSuccess, expectFailure, expectValidate} = require('./output-verifiers');
 const mock = require('./mock-server');
 
-describe('API v1 action endpoints', () => {
+describe('API v2 action endpoints', () => {
   const service = request(mock.server);
   beforeEach(async () => {
     await mock.beforeEach();
@@ -17,9 +17,9 @@ describe('API v1 action endpoints', () => {
 
   describe('GET /community/:id/action', () => {
 
-    it('should return seeded actions', done => {
-      const url = '/v1/community/1/action';
-      service.get(url)
+    it('should return seeded actions', () => {
+      const url = '/v2/community/1/action';
+      return service.get(url)
       .expect(200)
       .expect('Content-Type', /json/)
       .expect(res => {
@@ -29,58 +29,44 @@ describe('API v1 action endpoints', () => {
           expect(list.length).to.equal(4);
           list.forEach(data => {
             expectValidate(data, 'schemas/action-out.json');
-            expect(data).to.have.property('id');
-            expect(data).to.have.property('type');
-            expect(data).to.have.property('attributes');
-            expect(data).to.have.property('start_epoch');
             expect(data.start_epoch).to.be.null;
-            expect(data).to.have.property('end_epoch');
             expect(data.end_epoch).to.be.null;
-            expect(data).to.have.property('created_epoch');
             expect(data.created_epoch).to.match(/^[0-9]+$/);
-            expect(data).to.have.property('modified_epoch');
             expect(data.modified_epoch).to.deep.equal(data.created_epoch);
-            expect(data).to.have.property('modified_by');
             expect(data.modified_by).to.be.null;
-            expect(data).to.have.property('deleted_epoch');
             expect(data.deleted_epoch).to.be.null;
-            expect(data).to.have.property('deleted_by');
             expect(data.deleted_by).to.be.null;
-            expect(data).to.have.property('community_id');
-            expect(data.community_id).to.match(/^[0-9]+$/);
-            expect(data).to.have.property('log');
             expect(data.log).to.be.null;
           });
           expect(list[0].type).to.equal('follow');
-          expect(list[0].community_id).to.equal(1);
-          expect(list[0].owner_id).to.equal(1);
-          expect(list[0].profile_ref).to.equal(2);
+          expect(list[0].community).to.equal('/v2/community/1');
+          expect(list[0].owner).to.equal('/v2/community/1/profile/1');
+          expect(list[0].profile_ref).to.equal('/v2/community/1/profile/2');
           expect(list[0].attributes).to.be.empty;
           expect(list[1].type).to.equal('like');
-          expect(list[1].community_id).to.equal(1);
-          expect(list[1].owner_id).to.equal(2);
-          expect(list[1].entity_ref).to.equal(2);
+          expect(list[1].community).to.equal('/v2/community/1');
+          expect(list[1].owner).to.equal('/v2/community/1/profile/2');
+          expect(list[1].entity_ref).to.equal('/v2/community/1/entity/2');
           expect(list[1].attributes).to.be.empty;
           expect(list[2].type).to.equal('participate');
-          expect(list[2].community_id).to.equal(1);
-          expect(list[2].owner_id).to.equal(4);
-          expect(list[2].entity_ref).to.equal(1);
+          expect(list[2].community).to.equal('/v2/community/1');
+          expect(list[2].owner).to.equal('/v2/community/1/profile/4');
+          expect(list[2].entity_ref).to.equal('/v2/community/1/entity/1');
           expect(list[2].attributes).to.be.empty;
           expect(list[3].type).to.equal('flag');
-          expect(list[3].community_id).to.equal(1);
-          expect(list[3].owner_id).to.equal(2);
-          expect(list[3].entity_ref).to.equal(2);
-          expect(list[3].profile_ref).to.equal(3);
+          expect(list[3].community).to.equal('/v2/community/1');
+          expect(list[3].owner).to.equal('/v2/community/1/profile/2');
+          expect(list[3].entity_ref).to.equal('/v2/community/1/entity/2');
+          expect(list[3].profile_ref).to.equal('/v2/community/1/profile/3');
           expect(list[3].attributes).to.deep.equal({
             concern: 'Må man skrive "nøgen"?'
           });
         });
-      })
-      .end(done);
+      });
     });
 
-    it('should return Not Found for non-existent community', done => {
-      service.get('/v1/community/84/action')
+    it('should return Not Found for non-existent community', () => {
+      return service.get('/v2/community/84/action')
       .expect(404)
       .expect(res => {
         expectFailure(res.body, errors => {
@@ -91,17 +77,15 @@ describe('API v1 action endpoints', () => {
           expect(error).to.have.property('meta');
           expect(error.meta).to.have.property('resource');
         });
-      })
-      .end(done);
+      });
     });
   });
 
   describe('POST /community/:id/action', () => {
 
-    it('should return Not Found for non-existent community', done => {
-      service.post('/v1/community/83/action')
-      .send({type: 'like', owner_id: 1})
-      .expect(404)
+    it('should return Not Found for non-existent community', () => {
+      return service.post('/v2/community/83/action')
+      .send({type: 'like', owner: '/v2/community/1/profile/1'})
       .expect(res => {
         expectFailure(res.body, errors => {
           expect(errors).to.have.length(1);
@@ -112,11 +96,11 @@ describe('API v1 action endpoints', () => {
           expect(error.meta).to.have.property('resource');
         });
       })
-      .end(done);
+      .expect(404);
     });
 
-    it('should reject missing data', done => {
-      service.post('/v1/community/1/action')
+    it('should reject missing data', () => {
+      return service.post('/v2/community/1/action')
       .send({})
       .expect(400)
       .expect(res => {
@@ -124,14 +108,13 @@ describe('API v1 action endpoints', () => {
           expect(errors).to.have.length(1);
           const error = JSON.stringify(errors[0]);
           expect(error).to.match(/field.*type.*is required/);
-          expect(error).to.match(/field.*owner_id.*is required/);
+          expect(error).to.match(/field.*owner.*is required/);
         });
-      })
-      .end(done);
+      });
     });
 
-    it('should reject malformed data', done => {
-      service.post('/v1/community/1/action')
+    it('should reject malformed data', () => {
+      return service.post('/v2/community/1/action')
       .send('My Action')
       .expect(400)
       .expect(res => {
@@ -140,12 +123,11 @@ describe('API v1 action endpoints', () => {
           const error = JSON.stringify(errors[0]);
           expect(error).to.match(/JSON syntax error/);
         });
-      })
-      .end(done);
+      });
     });
 
-    it('should reject non-conformant JSON', done => {
-      service.post('/v1/community/1/action')
+    it('should reject non-conformant JSON', () => {
+      return service.post('/v2/community/1/action')
       .send({piggyback: 'I just wanna be in'})
       .expect(400)
       .expect(res => {
@@ -154,13 +136,12 @@ describe('API v1 action endpoints', () => {
           const error = JSON.stringify(errors[0]);
           expect(error).to.match(/has additional properties/);
         });
-      })
-      .end(done);
+      });
     });
 
-    it('should return Bad Request on non-existing entity_ref', done => {
-      service.post('/v1/community/1/action')
-      .send({owner_id: 1, type: 'like', entity_ref: 77})
+    it('should return Not Found on non-existing entity_ref', () => {
+      return service.post('/v2/community/1/action')
+      .send({owner: '/v2/community/1/profile/1', type: 'like', entity_ref: '/v2/community/1/entity/77'})
       .expect(404)
       .expect(res => {
         expectFailure(res.body, errors => {
@@ -175,12 +156,11 @@ describe('API v1 action endpoints', () => {
           expect(error).to.have.property('meta');
           expect(error.meta).to.have.property('resource');
         });
-      })
-      .end(done);
+      });
     });
 
-    it('should return Bad Request on entity_ref belonging to another community', done => {
-      service.post('/v1/community/1/action')
+    it('should return Bad Request on entity_ref belonging to another community', () => {
+      return service.post('/v2/community/1/action')
       .send({owner_id: 1, type: 'like', entity_ref: 2})
       .expect(400)
       .expect(res => {
@@ -196,12 +176,11 @@ describe('API v1 action endpoints', () => {
           expect(error).to.have.property('meta');
           expect(error.meta).to.have.property('resource');
         });
-      })
-      .end(done);
+      });
     });
 
-    it('should return Not Found on non-existing profile_ref', done => {
-      service.post('/v1/community/1/action')
+    it('should return Not Found on non-existing profile_ref', () => {
+      return service.post('/v2/community/1/action')
       .send({owner_id: 1, type: 'like', profile_ref: 78})
       .expect(404)
       .expect(res => {
@@ -217,12 +196,11 @@ describe('API v1 action endpoints', () => {
           expect(error).to.have.property('meta');
           expect(error.meta).to.have.property('resource');
         });
-      })
-      .end(done);
+      });
     });
 
-    it('should return Bad Request on profile_ref belonging to another community', done => {
-      service.post('/v1/community/1/action')
+    it('should return Bad Request on profile_ref belonging to another community', () => {
+      return service.post('/v2/community/1/action')
       .send({owner_id: 1, type: 'like', profile_ref: 5})
       .expect(400)
       .expect(res => {
@@ -238,15 +216,14 @@ describe('API v1 action endpoints', () => {
           expect(error).to.have.property('meta');
           expect(error.meta).to.have.property('resource');
         });
-      })
-      .end(done);
+      });
     });
 
-    it('should add a new action with a type and owner', done => {
+    it('should add a new action with a type and owner', () => {
       const type = 'need-help';
       const id = 5;
-      const location = `/v1/community/1/action/${id}`;
-      service.post('/v1/community/1/action')
+      const location = `/v2/community/1/action/${id}`;
+      return service.post('/v2/community/1/action')
       .send({type, owner_id: 2})
       .expect(201)
       .expect('location', location)
@@ -268,15 +245,14 @@ describe('API v1 action endpoints', () => {
           expect(data).to.have.property('deleted_epoch');
           expect(data.deleted_epoch).to.be.null;
         });
-      })
-      .end(done);
+      });
     });
   });
 
   describe('GET /community/:id/action/:id', () => {
 
-    it('should return Not Found on unknown action', done => {
-      service.get('/v1/community/1/action/82')
+    it('should return Not Found on unknown action', () => {
+      return service.get('/v2/community/1/action/82')
       .expect(404)
       .expect(res => {
         expectFailure(res.body, errors => {
@@ -287,12 +263,11 @@ describe('API v1 action endpoints', () => {
           expect(error).to.have.property('meta');
           expect(error.meta).to.have.property('resource');
         });
-      })
-      .end(done);
+      });
     });
 
-    it('should return Not Found for non-existent community', done => {
-      service.get('/v1/community/81/profile/1')
+    it('should return Not Found for non-existent community', () => {
+      return service.get('/v2/community/81/profile/1')
       .expect(404)
       .expect(res => {
         expectFailure(res.body, errors => {
@@ -303,12 +278,11 @@ describe('API v1 action endpoints', () => {
           expect(error).to.have.property('meta');
           expect(error.meta).to.have.property('resource');
         });
-      })
-      .end(done);
+      });
     });
 
-    it('should return Not Found when action does not belong to community', done => {
-      service.get('/v1/community/2/action/1')
+    it('should return Not Found when action does not belong to community', () => {
+      return service.get('/v2/community/2/action/1')
       .expect(400)
       .expect(res => {
         expectFailure(res.body, errors => {
@@ -322,13 +296,12 @@ describe('API v1 action endpoints', () => {
           expect(error).to.have.property('meta');
           expect(error.meta).to.have.property('resource');
         });
-      })
-      .end(done);
+      });
     });
 
-    it('should return specific action', done => {
-      const url = '/v1/community/1/action/1';
-      service.get(url)
+    it('should return specific action', () => {
+      const url = '/v2/community/1/action/1';
+      return service.get(url)
       .expect(200)
       .expect('Content-Type', /json/)
       .expect(res => {
@@ -365,16 +338,15 @@ describe('API v1 action endpoints', () => {
           expect(data).to.have.property('log');
           expect(data.log).to.be.null;
         });
-      })
-      .end(done);
+      });
     });
 
   });
 
   describe('PUT /community/:id/action/:id', () => {
 
-    it('should reject non-conformant JSON', done => {
-      service.put('/v1/community/1/action/1')
+    it('should reject non-conformant JSON', () => {
+      return service.put('/v2/community/1/action/1')
       .send({})
       .expect(400)
       .expect(res => {
@@ -384,12 +356,11 @@ describe('API v1 action endpoints', () => {
           expect(error).to.have.property('title');
           expect(error.title).to.match(/Input data does not adhere to schema/);
         });
-      })
-      .end(done);
+      });
     });
 
-    it('should return Not Found when action does not belong to community', done => {
-      service.put('/v1/community/81/action/1')
+    it('should return Not Found when action does not belong to community', () => {
+      return service.put('/v2/community/81/action/1')
       .send({type: 'dislike', modified_by: 1})
       .expect(404)
       .expect(res => {
@@ -400,12 +371,11 @@ describe('API v1 action endpoints', () => {
           expect(error.title).to.match(/Community does not exist/);
           expect(error.meta).to.have.property('resource');
         });
-      })
-      .end(done);
+      });
     });
 
-    it('should return Not Found on any non-existing action', done => {
-      service.put('/v1/community/1/action/80')
+    it('should return Not Found on any non-existing action', () => {
+      return service.put('/v2/community/1/action/80')
       .send({type: 'dislike', modified_by: 1})
       .expect(404)
       .expect(res => {
@@ -414,12 +384,11 @@ describe('API v1 action endpoints', () => {
           const error = JSON.stringify(errors[0]);
           expect(error).to.match(/does not exist/);
         });
-      })
-      .end(done);
+      });
     });
 
-    it('should return Not Found on any non-existing profile for modifier', done => {
-      service.put('/v1/community/1/action/1')
+    it('should return Not Found on any non-existing profile for modifier', () => {
+      return service.put('/v2/community/1/action/1')
       .send({type: 'dislike', modified_by: 79})
       .expect(404)
       .expect(res => {
@@ -428,12 +397,11 @@ describe('API v1 action endpoints', () => {
           const error = JSON.stringify(errors[0]);
           expect(error).to.match(/does not exist/);
         });
-      })
-      .end(done);
+      });
     });
 
-    it('should return Bad Request on modifier profile belonging to another community', done => {
-      service.put('/v1/community/1/entity/1')
+    it('should return Bad Request on modifier profile belonging to another community', () => {
+      return service.put('/v2/community/1/entity/1')
       .send({type: 'dislike', modified_by: 5})
       .expect(400)
       .expect(res => {
@@ -449,12 +417,11 @@ describe('API v1 action endpoints', () => {
           expect(error).to.have.property('meta');
           expect(error.meta).to.have.property('resource');
         });
-      })
-      .end(done);
+      });
     });
 
-    it('should return Bad Request on non-existing entity_ref', done => {
-      service.put('/v1/community/1/action/1')
+    it('should return Bad Request on non-existing entity_ref', () => {
+      return service.put('/v2/community/1/action/1')
       .send({modified_by: 1, entity_ref: 77})
       .expect(404)
       .expect(res => {
@@ -470,12 +437,11 @@ describe('API v1 action endpoints', () => {
           expect(error).to.have.property('meta');
           expect(error.meta).to.have.property('resource');
         });
-      })
-      .end(done);
+      });
     });
 
-    it('should return Bad Request on entity_ref belonging to another community', done => {
-      service.put('/v1/community/1/action/1')
+    it('should return Bad Request on entity_ref belonging to another community', () => {
+      return service.put('/v2/community/1/action/1')
       .send({modified_by: 1, entity_ref: 2})
       .expect(400)
       .expect(res => {
@@ -491,12 +457,11 @@ describe('API v1 action endpoints', () => {
           expect(error).to.have.property('meta');
           expect(error.meta).to.have.property('resource');
         });
-      })
-      .end(done);
+      });
     });
 
-    it('should return Not Found on non-existing profile_ref', done => {
-      service.put('/v1/community/1/action/1')
+    it('should return Not Found on non-existing profile_ref', () => {
+      return service.put('/v2/community/1/action/1')
       .send({modified_by: 1, profile_ref: 78})
       .expect(404)
       .expect(res => {
@@ -512,12 +477,11 @@ describe('API v1 action endpoints', () => {
           expect(error).to.have.property('meta');
           expect(error.meta).to.have.property('resource');
         });
-      })
-      .end(done);
+      });
     });
 
-    it('should return Bad Request on profile_ref belonging to another community', done => {
-      service.put('/v1/community/1/action/1')
+    it('should return Bad Request on profile_ref belonging to another community', () => {
+      return service.put('/v2/community/1/action/1')
       .send({modified_by: 1, profile_ref: 5})
       .expect(400)
       .expect(res => {
@@ -533,16 +497,15 @@ describe('API v1 action endpoints', () => {
           expect(error).to.have.property('meta');
           expect(error.meta).to.have.property('resource');
         });
-      })
-      .end(done);
+      });
     });
 
     const user_id = 3;
     const id = 2;
-    const url = `/v1/community/1/action/${id}`;
+    const url = `/v2/community/1/action/${id}`;
 
-    it('should mark as deleted when modified_by is only field', done => {
-      service.put(url)
+    it('should mark as deleted when modified_by is only field', () => {
+      return service.put(url)
       .send({modified_by: user_id})
       .expect(200)
       .expect(res => {
@@ -571,16 +534,15 @@ describe('API v1 action endpoints', () => {
           expect(data).to.have.property('log');
           expect(data.log).to.be.null;
         });
-      })
-      .end(done);
+      });
     });
 
-    it('should undelete on update', done => {
-      service.put(url)
+    it('should undelete on update', () => {
+      return service.put(url)
       .send({modified_by: user_id})
       .expect(200)
       .then(() => {
-        service.put(url)
+        return service.put(url)
         .send({modified_by: user_id, type: 'dislike'})
         .expect(res => {
           expectSuccess(res.body, (links, data) => {
@@ -608,25 +570,21 @@ describe('API v1 action endpoints', () => {
             expect(data.log.length).to.equal(1);
           });
         })
-        .expect(200)
-        .end(done);
-      })
-      .catch(error => {
-        done(error);
+        .expect(200);
       });
     });
 
-    it('should update log with no attributes when attributes not changed', done => {
-      const url2 = '/v1/community/1/action/4';
+    it('should update log with no attributes when attributes not changed', () => {
+      const url2 = '/v2/community/1/action/4';
       // Get original entity.
-      service.get(url2)
+      return service.get(url2)
       .expect(200)
       .expect(res => {
         expectSuccess(res.body, (links, data) => {
           expect(data).to.have.property('attributes');
           const attributes = data.attributes;
           // Update entity
-          service.put(url2)
+          return service.put(url2)
           .send({end_epoch: 1488363030, attributes, modified_by: 2})
           .expect(200)
           .expect(res2 => {
@@ -638,21 +596,17 @@ describe('API v1 action endpoints', () => {
               expect(log).to.not.have.property('end_epoch');
               expect(log).to.not.have.property('attributes');
             });
-          })
-          .end(done);
+          });
         });
-      })
-      .catch(error => {
-        done(error);
       });
     });
 
-    it('should update existing entity with type', done => {
-      service.put(url)
+    it('should update existing entity with type', () => {
+      return service.put(url)
       .send({modified_by: user_id, type: 'check'})
       .expect(200)
       .then(() => {
-        service.get(url)
+        return service.get(url)
         .expect(200)
         .expect(res => {
           expectSuccess(res.body, (links, data) => {
@@ -664,17 +618,13 @@ describe('API v1 action endpoints', () => {
             expect(log.type).to.equal('like');
             expect(log).to.not.have.property('attributes');
           });
-        })
-        .end(done);
-      })
-      .catch(error => {
-        done(error);
+        });
       });
     });
 
-    it('should update existing action and retrieve the update', done => {
+    it('should update existing action and retrieve the update', () => {
       // Arrange
-      service.put(url)
+      return service.put(url)
       .send({
         type: 'link',
         start_epoch: 148837000,
@@ -695,7 +645,7 @@ describe('API v1 action endpoints', () => {
         });
       })
       .then(() => {
-        service.get(url)
+        return service.get(url)
         .expect(200)
         .expect(res => {
           expectSuccess(res.body, (links, data) => {
@@ -726,11 +676,7 @@ describe('API v1 action endpoints', () => {
             expect(log).to.have.property('type');
             expect(log).to.not.have.property('attributes');
           });
-        })
-        .end(done);
-      })
-      .catch(error => {
-        done(error);
+        });
       });
     });
   });

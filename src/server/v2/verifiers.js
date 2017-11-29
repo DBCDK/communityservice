@@ -7,6 +7,7 @@
 const config = require('server/config');
 const knex = require('knex')(config.db);
 const validator = require('is-my-json-valid/require');
+const {idsFromUrl} = require('server/v2/to-from-db-format');
 const constants = require('server/constants')();
 const communityTable = constants.community.table;
 const profileTable = constants.profile.table;
@@ -30,7 +31,6 @@ function validatingInput(req, schema) {
     }
   });
 }
-exports.validatingInput = validatingInput;
 
 function verifyingCommunityExists(id, url) {
   return new Promise((resolve, reject) => {
@@ -50,7 +50,6 @@ function verifyingCommunityExists(id, url) {
     });
   });
 }
-exports.verifyingCommunityExists = verifyingCommunityExists;
 
 function verifyingProfileExists(id, community, url, object) {
   return new Promise((resolve, reject) => {
@@ -92,30 +91,49 @@ function verifyingProfileExists(id, community, url, object) {
     });
   });
 }
-exports.verifyingProfileExists = verifyingProfileExists;
 
-function verifyingProfileExistsIfSet(id, community, url, object) {
+function verifyingProfileUrlExistsIfSet(url, community, origin, object) {
   return new Promise((resolve, reject) => {
-    if (!id) {
+    if (!url) {
       resolve();
     }
-    verifyingProfileExists(id, community, url, object)
+    const ids = idsFromUrl(url);
+    if (!ids) {
+      reject();
+    }
+    if (!ids.profile) {
+      reject();
+    }
+    if (ids.community !== community) {
+      reject();
+    }
+    verifyingProfileExists(ids.profile, ids.community, origin, object)
     .then(resolve, reject);
   });
 }
-exports.verifyingProfileExistsIfSet = verifyingProfileExistsIfSet;
 
-function verifyingEntityExistsIfSet(id, community, url, object) {
+function verifyingEntityUrlExistsIfSet(url, community, origin, object) {
   return new Promise((resolve, reject) => {
-    if (!id) {
+    if (!url) {
       resolve();
     }
+    const ids = idsFromUrl(url);
+    if (!ids) {
+      reject();
+    }
+    if (!ids.entity) {
+      reject();
+    }
+    if (ids.community !== community) {
+      reject();
+    }
+    const id = ids.entity;
     knex(entityTable).where('id', id).select()
     .then(entities => {
       if (!entities || entities.length !== 1) {
         let meta = {};
-        if (url) {
-          meta.resource = url;
+        if (origin) {
+          meta.resource = origin;
         }
         let details = {
           problem: `Entity ${id} does not exist`
@@ -133,8 +151,8 @@ function verifyingEntityExistsIfSet(id, community, url, object) {
       const entity = entities[0];
       if (entity.community_id !== Number(community)) {
         let meta = {};
-        if (url) {
-          meta.resource = url;
+        if (origin) {
+          meta.resource = origin;
         }
         let details = {
           problem: `Entity ${id} does not belong to community ${community}`
@@ -156,4 +174,11 @@ function verifyingEntityExistsIfSet(id, community, url, object) {
     });
   });
 }
-exports.verifyingEntityExistsIfSet = verifyingEntityExistsIfSet;
+
+module.exports = {
+  validatingInput,
+  verifyingCommunityExists,
+  verifyingProfileExists,
+  verifyingProfileUrlExistsIfSet,
+  verifyingEntityUrlExistsIfSet
+};

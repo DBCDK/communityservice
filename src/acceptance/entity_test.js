@@ -6,7 +6,7 @@ const request = require('supertest');
 const {expectSuccess, expectFailure, expectValidate} = require('./output-verifiers');
 const mock = require('./mock-server');
 
-describe('API v1 entity endpoints', () => {
+describe('API v2 entity endpoints', () => {
   const service = request(mock.server);
   beforeEach(async () => {
     await mock.beforeEach();
@@ -17,9 +17,9 @@ describe('API v1 entity endpoints', () => {
 
   describe('GET /community/:id/entity', () => {
 
-    it('should return seeded entities', done => {
-      const url = '/v1/community/1/entity';
-      service.get(url)
+    it('should return seeded entities', () => {
+      const url = '/v2/community/1/entity';
+      return service.get(url)
       .expect(200)
       .expect('Content-Type', /json/)
       .expect(res => {
@@ -57,12 +57,11 @@ describe('API v1 entity endpoints', () => {
             expect(data.log).to.be.null;
           });
         });
-      })
-      .end(done);
+      });
     });
 
     it('should return Not Found for non-existent community', done => {
-      service.get('/v1/community/99/entity')
+      service.get('/v2/community/99/entity')
       .expect(404)
       .expect(res => {
         expectFailure(res.body, errors => {
@@ -81,7 +80,7 @@ describe('API v1 entity endpoints', () => {
   describe('POST /community/:id/entity', () => {
 
     it('should return Not Found for non-existent community', done => {
-      service.post('/v1/community/99/entity')
+      service.post('/v2/community/99/entity')
       .send({
         owner_id: 3,
         type: 'campaign',
@@ -103,7 +102,7 @@ describe('API v1 entity endpoints', () => {
     });
 
     it('should return Not Found for non-existent owner', done => {
-      service.post('/v1/community/1/entity')
+      service.post('/v2/community/1/entity')
       .send({
         owner_id: 95,
         type: 'campaign',
@@ -129,7 +128,7 @@ describe('API v1 entity endpoints', () => {
     });
 
     it('should reject missing type', done => {
-      service.post('/v1/community/1/entity')
+      service.post('/v2/community/1/entity')
       .send({
         title: 'Byg en sæbekassevogn',
         contents: 'Bla bla bla'
@@ -146,7 +145,7 @@ describe('API v1 entity endpoints', () => {
     });
 
     it('should reject missing title', done => {
-      service.post('/v1/community/1/entity')
+      service.post('/v2/community/1/entity')
       .send({
         type: 'campaign',
         contents: 'Bla bla bla'
@@ -163,7 +162,7 @@ describe('API v1 entity endpoints', () => {
     });
 
     it('should reject missing contents', done => {
-      service.post('/v1/community/1/entity')
+      service.post('/v2/community/1/entity')
       .send({
         type: 'campaign',
         title: 'Byg en sæbekassevogn'
@@ -180,7 +179,7 @@ describe('API v1 entity endpoints', () => {
     });
 
     it('should reject missing owner', done => {
-      service.post('/v1/community/1/entity')
+      service.post('/v2/community/1/entity')
       .send({
         type: 'campaign',
         title: 'Byg en sæbekassevogn',
@@ -198,7 +197,7 @@ describe('API v1 entity endpoints', () => {
     });
 
     it('should reject owner in other community', done => {
-      service.post('/v1/community/1/entity')
+      service.post('/v2/community/1/entity')
       .send({
         owner_id: 5,
         type: 'campaign',
@@ -224,7 +223,7 @@ describe('API v1 entity endpoints', () => {
     });
 
     it('should reject malformed data', done => {
-      service.post('/v1/community/1/entity')
+      service.post('/v2/community/1/entity')
       .send('ost')
       .expect(400)
       .expect(res => {
@@ -238,7 +237,7 @@ describe('API v1 entity endpoints', () => {
     });
 
     it('should reject non-conformant JSON', done => {
-      service.post('/v1/community/1/entity')
+      service.post('/v2/community/1/entity')
       .send({
         type: 'campaign',
         title: 'Byg en sæbekassevogn',
@@ -257,7 +256,7 @@ describe('API v1 entity endpoints', () => {
       .end(done);
     });
 
-    const url = '/v1/community/1/entity';
+    const url = '/v2/community/1/entity';
     const title = 'Byg en sæbekassevogn';
     const type = 'campaign';
     const contents = 'Bla bla bla';
@@ -431,7 +430,7 @@ describe('API v1 entity endpoints', () => {
   describe('GET /community/:id/entity/:id', () => {
 
     it('should return Not Found on unknown entity', done => {
-      service.get('/v1/community/1/entity/91')
+      service.get('/v2/community/1/entity/91')
       .expect(404)
       .expect(res => {
         expectFailure(res.body, errors => {
@@ -447,7 +446,7 @@ describe('API v1 entity endpoints', () => {
     });
 
     it('should return Not Found for non-existent community', done => {
-      service.get('/v1/community/90/entity/1')
+      service.get('/v2/community/90/entity/1')
       .expect(404)
       .expect(res => {
         expectFailure(res.body, errors => {
@@ -463,7 +462,7 @@ describe('API v1 entity endpoints', () => {
     });
 
     it('should return Not Found when entity does not belong to community', done => {
-      service.get('/v1/community/2/entity/1')
+      service.get('/v2/community/2/entity/1')
       .expect(400)
       .expect(res => {
         expectFailure(res.body, errors => {
@@ -487,7 +486,7 @@ describe('API v1 entity endpoints', () => {
   describe('PUT /community/:id/entity/:id', () => {
 
     it('should reject non-conformant JSON', done => {
-      service.put('/v1/community/1/entity/1')
+      service.put('/v2/community/1/entity/1')
       .send({})
       .expect(400)
       .expect(res => {
@@ -502,7 +501,7 @@ describe('API v1 entity endpoints', () => {
     });
 
     it('should return Not Found when entity does not belong to community', done => {
-      service.put('/v1/community/89/entity/1')
+      service.put('/v2/community/89/entity/1')
       .send({title: 'Title', modified_by: 1})
       .expect(404)
       .expect(res => {
@@ -518,7 +517,7 @@ describe('API v1 entity endpoints', () => {
     });
 
     it('should return Not Found on any non-existing entity', done => {
-      service.put('/v1/community/1/entity/88')
+      service.put('/v2/community/1/entity/88')
       .send({title: 'Title', modified_by: 1})
       .expect(404)
       .expect(res => {
@@ -532,7 +531,7 @@ describe('API v1 entity endpoints', () => {
     });
 
     it('should return Not Found on any non-existing profile for modifier', done => {
-      service.put('/v1/community/1/entity/1')
+      service.put('/v2/community/1/entity/1')
       .send({title: 'Title', modified_by: 87})
       .expect(404)
       .expect(res => {
@@ -546,7 +545,7 @@ describe('API v1 entity endpoints', () => {
     });
 
     it('should return Bad Request on modifier profile belonging to another community', done => {
-      service.put('/v1/community/1/entity/1')
+      service.put('/v2/community/1/entity/1')
       .send({title: 'Title', modified_by: 5})
       .expect(400)
       .expect(res => {
@@ -567,7 +566,7 @@ describe('API v1 entity endpoints', () => {
     });
 
     const user_id = 5;
-    const url = '/v1/community/2/entity/2';
+    const url = '/v2/community/2/entity/2';
 
     it('should mark as deleted when modified_by is only field', done => {
       service.put(url)
@@ -649,7 +648,7 @@ describe('API v1 entity endpoints', () => {
     });
 
     it('should update log with no attributes when attributes not changed', done => {
-      const url2 = '/v1/community/1/entity/1';
+      const url2 = '/v2/community/1/entity/1';
       // Get original entity.
       service.get(url2)
       .expect(200)
@@ -767,7 +766,7 @@ describe('API v1 entity endpoints', () => {
     });
 
     it('should add attributes to existing entity', done => {
-      service.put('/v1/community/1/entity/1')
+      service.put('/v2/community/1/entity/1')
       .send({
         modified_by: 1,
         attributes: {

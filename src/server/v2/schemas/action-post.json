@@ -5,17 +5,17 @@
       "required": true,
       "type": "string"
     },
-    "owner_id": {
+    "owner": {
       "required": true,
-      "type": "integer"
+      "type": "string"
     },
     "entity_ref": {
       "required": false,
-      "type": "integer"
+      "type": "string"
     },
     "profile_ref": {
       "required": false,
-      "type": "integer"
+      "type": "string"
     },
     "start_epoch": {
       "required": false,

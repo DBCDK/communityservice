@@ -29,8 +29,6 @@ module.exports = knex => {
     await knex.schema.dropTableIfExists(entityTable);
     await knex.schema.dropTableIfExists(profileTable);
     await knex.schema.dropTableIfExists(communityTable);
-    // await knex.schema.dropTableIfExists('knex_migrations');
-    // await knex.schema.dropTableIfExists('knex_migrations_lock');
   }
 
   return {

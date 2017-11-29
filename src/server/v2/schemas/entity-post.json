@@ -1,20 +1,20 @@
 {
   "type": "object",
   "properties": {
-    "modified_by": {
+    "owner": {
       "required": true,
-      "type": "integer"
+      "type": "string"
     },
     "type": {
-      "required": false,
+      "required": true,
       "type": "string"
     },
     "title": {
-      "required": false,
+      "required": true,
       "type": "string"
     },
     "contents": {
-      "required": false,
+      "required": true,
       "type": "string"
     },
     "start_epoch": {
@@ -28,6 +28,10 @@
     "attributes": {
       "required": false,
       "type": "object"
+    },
+    "entity_ref": {
+      "required": false,
+      "type": "string"
     }
   },
   "additionalProperties": false

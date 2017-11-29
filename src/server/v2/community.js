@@ -9,8 +9,8 @@ const router = express.Router();
 const config = require('server/config');
 const logger = require('__/logging')(config.logger);
 const knex = require('knex')(config.db);
-const validatingInput = require('server/v1/verifiers').validatingInput;
-const updateCommunity = require('server/v1/modifiers').updateCommunity;
+const {validatingInput} = require('server/v2/verifiers');
+const {updateCommunity} = require('server/v2/modifiers');
 const constants = require('server/constants')();
 const communityTable = constants.community.table;
 

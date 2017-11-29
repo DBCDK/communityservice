@@ -3,19 +3,19 @@
   "properties": {
     "modified_by": {
       "required": true,
-      "type": "integer"
+      "type": "string"
     },
     "type": {
       "required": false,
       "type": "string"
     },
-    "entity_ref": {
+    "title": {
       "required": false,
-      "type": "integer"
+      "type": "string"
     },
-    "profile_ref": {
+    "contents": {
       "required": false,
-      "type": "integer"
+      "type": "string"
     },
     "start_epoch": {
       "required": false,

@@ -26,7 +26,7 @@ describe('service meta API', () => {
         expect(res.body).to.not.have.property('errorLog');
         // Service info.
         expect(res.body).to.have.property('address');
-        expect(res.body['api-version']).to.equal('1');
+        expect(res.body['api-version']).to.equal('2');
         expect(res.body.version).to.equal('1.0.0');
         expect(res.body).to.not.have.nested.property('config.db.connection.user');
         expect(res.body).to.not.have.nested.property('config.db.connection.password');
