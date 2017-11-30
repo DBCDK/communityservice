@@ -1,6 +1,18 @@
 version: "3"
 services:
 
+  elvis:
+    build:
+      context: ./src
+    links:
+      - database
+    environment:
+      DB_NAME: communityservice
+      DB_USER: communityservice
+      DB_HOST: database
+    ports:
+      - "3002:3000"
+
   database:
     image: postgres:9.6
     ports:

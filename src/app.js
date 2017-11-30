@@ -1,7 +1,7 @@
 'use strict';
 
-const config = require('./config');
-const server = require('./server');
+const config = require('server/config');
+const server = require('server');
 const logger = require('__/logging')(config.logger);
 
 const serverListener = server.listen(config.server.port, function() {
