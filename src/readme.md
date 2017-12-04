@@ -5,12 +5,11 @@ To setup the system locally, in the `src` directory:
     $ touch current.env     // Use default configuration.
     $ npm install           // Install dependencies.
 
-To run the system locally:
+If you want to manually start up a PostgreSQL server, it needs to run on port 5432 and have a database called `communityservice` owned by `communityservice`; see the following section about environments.  To run web service directly against the PostgreSQL server:
 
-    $ docker-compose up -d  // Start local PostgreSQL database on port 5432.
     $ npm run dev           // Start the service.
 
-If you want to manually start up a PostgreSQL server, it needs to run on port 5432 and have a database called `communityservice` owned by `communityservice`; see the following section about environments.
+The web service will then run on port 3000.
 
 To run fast tests on local machine:
 
@@ -18,12 +17,22 @@ To run fast tests on local machine:
     $ npm run test-units    // Run unit tests.
     $ npm test              // Run both lint & unit tests.
 
-To run full integration test:
+To run the acceptance test:
 
-    $ docker-compose up -d  // Start local PostgreSQL database.
-    $ npm run test-full     // Run all test, including database integration.
+    $ npm run test-full     // Run all test, including database acceptance.
 
 See also [service endpoints](../doc/endpoints.md).
+
+## Containers
+
+To run the system locally via Docker containers:
+
+    $ docker-compose build  // Build an image with the web service.
+    $ docker-compose up -d  // Start local PostgreSQL database & the web service.
+
+The web service will then run on port 3002.
+
+The public available container is automatically built on [DockerHub](https://hub.docker.com/r/jpsecher/communityservice) when there is a push to GitHub repository, after which other projects can use the image `jpsecher/communityservice`.
 
 ## Database
 
@@ -75,7 +84,7 @@ On the build server, the [config file](../.travis.yml) uses the `after_script` t
 
 ##  Directory structure
 
-The web service is located in `server` and all other local (but possibly reusable) utilities and libraries are located in `lib`.  The script [`setup-node-env.sh`](setup-node-env.sh), which is run as a result of `npm install`, ensures that there are symbolic links `node_modules/server` and `node_modules/__` pointing to `server` and `lib` respectively, so that any part of the server or the local libraries can include any other part by using
+The web service is located in `server` and all other local (but possibly reusable) utilities and libraries are located in `lib`.  The script [`setup-node-env.sh`](setup-node-env.sh), which is run as a result of `npm install`, ensures that there are symbolic links `node_modules/server`, `node_modules/acceptance` and `node_modules/__` pointing to `server`, `acceptance` and `lib` respectively, so that any part of the server or the local libraries can include any other part by using
 
 ```javascript
 const mySpiff = require('__/mySpiffyLib');
