@@ -15,7 +15,8 @@ ENTRYPOINT ["/sbin/tini", "--"]
 ##
 FROM base AS production-dependencies
 COPY package.json setup-node-env.sh ./
-RUN mkdir server lib acceptance fixtures migrations && \
+RUN touch current.env \
+    mkdir server lib acceptance fixtures migrations && \
     npm set progress=false && \
     npm config set depth 0 && \
     npm install --only=production
