@@ -12,6 +12,7 @@ services:
       DB_HOST: database
     ports:
       - "3002:3000"
+    command: sh -c './tools/wait-for.sh database:5432 -- npm start'
 
   database:
     image: postgres:9.6
