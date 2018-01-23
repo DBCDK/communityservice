@@ -78,6 +78,7 @@ You can run and test the service directly from the `src` directory, see the [dev
 ----
 
 [![Build Status](https://travis-ci.org/DBCDK/communityservice.svg?branch=master)](https://travis-ci.org/DBCDK/communityservice)
+[![DockerHub](https://img.shields.io/docker/build/dbcdk/communityservice.svg)](https://hub.docker.com/r/dbcdk/communityservice)
 [![Coverage Status](https://coveralls.io/repos/github/DBCDK/communityservice/badge.svg?branch=master)](https://coveralls.io/github/DBCDK/communityservice?branch=master)
 [![bitHound Overall Score](https://www.bithound.io/github/DBCDK/communityservice/badges/score.svg)](https://www.bithound.io/github/DBCDK/communityservice)
 

@@ -32,7 +32,7 @@ To run the system locally via Docker containers:
 
 The web service will then run on port 3002.
 
-The public available container is automatically built on [DockerHub](https://hub.docker.com/r/jpsecher/communityservice) when there is a push to GitHub repository, after which other projects can use the image `jpsecher/communityservice`.
+The public available container is automatically built on [DockerHub](https://hub.docker.com/r/dbcdk/communityservice) when there is a push to GitHub repository, after which other projects can use the image `jpsecher/communityservice`.
 
 ## Database
 
