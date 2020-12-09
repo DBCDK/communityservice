@@ -26,7 +26,7 @@ pipeline {
                 dir('src') {
                     sh """
                     ls -la
-                    
+                    whoami
                     . ./nvm.sh
                     nvm install
                     
@@ -36,7 +36,7 @@ pipeline {
                     
                     npm run test
                     
-                    rm current.env                    
+                    rm current.env                      
                     
                     """
                 }
