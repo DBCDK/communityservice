@@ -34,10 +34,12 @@ pipeline {
                         sh "ls -la"
                         dir('src') {
                            sh """
-. ./nvm.sh
-nvm install
+
 npm up
 npm install
+
+. ./setup-node-env.sh
+
 cp environments/developer.env current.env
 npm run test
 rm current.env
