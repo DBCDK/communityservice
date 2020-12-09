@@ -35,6 +35,7 @@ pipeline {
                         dir('src') {
                            sh """
 npm install
+ls -la
                     """
                         }
 
