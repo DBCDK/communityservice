@@ -44,7 +44,7 @@ ls -la environments/
 
 . ./setup-node-env.sh
 
-cp environments/developer.env
+cp environments/developer.env current.env
 npm run test
 rm current.env
 ls -la
