@@ -27,7 +27,16 @@ pipeline {
                     sh """
                     ls -la
                     whoami
-                    . ./nvm.sh
+                    
+                    nvm install
+                    
+                    npm install
+                    
+                    cp environments/developer.env current.env
+                    
+                    npm run test
+                    
+                    rm current.env                      
                     
                     """
                 }
