@@ -21,26 +21,22 @@ pipeline {
     }
     stages {
         stage('master2stable-build') {
-            steps {
-                script {
+            agent {
+                docker {
+                    image "docker.dbc.dk/dbc-node"
+                    label 'devel9'
+                    args '-u 0:0'
+                }
+                steps {
 
-                    sh "ls -la"
-                    dir('src') {
-                        sh """
-export NPM_TOKEN="f0d2397e-64bb-4f54-949c-feab0ee8d88f"
 
-env | sort 
-env | grep -e '^GIT_' > downstream.env
-                    ls -la
-                    whoami
-                    
-                    . ./nvm.sh --quiet
-                    nvm install
-                    
-                                   
-                    
+                        sh "ls -la"
+                        dir('src') {
+                           sh """
+npm install
                     """
-                    }
+                        }
+
                 }
             }
         }
