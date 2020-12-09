@@ -35,6 +35,9 @@ pipeline {
                         dir('src') {
                            sh """
 npm install
+cp environments/developer.env current.env
+npm run test
+rm current.env
 ls -la
                     """
                         }
