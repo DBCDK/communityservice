@@ -16,17 +16,38 @@ pipeline {
     agent {
         label 'devel9-head'
     }
+    environment{
+        NPM_TOKEN="f0d2397e-64bb-4f54-949c-feab0ee8d88f"
+    }
     stages {
-        stage('Test and build image') {
+        stage('master2stable-build') {
             steps {
-                sh "echo FISK"
-                /*
-                script {
-                    sh "docker build -t $DOCKER_NAME --pull --no-cache ."
-                    sh "docker tag $DOCKER_NAME $DOCKER_NAME_LATEST"
+                dir("src") {
+                    sh """
+                    export NPM_TOKEN="f0d2397e-64bb-4f54-949c-feab0ee8d88f"
+                    
+                    env | sort 
+                    env | grep -e '^GIT_' > downstream.env
+                    
+                    cd src
+                    
+                    . ./nvm.sh
+                    nvm install
+                    
+                    npm install
+                    
+                    cp environments/developer.env current.env
+                    
+                    npm run test
+                    
+                    rm current.env
+                    
+                    cd ..
+                    
+                    tar -czf ../$BUILD_NAME-$BUILD_NUMBER.tar.gz .
+                    mv ../$BUILD_NAME-$BUILD_NUMBER.tar.gz
+                    """
                 }
-
-                 */
             }
         }
         /*
