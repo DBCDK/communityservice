@@ -26,12 +26,6 @@ pipeline {
                 dir('src') {
                     sh """
                     ls -la
-                    export NPM_TOKEN="f0d2397e-64bb-4f54-949c-feab0ee8d88f"
-                    
-                    env | sort 
-                    env | grep -e '^GIT_' > downstream.env
-                    
-                   
                     
                     . ./nvm.sh
                     nvm install
