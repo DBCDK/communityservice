@@ -37,13 +37,14 @@ pipeline {
 
 npm up
 npm install
-
+pwd
+cd ..
 ls -la 
-ls -la environment/
+ls -la environments/
 
 . ./setup-node-env.sh
 
-cp environments/developer.env current.env
+cp environments/developer.env
 npm run test
 rm current.env
 ls -la
