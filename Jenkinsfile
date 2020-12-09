@@ -38,7 +38,7 @@ pipeline {
 npm up
 npm install
 pwd
-cd ..
+
 ls -la 
 ls -la environments/
 
