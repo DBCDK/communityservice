@@ -19,10 +19,14 @@ pipeline {
     stages {
         stage('Test and build image') {
             steps {
+                sh "echo FISK"
+                /*
                 script {
                     sh "docker build -t $DOCKER_NAME --pull --no-cache ."
                     sh "docker tag $DOCKER_NAME $DOCKER_NAME_LATEST"
                 }
+
+                 */
             }
         }
         /*
@@ -50,11 +54,15 @@ pipeline {
     }
     post {
         always {
+            sh "echo HUND"
+            /*
             script {
                 sh """
                     docker rmi $DOCKER_NAME
                 """
             }
+
+             */
         }
     }
 }
