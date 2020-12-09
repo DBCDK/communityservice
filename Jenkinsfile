@@ -22,9 +22,10 @@ pipeline {
     stages {
         stage('master2stable-build') {
             steps {
-                sh "ls -la"
-                dir('src') {
-                    sh """
+                script {
+                    sh "ls -la"
+                    dir('src') {
+                        sh """
                     ls -la
                     whoami
                     . ./nvm.sh
@@ -33,6 +34,7 @@ pipeline {
                                    
                     
                     """
+                    }
                 }
             }
         }
