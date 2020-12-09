@@ -33,6 +33,7 @@ env | sort
 env | grep -e '^GIT_' > downstream.env
                     ls -la
                     whoami
+                    rm .nvmrc
                     . ./nvm.sh
                     nvm install
                     
