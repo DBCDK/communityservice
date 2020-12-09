@@ -27,21 +27,7 @@ pipeline {
                     sh """
                     ls -la
                     
-                    . ./nvm.sh
-                    nvm install
                     
-                    npm install
-                    
-                    cp environments/developer.env current.env
-                    
-                    npm run test
-                    
-                    rm current.env
-                    
-                    cd ..
-                    
-                    tar -czf ../$BUILD_NAME-$BUILD_NUMBER.tar.gz .
-                    mv ../$BUILD_NAME-$BUILD_NUMBER.tar.gz
                     """
                 }
             }
