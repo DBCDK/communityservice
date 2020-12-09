@@ -27,6 +27,7 @@ pipeline {
                     label 'devel9'
                     args '-u 0:0'
                 }
+            }
                 steps {
 
 
@@ -38,7 +39,7 @@ npm install
                         }
 
                 }
-            }
+
         }
         /*
         stage('Push to Artifactory') {
