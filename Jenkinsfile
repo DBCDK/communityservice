@@ -33,8 +33,8 @@ env | sort
 env | grep -e '^GIT_' > downstream.env
                     ls -la
                     whoami
-                    rm .nvmrc
-                    . ./nvm.sh
+                    
+                    . ./nvm.sh --quiet
                     nvm install
                     
                                    
@@ -70,7 +70,7 @@ env | grep -e '^GIT_' > downstream.env
     post {
         always {
             sh "echo HUND"
-            cleanWs()
+           // cleanWs()
             /*
             script {
                 sh """
