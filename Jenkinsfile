@@ -35,18 +35,9 @@ pipeline {
                         dir('src') {
                            sh """
 
-npm up
+
 npm install
-pwd
-
-ls -la 
-ls -la environments/
-
 . ./setup-node-env.sh
-
-pwd
-cd ..
-pwd
 cp environments/developer.env current.env
 npm run test
 rm current.env
