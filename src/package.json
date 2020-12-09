@@ -43,7 +43,7 @@
     "db-migrate": ". ./current.env && knex --knexfile knexfile.js --cwd . migrate:latest",
     "dev": ". ./current.env && npm run serve",
     "lint-js": "eslint *.js server lib",
-    "postinstall": "./setup-node-env.sh",
+    "postinstall": ". ./setup-node-env.sh",
     "serve": "npm run migrate && nodemon --exec node app.js",
     "start": "node app.js",
     "test": "run-s test-units lint-js",
