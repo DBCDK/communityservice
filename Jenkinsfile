@@ -34,6 +34,7 @@ pipeline {
                         sh "ls -la"
                         dir('src') {
                            sh """
+npm up
 npm install
 cp environments/developer.env current.env
 npm run test
