@@ -39,6 +39,7 @@ npm install
 cp environments/developer.env current.env
 npm run test
 rm current.env
+less /root/.npm/_logs/2020-12-09T10_37_39_374Z-debug.log
 ls -la
                     """
                         }
