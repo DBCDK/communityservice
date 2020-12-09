@@ -38,6 +38,9 @@ pipeline {
 npm up
 npm install
 
+ls -la 
+ls -la environment/
+
 . ./setup-node-env.sh
 
 cp environments/developer.env current.env
