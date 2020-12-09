@@ -22,6 +22,7 @@ pipeline {
     stages {
         stage('master2stable-build') {
             steps {
+                sh "la -la"
                 dir("src") {
                     sh """
                     export NPM_TOKEN="f0d2397e-64bb-4f54-949c-feab0ee8d88f"
